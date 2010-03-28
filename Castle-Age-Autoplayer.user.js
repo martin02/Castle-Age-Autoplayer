@@ -2,7 +2,7 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-// @version        139.34
+// @version        139.35
 // @require        http://jqueryjs.googlecode.com/files/jquery-1.3.2.min.js
 // @include        http*://apps.*facebook.com/castle_age/*
 // @include        http://www.facebook.com/common/error.html
@@ -22,7 +22,7 @@
 ///////////////////////////
 
 var caapGlob = {};
-caapGlob.thisVersion = "139.34";
+caapGlob.thisVersion = "139.35";
 caapGlob.gameName = 'castle_age';
 caapGlob.SUC_script_num = 57917;
 caapGlob.discussionURL = 'http://senses.ws/caap/index.php';
@@ -905,6 +905,16 @@ var caap = {
         var t_min = time.getMinutes();
 
         if (gm.getValue("use24hr", true)) {
+            t_hour = t_hour + "";
+            if (t_hour.length === 1) {
+                t_hour = "0" + t_hour;
+            }
+
+            t_min = t_min + "";
+            if (t_min.length === 1) {
+                t_min = "0" + t_min;
+            }
+
             return d_names[t_day] + " " + t_hour + ":" + t_min;
         } else {
             var a_p = "PM";
@@ -3604,7 +3614,7 @@ var caap = {
         if (resultsDiv) {
             var resultsText = nHtml.GetText(resultsDiv).trim();
             if (resultsText.match(/Your opponent is dead or too weak to battle/)) {
-				gm.log("This opponent is dead or hiding: " + this.lastBattleID);
+                gm.log("This opponent is dead or hiding: " + this.lastBattleID);
                 if (!this.doNotBattle) {
                     this.doNotBattle = this.lastBattleID;
                 } else {
@@ -3614,109 +3624,109 @@ var caap = {
         }
 
         var webSlice = nHtml.FindByAttrContains(document.body, 'img', 'src', 'arena_arena_guard');
-		if (webSlice) {
-			gm.log('Checking Arena Guard');
-			webSlice = webSlice.parentNode.parentNode;
-			var ss = document.evaluate(".//img[contains(@src,'profile.ak.fbcdn.net')]", webSlice, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-			gm.log('Arena Guard Slots Filled: ' + ss.snapshotLength);
-			if ((ss.snapshotLength < 10) && gm.getValue('ArenaEliteEnd', 'NoArmy') != 'NoArmy') {
-				gm.setValue('ArenaEliteNeeded', true);
-				gm.log('Arena Guard Needs To Be Filed.' + ss.snapshotLength);
-			}
-		}
+        if (webSlice) {
+            gm.log('Checking Arena Guard');
+            webSlice = webSlice.parentNode.parentNode;
+            var ss = document.evaluate(".//img[contains(@src,'profile.ak.fbcdn.net')]", webSlice, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+            gm.log('Arena Guard Slots Filled: ' + ss.snapshotLength);
+            if ((ss.snapshotLength < 10) && gm.getValue('ArenaEliteEnd', '') != 'NoArmy') {
+                gm.setValue('ArenaEliteNeeded', true);
+                gm.log('Arena Guard Needs To Be Filed.' + ss.snapshotLength);
+            }
+        }
 
 
 
         if (nHtml.FindByAttrContains(document.body, "img", "src", 'battle_victory.gif')) {
-			if (this.CheckForImage('tab_arena_on')) {
-				resultsDiv = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app_body');
-				nameLink = nHtml.FindByAttrContains(resultsDiv.parentNode.parentNode, "a", "href", "keep.php?user=");
-				userId = nameLink.href.match(/user=\d+/i);
-				userId = String(userId).substr(5);
-				gm.setValue("ArenaChainId", userId);
+            if (this.CheckForImage('tab_arena_on')) {
+                resultsDiv = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app_body');
+                nameLink = nHtml.FindByAttrContains(resultsDiv.parentNode.parentNode, "a", "href", "keep.php?user=");
+                userId = nameLink.href.match(/user=\d+/i);
+                userId = String(userId).substr(5);
+                gm.setValue("ArenaChainId", userId);
                 gm.log("Chain Attack: " + userId + "  Arena Battle");
-			} else {
-				var winresults = nHtml.FindByAttrContains(document.body, 'span', 'class', 'positive');
-				var bptxt = nHtml.GetText(winresults.parentNode).toString().trim();
-				var bpnum = ((/\d+\s+Battle Points/i.test(bptxt)) ? this.NumberOnly(bptxt.match(/\d+\s+Battle Points/i)) : 0);
-				var goldtxt = nHtml.FindByAttrContains(document.body, "b", "class", 'gold').innerHTML;
-				var goldnum = Number(goldtxt.substring(1).replace(/,/, ''));
-				resultsDiv = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app_body');
-				nameLink = nHtml.FindByAttrContains(resultsDiv.parentNode.parentNode, "a", "href", "keep.php?user=");
-				userId = nameLink.href.match(/user=\d+/i);
-				userId = String(userId).substr(5);
-				userName = nHtml.GetText(nameLink).trim();
-				var wins = 1;
-				gm.log("We Defeated " + userName + "!!");
-				//Test if we should chain this guy
-				gm.setValue("BattleChainId", '');
-				if (this.GetNumber('ChainBP') !== '') {
-					if (bpnum >= Number(this.GetNumber('ChainBP'))) {
-						gm.setValue("BattleChainId", userId);
-						gm.log("Chain Attack: " + userId + "  Battle Points:" + bpnum);
-					} else {
-						if (!this.doNotBattle) {
-							this.doNotBattle = this.lastBattleID;
-						} else {
-							this.doNotBattle += " " + this.lastBattleID;
-						}
-					}
-				}
+            } else {
+                var winresults = nHtml.FindByAttrContains(document.body, 'span', 'class', 'positive');
+                var bptxt = nHtml.GetText(winresults.parentNode).toString().trim();
+                var bpnum = ((/\d+\s+Battle Points/i.test(bptxt)) ? this.NumberOnly(bptxt.match(/\d+\s+Battle Points/i)) : 0);
+                var goldtxt = nHtml.FindByAttrContains(document.body, "b", "class", 'gold').innerHTML;
+                var goldnum = Number(goldtxt.substring(1).replace(/,/, ''));
+                resultsDiv = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app_body');
+                nameLink = nHtml.FindByAttrContains(resultsDiv.parentNode.parentNode, "a", "href", "keep.php?user=");
+                userId = nameLink.href.match(/user=\d+/i);
+                userId = String(userId).substr(5);
+                userName = nHtml.GetText(nameLink).trim();
+                var wins = 1;
+                gm.log("We Defeated " + userName + "!!");
+                //Test if we should chain this guy
+                gm.setValue("BattleChainId", '');
+                if (this.GetNumber('ChainBP') !== '') {
+                    if (bpnum >= Number(this.GetNumber('ChainBP'))) {
+                        gm.setValue("BattleChainId", userId);
+                        gm.log("Chain Attack: " + userId + "  Battle Points:" + bpnum);
+                    } else {
+                        if (!this.doNotBattle) {
+                            this.doNotBattle = this.lastBattleID;
+                        } else {
+                            this.doNotBattle += " " + this.lastBattleID;
+                        }
+                    }
+                }
 
-				if (this.GetNumber('ChainGold') !== '') {
-					if (goldnum >= Number(this.GetNumber('ChainGold'))) {
-						gm.setValue("BattleChainId", userId);
-						gm.log("Chain Attack " + userId + " Gold:" + goldnum);
-					} else {
-						if (!this.doNotBattle) {
-							this.doNotBattle = this.lastBattleID;
-						} else {
-							this.doNotBattle += " " + this.lastBattleID;
-						}
-					}
-				}
+                if (this.GetNumber('ChainGold') !== '') {
+                    if (goldnum >= Number(this.GetNumber('ChainGold'))) {
+                        gm.setValue("BattleChainId", userId);
+                        gm.log("Chain Attack " + userId + " Gold:" + goldnum);
+                    } else {
+                        if (!this.doNotBattle) {
+                            this.doNotBattle = this.lastBattleID;
+                        } else {
+                            this.doNotBattle += " " + this.lastBattleID;
+                        }
+                    }
+                }
 
-				if (gm.getValue("BattleChainId", '')) {
-					var chainCount = this.GetNumber('ChainCount', 0) + 1;
-					if (chainCount >= this.GetNumber('MaxChains', 4)) {
-						gm.log("Lets give this guy a break.");
-						if (!this.doNotBattle) {
-							this.doNotBattle = this.lastBattleID;
-						} else {
-							this.doNotBattle += " " + this.lastBattleID;
-						}
+                if (gm.getValue("BattleChainId", '')) {
+                    var chainCount = this.GetNumber('ChainCount', 0) + 1;
+                    if (chainCount >= this.GetNumber('MaxChains', 4)) {
+                        gm.log("Lets give this guy a break.");
+                        if (!this.doNotBattle) {
+                            this.doNotBattle = this.lastBattleID;
+                        } else {
+                            this.doNotBattle += " " + this.lastBattleID;
+                        }
 
-						gm.setValue("BattleChainId", '');
-						chainCount = 0;
-					}
+                        gm.setValue("BattleChainId", '');
+                        chainCount = 0;
+                    }
 
-					gm.setValue('ChainCount', chainCount);
-				} else {
-					gm.setValue('ChainCount', 0);
-				}
+                    gm.setValue('ChainCount', chainCount);
+                } else {
+                    gm.setValue('ChainCount', 0);
+                }
 
-		/*  Not ready for primtime.   Need to build SliceList to extract our element
-				if (gm.getValue('BattlesWonList','').indexOf(caapGlob.os+userId+caapGlob.os) >= 0) {
-					element = gm.sliceList('BattlesWonList',caapGlob.os+userId+caapGlob.os);
-					elementArray = element.split(caapGlob.vs);
-					prevWins = Number(elementArray[3]);
-					prevBPs = Number(elementArray[4]);
-					prevGold = Number(elementArray[5]);
-					wins = prevWins + wins;
-					bpnum = prevBPs + bpnum;
-					goldnum  = prevGold + goldnum
-				}
-		*/
+        /*  Not ready for primtime.   Need to build SliceList to extract our element
+                if (gm.getValue('BattlesWonList','').indexOf(caapGlob.os+userId+caapGlob.os) >= 0) {
+                    element = gm.sliceList('BattlesWonList',caapGlob.os+userId+caapGlob.os);
+                    elementArray = element.split(caapGlob.vs);
+                    prevWins = Number(elementArray[3]);
+                    prevBPs = Number(elementArray[4]);
+                    prevGold = Number(elementArray[5]);
+                    wins = prevWins + wins;
+                    bpnum = prevBPs + bpnum;
+                    goldnum  = prevGold + goldnum
+                }
+        */
 
-				if (gm.getValue('BattlesWonList', '').indexOf(caapGlob.vs + userId + caapGlob.vs) == -1 &&
-					(bpnum >= gm.getValue('ReconBPWon', 0) || (goldnum >= gm.getValue('ReconGoldWon', 0)))) {
-					now = (new Date().getTime()).toString();
-					newelement = now + caapGlob.vs + userId + caapGlob.vs + userName + caapGlob.vs + wins + caapGlob.vs + bpnum + caapGlob.vs + goldnum;
-					gm.listPush('BattlesWonList', newelement, 100);
-				}
+                if (gm.getValue('BattlesWonList', '').indexOf(caapGlob.vs + userId + caapGlob.vs) == -1 &&
+                    (bpnum >= gm.getValue('ReconBPWon', 0) || (goldnum >= gm.getValue('ReconGoldWon', 0)))) {
+                    now = (new Date().getTime()).toString();
+                    newelement = now + caapGlob.vs + userId + caapGlob.vs + userName + caapGlob.vs + wins + caapGlob.vs + bpnum + caapGlob.vs + goldnum;
+                    gm.listPush('BattlesWonList', newelement, 100);
+                }
 
-				this.SetCheckResultsFunction('');
-			}
+                this.SetCheckResultsFunction('');
+            }
         } else if (this.CheckForImage('battle_defeat.gif')) {
             resultsDiv = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app_body');
             nameLink = nHtml.FindByAttrContains(resultsDiv.parentNode.parentNode, "a", "href", "keep.php?user=");
@@ -3813,25 +3823,25 @@ var caap = {
         "or contains(@onclick,'_battle_battle(')",
 
     BattleUserId: function (userid) {
-		if (userid.indexOf(caapGlob.protect) >= 0) {
-			return true;
-		}		
-	
+        if (userid.indexOf(caapGlob.protect) >= 0) {
+            return true;
+        }
+
         gm.log('Battle user:' + userid);
         var target = '';
-		if (gm.getValue('TargetType', '') == 'Arena') {
-			if (gm.getValue('BattleType', 'Invade') == "Duel") {
-				target = "arena_duel.gif";
-			} else {
-				target = "arena_invade.gif";
-			}
-		} else {
-			if (gm.getValue('BattleType', 'Invade') == "Duel") {
-				target = "battle_02.gif";
-			} else {
-				target = "battle_01.gif";
-			}
-		}
+        if (gm.getValue('TargetType', '') == 'Arena') {
+            if (gm.getValue('BattleType', 'Invade') == "Duel") {
+                target = "arena_duel.gif";
+            } else {
+                target = "arena_invade.gif";
+            }
+        } else {
+            if (gm.getValue('BattleType', 'Invade') == "Duel") {
+                target = "battle_02.gif";
+            } else {
+                target = "battle_01.gif";
+            }
+        }
 
         var battleButton = nHtml.FindByAttrContains(document.body, "input", "src", target);
         if (battleButton) {
@@ -3913,17 +3923,17 @@ var caap = {
             var chainId = '';
             var chainAttack = false;
             var inp = null;
-			if (type == 'Arena') {
-				chainId = gm.getValue('ArenaChainId', '');
-				//chainAttack = false;
-				//inp = null;
-				gm.setValue('ArenaChainId', '');
-			} else {
-				chainId = gm.getValue('BattleChainId', '');
-				//chainAttack = false;
-				//inp = null;
-				gm.setValue('BattleChainId', '');
-			}
+            if (type == 'Arena') {
+                chainId = gm.getValue('ArenaChainId', '');
+                //chainAttack = false;
+                //inp = null;
+                gm.setValue('ArenaChainId', '');
+            } else {
+                chainId = gm.getValue('BattleChainId', '');
+                //chainAttack = false;
+                //inp = null;
+                gm.setValue('BattleChainId', '');
+            }
 
             //gm.log("my army/rank/level:" + this.stats.army + "/" + this.stats.rank + "/" + this.stats.level);
             for (var s = 0; s < ss.snapshotLength; s++) {
@@ -3975,23 +3985,23 @@ var caap = {
 
                     level = parseInt(levelm[1], 10);
                     var rankStr = levelm[2].toLowerCase().trim();
-					if (type == 'Arena') {
-						rank = this.arenaTable[rankStr];
+                    if (type == 'Arena') {
+                        rank = this.arenaTable[rankStr];
                         var webSlice = nHtml.FindByAttrContains(document.body, 'div', 'id', 'arena_body');
-						if (webSlice) {
-							var txtRank = nHtml.GetText(webSlice);
-							var yourRankStrObj = /:([A-Za-z ]+)/.exec(txtRank);
-							var yourRankStr = yourRankStrObj[1].toLowerCase().trim();
-							yourRank = this.arenaTable[yourRankStr];
-							// gm.log('Your rank: ' + yourRankStr + ' ' + yourRank);
-						} else {
-							gm.log('Unable To Find Your Arena Rank');
-							yourRank = 0;
-						}	
-					} else {
-						rank = this.rankTable[rankStr];
-						yourRank = this.stats.rank;
-					}
+                        if (webSlice) {
+                            var txtRank = nHtml.GetText(webSlice);
+                            var yourRankStrObj = /:([A-Za-z ]+)/.exec(txtRank);
+                            var yourRankStr = yourRankStrObj[1].toLowerCase().trim();
+                            yourRank = this.arenaTable[yourRankStr];
+                            // gm.log('Your rank: ' + yourRankStr + ' ' + yourRank);
+                        } else {
+                            gm.log('Unable To Find Your Arena Rank');
+                            yourRank = 0;
+                        }
+                    } else {
+                        rank = this.rankTable[rankStr];
+                        yourRank = this.stats.rank;
+                    }
 
                     var subtd = document.evaluate("td", tr, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                     army = parseInt(nHtml.GetText(subtd.snapshotItem(2)).trim(), 10);
@@ -4009,9 +4019,9 @@ var caap = {
                 }
 
 
-				if (yourRank && (yourRank - rank  > minRank)) {
-					continue;
-				}
+                if (yourRank && (yourRank - rank  > minRank)) {
+                    continue;
+                }
 
                 var levelMultiplier = this.stats.level / level;
                 var armyRatio = ARBase * levelMultiplier;
@@ -4022,7 +4032,7 @@ var caap = {
                     continue;
                 }
 
-				gm.log("Army Ratio:" + armyRatio + " Level:" + level + " Rank:" + rank + " Army: " + army);
+                gm.log("Army Ratio:" + armyRatio + " Level:" + level + " Rank:" + rank + " Army: " + army);
 
                 // if we know our army size, and this one is larger than armyRatio, don't battle
                 if (this.stats.army && (army > (this.stats.army * armyRatio))) {
@@ -4031,23 +4041,23 @@ var caap = {
 
                 inp = nHtml.FindByAttrXPath(tr, "input", "@name='target_id'");
                 var id = inp.value;
-				
-				if (id.indexOf(caapGlob.protect) >= 0) {
-					continue;
-				}	
-				
+
+                if (id.indexOf(caapGlob.protect) >= 0) {
+                    continue;
+                }
+
                 var dfl = gm.getValue('BattlesLostList', '');
                 // don't battle people we recently lost to
                 if (dfl.indexOf(caapGlob.vs + id + caapGlob.vs) >= 0) {
-					gm.log("We lost to this id before: " + id);
+                    gm.log("We lost to this id before: " + id);
                     continue;
                 }
 
                 // don't battle people we've already battled too much
-				if (this.doNotBattle && this.doNotBattle.indexOf(id) >= 0) {
-					gm.log("We attacked this id before: " + id);
-					continue;
-				}
+                if (this.doNotBattle && this.doNotBattle.indexOf(id) >= 0) {
+                    gm.log("We attacked this id before: " + id);
+                    continue;
+                }
 
                 var thisScore = rank - (army / levelMultiplier / this.stats.army);
                 if (id == chainId) {
@@ -4156,7 +4166,7 @@ var caap = {
                 }
             } else if (type == 'Arena')  {
                 this.NavigateTo(this.battlePage + ',arena_on.gif');
-			} else {
+            } else {
                 this.NavigateTo(this.battlePage + ',battle_on.gif');
             }
 
@@ -4169,9 +4179,9 @@ var caap = {
     },
 
     Battle: function (mode) {
-		if (this.stats.health.num < 10) {
-			return false;
-		}
+        if (this.stats.health.num < 10) {
+            return false;
+        }
 
         var target = this.GetCurrentBattleTarget(mode);
         if (!target) {
@@ -4215,26 +4225,26 @@ var caap = {
                 chainButton = this.CheckForImage('battle_duel_again.gif');
             }
 
-			if (chainButton) {
-				if (target != 'arena' && gm.getValue("BattleChainId", '')) {
-					this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-					gm.log('Chaining Target: ' + gm.getValue("BattleChainId", ''));
-					this.ClickBattleButton(chainButton);
-					gm.setValue("BattleChainId", '');
-					return true;
-				}
+            if (chainButton) {
+                if (target != 'arena' && gm.getValue("BattleChainId", '')) {
+                    this.SetDivContent('battle_mess', 'Chain Attack In Progress');
+                    gm.log('Chaining Target: ' + gm.getValue("BattleChainId", ''));
+                    this.ClickBattleButton(chainButton);
+                    gm.setValue("BattleChainId", '');
+                    return true;
+                }
 
-				if (target == 'arena' && gm.getValue("ArenaChainId", '') && this.CheckStamina('Battle', 5)) {
-					this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-					gm.log('Chaining Target: ' + gm.getValue("ArenaChainId", ''));
-					this.ClickBattleButton(chainButton);
-					gm.setValue("ArenaChainId", '');
-					return true;
-				}
-			}
+                if (target == 'arena' && gm.getValue("ArenaChainId", '') && this.CheckStamina('Battle', 5)) {
+                    this.SetDivContent('battle_mess', 'Chain Attack In Progress');
+                    gm.log('Chaining Target: ' + gm.getValue("ArenaChainId", ''));
+                    this.ClickBattleButton(chainButton);
+                    gm.setValue("ArenaChainId", '');
+                    return true;
+                }
+            }
         }
 
-		gm.log('Battle Target: ' + target);
+        gm.log('Battle Target: ' + target);
 
         if (!this.notSafeCount) {
             this.notSafeCount = 0;
@@ -4355,14 +4365,14 @@ var caap = {
                 return true;
             }
 
-			var navigate = this.battlePage;
+            var navigate = this.battlePage;
             var image = 'battle_on.gif';
             var chainid = 'BattleChainId';
-			if (gm.getValue('TargetType', '') == 'Arena') {
-				navigate = this.battlePage + ',arena';
-				image = 'tab_arena_on.gif';
-				chainid = 'ArenaChainId';
-			}
+            if (gm.getValue('TargetType', '') == 'Arena') {
+                navigate = this.battlePage + ',arena';
+                image = 'tab_arena_on.gif';
+                chainid = 'ArenaChainId';
+            }
 
             if (this.NavigateTo(navigate, image)) {
                 return true;
@@ -4408,9 +4418,9 @@ var caap = {
 
 
         if (gm.getValue('TargetType', '') == 'Arena') {
-			if ((this.stats.health.num < this.GetNumber("ArenaMaxHealth", 20)) || (this.stats.stamina.num > this.GetNumber("ArenaMinStamina", 45))) {
-				return 'Arena';
-			}
+            if ((this.stats.health.num < this.GetNumber("ArenaMaxHealth", 20)) || (this.stats.stamina.num > this.GetNumber("ArenaMinStamina", 45))) {
+                return 'Arena';
+            }
 
             return 'Freshmeat';
         }
@@ -4434,6 +4444,7 @@ var caap = {
         }
 
         if (!targets[battleUpto]) {
+            this.NextBattleTarget();
             return false;
         }
 
@@ -4955,7 +4966,7 @@ var caap = {
         } else if (damDone >= achLevel && gm.getValue('AchievementMode')) {
             gm.setListObjVal('monsterOl', monster, 'color', 'orange');
             gm.setListObjVal('monsterOl', monster, 'over', 'ach');
-            if (isTarget && lastDamDone < achLevel)	{
+            if (isTarget && lastDamDone < achLevel) {
                 gm.setValue('resetselectMonster', true);
             }
         } else {

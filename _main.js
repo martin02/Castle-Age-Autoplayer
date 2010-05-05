@@ -7,8 +7,53 @@ if (typeof GM_log != 'function') {
     alert("Your browser does not appear to support Greasemonkey scripts!");
     throw "Error: Your browser does not appear to support Greasemonkey scripts!";
 }
-
 gm.log("Starting");
+//////////   Start Golem _main.js
+
+var show_debug = true;
+
+// Shouldn't touch
+var VERSION = 30.9;
+var script_started = Date.now();
+
+// Automatically filled
+var userID = 0;
+var imagepath = '';
+
+// Decide which facebook app we're in...
+var applications = {
+	'reqs.php':['','Gifts'], // For gifts etc
+	'castle_age':['46755028429', 'Castle Age']
+};
+
+if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
+	for (var i in applications) {
+		if (window.location.pathname.indexOf(i) === 1) {
+			var APP = i;
+			var APPID = applications[i][0];
+			var APPNAME = applications[i][1];
+			var PREFIX = 'golem'+APPID+'_';
+			break;
+		}
+	}
+}
+
+var log = console.log;
+
+if (show_debug) {
+	var debug = function(txt) {
+		console.log('[' + (new Date()).format('G:i:s') + '] ' + txt);
+	};
+} else {
+	var debug = function(){};
+}
+
+if (typeof unsafeWindow === 'undefined') {
+	unsafeWindow = window;
+}
+
+//////////   End Golem _main.js
+
 
 /////////////////////////////////////////////////////////////////////
 //                         Chrome Startup
@@ -188,6 +233,20 @@ $(function () {
         }
 
         nHtml.setTimeout(function () {
+			Page.identify();
+			gm.log('Workers: ' + Workers.length);
+			for (ii=0; ii<Workers.length; ii++) {
+					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
+					Workers[ii]._setup();
+			}
+			for (i=0; i<Workers.length; i++) {
+					Workers[i]._init();
+			}
+			for (i=0; i<Workers.length; i++) {
+					Workers[i]._update();
+					Workers[i]._flush();
+			}
+			Page.parse_all(); // Call once to get the ball rolling...
             caap.init();
         }, 200);
     }
@@ -197,5 +256,3 @@ $(function () {
 });
 
 caap.ReloadOccasionally();
-
-// ENDOFSCRIPT

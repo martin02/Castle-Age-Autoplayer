@@ -3665,290 +3665,6 @@ caap = {
     },
 
     /////////////////////////////////////////////////////////////////////
-    //                          LAND
-    // Displays return on lands and perfom auto purchasing
-    /////////////////////////////////////////////////////////////////////
-
-    LandsGetNameFromRow: function (row) {
-        // schoolofmagic, etc. <div class=item_title
-        var infoDiv = nHtml.FindByAttrXPath(row, 'div', "contains(@class,'land_buy_info') or contains(@class,'item_title')");
-        if (!infoDiv) {
-            gm.log("can't find land_buy_info");
-        }
-
-        if (infoDiv.className.indexOf('item_title') >= 0) {
-            return infoDiv.textContent.trim();
-        }
-
-        var strongs = infoDiv.getElementsByTagName('strong');
-        if (strongs.length < 1) {
-            return null;
-        }
-
-        return strongs[0].textContent.trim();
-    },
-
-    bestLand: {
-        land: '',
-        roi: 0
-    },
-
-    CheckResults_land: function () {
-        if (nHtml.FindByAttrXPath(document, 'div', "contains(@class,'caap_landDone')")) {
-            return null;
-        }
-
-        gm.deleteValue('BestLandCost');
-        this.sellLand = '';
-        this.bestLand.roi = 0;
-        var landByName = this.IterateLands(function (land) {
-            this.SelectLands(land.row, 2);
-            var roi = (parseInt((land.income / land.totalCost) * 240000, 10) / 100);
-            var selects = land.row.getElementsByTagName('select');
-            var div = null;
-            if (!nHtml.FindByAttrXPath(land.row, 'input', "@name='Buy'")) {
-                roi = 0;
-                // Lets get our max allowed from the land_buy_info div
-                div = nHtml.FindByAttrXPath(land.row, 'div', "contains(@class,'land_buy_info') or contains(@class,'item_title')");
-                var maxText = nHtml.GetText(div).match(/:\s+\d+/i).toString().trim();
-                var maxAllowed = Number(maxText.replace(/:\s+/, ''));
-                // Lets get our owned total from the land_buy_costs div
-                div = nHtml.FindByAttrXPath(land.row, 'div', "contains(@class,'land_buy_costs')");
-                var ownedText = nHtml.GetText(div).match(/:\s+\d+/i).toString().trim();
-                var owned = Number(ownedText.replace(/:\s+/, ''));
-                // If we own more than allowed we will set land and selection
-                var selection = [1, 5, 10];
-                for (var s = 2; s >= 0; s -= 1) {
-                    if (owned - maxAllowed >= selection[s]) {
-                        this.sellLand = land;
-                        this.sellLand.selection = s;
-                        break;
-                    }
-                }
-            }
-
-            div = nHtml.FindByAttrXPath(land.row, 'div', "contains(@class,'land_buy_info') or contains(@class,'item_title')").getElementsByTagName('strong');
-            div[0].innerHTML += " | " + roi + "% per day.";
-            if (!land.usedByOther) {
-                if (!(this.bestLand.roi || roi === 0) || roi > this.bestLand.roi) {
-                    this.bestLand.roi = roi;
-                    this.bestLand.land = land;
-                    gm.setValue('BestLandCost', this.bestLand.land.cost);
-                }
-            }
-        });
-
-        var bestLandCost = gm.getValue('BestLandCost', '');
-        gm.log("BestLandCost: " + bestLandCost);
-        if (!bestLandCost) {
-            gm.setValue('BestLandCost', 'none');
-        }
-
-        var div = document.createElement('div');
-        div.className = 'caap_landDone';
-        div.style.display = 'none';
-        nHtml.FindByAttrContains(document.body, "tr", "class", 'land_buy_row').appendChild(div);
-        return null;
-    },
-
-    IterateLands: function (func) {
-        var content = document.getElementById('content');
-        var ss = document.evaluate(".//tr[contains(@class,'land_buy_row')]", content, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        if (!ss || (ss.snapshotLength === 0)) {
-            //gm.log("Can't find land_buy_row");
-            return null;
-        }
-
-        var builtOnRe = new RegExp('(Built On|Consumes|Requires):\\s*([^<]+)', 'i');
-        var landByName = {};
-        var landNames = [];
-
-        //gm.log('forms found:'+ss.snapshotLength);
-        for (var s = 0; s < ss.snapshotLength; s += 1) {
-            var row = ss.snapshotItem(s);
-            if (!row) {
-                continue;
-            }
-
-            var name = this.LandsGetNameFromRow(row);
-            if (name === null || name === '') {
-                gm.log("Can't find land name");
-                continue;
-            }
-
-            var moneyss = document.evaluate(".//*[contains(@class,'gold') or contains(@class,'currency')]", row, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            if (moneyss.snapshotLength < 2) {
-                gm.log("Can't find 2 gold instances");
-                continue;
-            }
-
-            var income = 0;
-            var nums = [];
-            var numberRe = new RegExp("([0-9,]+)");
-            for (var sm = 0; sm < moneyss.snapshotLength; sm += 1) {
-                income = moneyss.snapshotItem(sm);
-                if (income.className.indexOf('label') >= 0) {
-                    income = income.parentNode;
-                    var m = numberRe.exec(income.textContent);
-                    if (m && m.length >= 2 && m[1].length > 1) {
-                        // number must be more than a digit or else it could be a "? required" text
-                        income = this.NumberOnly(m[1]);
-                    } else {
-                        //gm.log('Cannot find income for: '+name+","+income.textContent);
-                        income = 0;
-                        continue;
-                    }
-                } else {
-                    income = this.NumberOnly(income.textContent);
-                }
-                nums.push(income);
-            }
-
-            income = nums[0];
-            var cost = nums[1];
-            if (!income || !cost) {
-                gm.log("Can't find income or cost for " + name);
-                continue;
-            }
-
-            if (income > cost) {
-                // income is always less than the cost of land.
-                income = nums[1];
-                cost = nums[0];
-            }
-
-            var totalCost = cost;
-            var land = {
-                'row': row,
-                'name': name,
-                'income': income,
-                'cost': cost,
-                'totalCost': totalCost,
-                'usedByOther': false
-            };
-            landByName[name] = land;
-            landNames.push(name);
-        }
-
-        for (var p = 0; p < landNames.length; p += 1) {
-            func.call(this, landByName[landNames[p]]);
-        }
-
-        return landByName;
-    },
-
-    SelectLands: function (row, val) {
-        var selects = row.getElementsByTagName('select');
-        if (selects.length < 1) {
-            return false;
-        }
-
-        var select = selects[0];
-        select.selectedIndex = val;
-        return true;
-    },
-
-    BuyLand: function (land) {
-        //this.DrawLands();
-        this.SelectLands(land.row, 2);
-        var button = nHtml.FindByAttrXPath(land.row, 'input', "@type='submit' or @type='image'");
-        if (button) {
-            //gm.log("Clicking buy button:" + button);
-            gm.log("Buying Land: " + land.name);
-            this.Click(button, 13000);
-            gm.deleteValue('BestLandCost');
-            this.bestLand.roi = 0;
-            return true;
-        }
-
-        return false;
-    },
-
-    SellLand: function (land, select) {
-        //this.DrawLands();
-        this.SelectLands(land.row, select);
-        var button = nHtml.FindByAttrXPath(land.row, 'input', "@type='submit' or @type='image'");
-        if (button) {
-            //gm.log("Clicking sell button:" + button);
-            gm.log("Selling Land: " + land.name);
-            this.Click(button, 13000);
-            this.sellLand = '';
-            return true;
-        }
-
-        return false;
-    },
-
-    Lands: function () {
-        /*
-        if (gm.getValue('LandTimer') && this.CheckTimer('LandTimer')) {
-            if (this.NavigateTo('soldiers,land','tab_land_on.gif')) return true;
-        }
-        */
-
-        if (gm.getValue('autoBuyLand', false)) {
-            // Do we have lands above our max to sell?
-            if (this.sellLand && gm.getValue('SellLands', false)) {
-                this.SellLand(this.sellLand, this.sellLand.selection);
-                return true;
-            }
-
-            var bestLandCost = gm.getValue('BestLandCost', '');
-            if (!bestLandCost) {
-                gm.log("Going to land to get Best Land Cost");
-                if (this.NavigateTo('soldiers,land', 'tab_land_on.gif')) {
-                    return true;
-                }
-            }
-
-            if (bestLandCost == 'none') {
-                //gm.log("No Lands avaliable");
-                return false;
-            }
-
-            var inStore = gm.getValue('inStore', '');
-            //gm.log("Lands: How much gold in store?: " + inStore)
-            if (!inStore && inStore !== 0) {
-                gm.log("Going to keep to get Stored Value");
-                if (this.NavigateTo('keep')) {
-                    return true;
-                }
-            }
-
-            // Retrieving from Bank
-            var cashTotAvail = this.stats.cash + (inStore - gm.getNumber('minInStore', 0));
-            var cashNeed = 10 * bestLandCost;
-            if ((cashTotAvail >= cashNeed) && (this.stats.cash < cashNeed)) {
-                if (this.PassiveGeneral()) {
-                    return true;
-                }
-
-                gm.log("Trying to retrieve: " + (10 * bestLandCost - this.stats.cash));
-                return this.RetrieveFromBank(10 * bestLandCost - this.stats.cash);
-            }
-
-            // Need to check for enough moneys + do we have enough of the builton type that we already own.
-            if (bestLandCost && this.stats.cash >= 10 * bestLandCost) {
-                if (this.PassiveGeneral()) {
-                    return true;
-                }
-
-                this.NavigateTo('soldiers,land');
-                if (this.CheckForImage('tab_land_on.gif')) {
-                    //gm.log("Buying land: " + this.bestLand.land.name);
-                    if (this.BuyLand(this.bestLand.land)) {
-                        return true;
-                    }
-                } else {
-                    return this.NavigateTo('soldiers,land');
-                }
-            }
-        }
-
-        return false;
-    },
-
-    /////////////////////////////////////////////////////////////////////
     //                          BATTLING PLAYERS
     /////////////////////////////////////////////////////////////////////
 
@@ -7169,86 +6885,6 @@ caap = {
         }
     },
 
-    /*-------------------------------------------------------------------------------------\
-    AutoAlchemy perform aclchemy combines for all recipes that do not have missing
-    ingredients.  By default, it also will not combine Battle Hearts.
-    First we make sure the option is set and that we haven't been here for a while.
-    \-------------------------------------------------------------------------------------*/
-    AutoAlchemy: function () {
-        try {
-            if (!gm.getValue('AutoAlchemy', false)) {
-                return false;
-            }
-
-            if (!this.CheckTimer('AlchemyTimer')) {
-                return false;
-            }
-    /*-------------------------------------------------------------------------------------\
-    Now we navigate to the Alchemy Recipe page.
-    \-------------------------------------------------------------------------------------*/
-            if (!this.NavigateTo('keep,alchemy', 'alchemy_banner.jpg')) {
-                var button = null;
-                if (document.getElementById('app46755028429_recipe_list').className != 'show_items') {
-                    button = nHtml.FindByAttrContains(document.body, 'div', 'id', 'alchemy_item_tab');
-                    if (button) {
-                        this.Click(button, 5000);
-                        return true;
-                    } else {
-                        gm.log('Cant find recipe div');
-                        return false;
-                    }
-                }
-    /*-------------------------------------------------------------------------------------\
-    We close the results of our combines so they don't hog up our screen
-    \-------------------------------------------------------------------------------------*/
-                button = this.CheckForImage('help_close_x.gif');
-                if (button) {
-                    this.Click(button, 1000);
-                    return true;
-                }
-    /*-------------------------------------------------------------------------------------\
-    Now we get all of the recipes and step through them one by one
-    \-------------------------------------------------------------------------------------*/
-                var ss = document.evaluate(".//div[@class='alchemyRecipeBack']", document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-                for (var s = 0; s < ss.snapshotLength; s += 1) {
-                    var recipeDiv = ss.snapshotItem(s);
-    /*-------------------------------------------------------------------------------------\
-    If we are missing an ingredient then skip it
-    \-------------------------------------------------------------------------------------*/
-                    if (nHtml.FindByAttrContains(recipeDiv, 'div', 'class', 'missing')) {
-                        // gm.log('Skipping Recipe');
-                        continue;
-                    }
-    /*-------------------------------------------------------------------------------------\
-    If we are skipping battle hearts then skip it
-    \-------------------------------------------------------------------------------------*/
-                    if (this.CheckForImage('raid_hearts', recipeDiv) && !gm.getValue('AutoAlchemyHearts', false)) {
-                        gm.log('Skipping Hearts');
-                        continue;
-                    }
-    /*-------------------------------------------------------------------------------------\
-    Find our button and click it
-    \-------------------------------------------------------------------------------------*/
-                    button = nHtml.FindByAttrXPath(recipeDiv, 'input', "@type='image'");
-                    if (button) {
-                        this.Click(button, 2000);
-                        return true;
-                    } else {
-                        gm.log('Cant Find Item Image Button');
-                    }
-                }
-    /*-------------------------------------------------------------------------------------\
-    All done. Set the timer to check back in 3 hours.
-    \-------------------------------------------------------------------------------------*/
-                this.SetTimer('AlchemyTimer', 3 * 60 * 60);
-                return false;
-            }
-        } catch (e) {
-            gm.log("ERROR in Alchemy: " + e);
-            return false;
-        }
-    },
-
     /////////////////////////////////////////////////////////////////////
     //                          BANKING
     // Keep it safe!
@@ -7259,10 +6895,10 @@ caap = {
             return false;
         }
 
-        return this.Bank();
+        return this.CaapBank();
     },
 
-    Bank: function () {
+    CaapBank: function () {
         var maxInCash = gm.getNumber('MaxInCash', -1);
         var minInCash = gm.getNumber('MinInCash', 0);
         if (!maxInCash || maxInCash < 0 || this.stats.cash <= minInCash || this.stats.cash < maxInCash || this.stats.cash < 10) {
@@ -8188,7 +7824,7 @@ caap = {
                                     }
 
                                     caap.SetDivContent('idle_mess', 'Filling Army, Please wait...' + ID + "/" + Ids.length);
-                                    for (ID; ID < Ids.length ; ID += 1) {
+                                    for (ID=ID; ID < Ids.length ; ID += 1) {
                                         caap.SetDivContent('idle_mess', 'Filling Army, Please wait...' + ID + "/" + Ids.length);
                                         if (count >= 5) { //don't spam requests
                                             this.waitMilliSecs = 1000;
@@ -8469,6 +8105,7 @@ caap = {
     /////////////////////////////////////////////////////////////////////
 
     actionDescTable: {
+        'Page': 'Reviewing Pages',
         'AutoIncome': 'Awaiting Income',
         'AutoStat': 'Upgrade Skill Points',
         'MaxEnergyQuest': 'At Max Energy Quest',
@@ -8521,13 +8158,13 @@ caap = {
         0x0A: 'MonsterFinder',
         0x0B: 'Quests',
         0x0C: 'PassiveGeneral',
-        0x0D: 'Lands',
-        0x0E: 'Bank',
+        0x0D: 'Land',
+        0x0E: 'CaapBank',
         0x0F: 'AutoBless',
         0x10: 'AutoStat',
         0x11: 'AutoGift',
         0x12: 'AutoPotions',
-        0x13: 'AutoAlchemy',
+        0x13: 'Alchemy',
         0x14: 'Idle'
     },
 
@@ -8624,11 +8261,13 @@ caap = {
                     gm.log("Get Action List: " + this.actionsList);
                 }
             }
+			this.actionsList.unshift('Page');
             return true;
         } catch (e) {
             // Something went wrong, log it and use the emergency Action List.
             gm.log("ERROR in MakeActionsList: " + e);
             this.actionsList = [
+				'Page',
                 "AutoElite",
                 "ArenaElite",
                 "Heal",
@@ -8642,13 +8281,13 @@ caap = {
                 "MonsterFinder",
                 "Quests",
                 "PassiveGeneral",
-                "Lands",
-                "Bank",
+                "Land",
+                "CaapBank",
                 "AutoBless",
                 "AutoStat",
                 "AutoGift",
                 "AutoPotions",
-                "AutoAlchemy",
+                "Alchemy",
                 "Idle"
             ];
             return false;
@@ -8777,15 +8416,23 @@ caap = {
 
         //gm.log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
-            if (actionsListCopy.hasOwnProperty(action)) {
+			worker = WorkerByName(actionsListCopy[action]);		
+			if (worker) {
+				worker._unflush();
+                result = worker._work(true);
+			} else if (actionsListCopy.hasOwnProperty(action)) {
+				result = this[actionsListCopy[action]]();
+            }
+			if (result) {
+				if (worker) gm.log('Doing worker ' + worker.name);
                 //gm.log('Action: ' + actionsListCopy[action]);
-                if (this[actionsListCopy[action]]()) {
                     this.CheckLastAction(actionsListCopy[action]);
                     break;
                 }
             }
+        for (i=0; i<Workers.length; i++) {
+                Workers[i]._flush();
         }
-
         this.WaitMainLoop();
     },
 

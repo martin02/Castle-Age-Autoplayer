@@ -33,9 +33,9 @@ rem MINIMISED VERSION - This will fail on errors so use is advised - required fo
 rem Change path to compiler and source - obtain it from here:
 rem http://code.google.com/closure/compiler/
 
-rem echo Creating minimised version (will also show errors)
-rem copy _head.js _min.user.js >nul
-rem "C:\Program Files\Java\jre6\bin\java.exe" -jar "C:\Program Files\Compiler\compiler.jar" --js "_normal.user.js" >> "_min.user.js"
+echo Creating minimised version (will also show errors)
+copy _head.js _min.user.js >nul
+"C:\Program Files\Java\jre6\bin\java.exe" -jar compiler.jar --js "_normal.user.js" >> "_min.user.js"
 
 echo Press any key to quit.
 pause>nul

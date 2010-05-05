@@ -2310,14 +2310,14 @@ caap = {
 
             if (!this.oneMinuteUpdate('dashboard') && $('#caap_infoMonster').html() && $('#caap_infoMonster').html()) {
                 if (this.UpdateDashboardWaitLog) {
-                    gm.log("Dashboard update is waiting on oneMinuteUpdate");
+                    //gm.log("Dashboard update is waiting on oneMinuteUpdate");
                     this.UpdateDashboardWaitLog = false;
                 }
 
                 return false;
             }
 
-            gm.log("Updating Dashboard");
+            //gm.log("Updating Dashboard");
             this.UpdateDashboardWaitLog = true;
             var html = "<table width=570 cellpadding=0 cellspacing=0 ><tr>";
             var displayItemList = ['Name', 'Damage', 'Damage%', 'Fort%', 'TimeLeft', 'T2K', 'Phase', 'Link'];
@@ -5716,7 +5716,7 @@ caap = {
             return false;
         }
 
-        gm.log('nth battle target: ' + battleUpto + ':' + targets[battleUpto]);
+        //gm.log('nth battle target: ' + battleUpto + ':' + targets[battleUpto]);
         return targets[battleUpto];
     },
 
@@ -9805,3 +9805,1760 @@ $(function () {
 caap.ReloadOccasionally();
 
 // ENDOFSCRIPT
+// Utility functions
+
+// Prototypes to ease functionality
+
+String.prototype.trim = function() {
+	return this.replace(/^\s+|\s+$/g, '');
+};
+
+String.prototype.filepart = function() {
+	var x = this.lastIndexOf('/');
+	if (x >= 0) {
+		return this.substr(x+1);
+	}
+	return this;
+};
+
+String.prototype.pathpart = function() {
+	var x = this.lastIndexOf('/');
+	if (x >= 0) {
+		return this.substr(0, x+1);
+	}
+	return this;
+};
+
+String.prototype.regex = function(r) {
+	var a = this.match(r), i;
+	if (a) {
+		a.shift();
+		for (i=0; i<a.length; i++) {
+			if (a[i] && a[i].search(/^[-+]?[0-9]*\.?[0-9]*$/) >= 0) {
+				a[i] = parseFloat(a[i]);
+			}
+		}
+		if (a.length===1) {
+			return a[0];
+		}
+	}
+	return a;
+};
+
+String.prototype.toNumber = function() {
+	return parseFloat(this);
+};
+
+String.prototype.parseTimer = function() {
+	var a = this.split(':'), b = 0, i;
+	for (i=0; i<a.length; i++) {
+		b = b * 60 + parseInt(a[i],10);
+	}
+	if (isNaN(b)) {
+		b = 9999;
+	}
+	return b;
+};
+
+Number.prototype.round = function(dec) {
+	return result = Math.round(this*Math.pow(10,(dec||0))) / Math.pow(10,(dec||0));
+};
+
+Math.range = function(min, num, max) {
+	return Math.max(min, Math.min(num, max));
+};
+
+//Array.prototype.unique = function() { var o = {}, i, l = this.length, r = []; for(i=0; i<l;i++) o[this[i]] = this[i]; for(i in o) r.push(o[i]); return r; };
+//Array.prototype.inArray = function(value) {for (var i in this) if (this[i] === value) return true;return false;};
+
+var makeTimer = function(sec) {
+	var h = Math.floor(sec / 3600), m = Math.floor(sec / 60) % 60, s = Math.floor(sec % 60);
+	return (h ? h+':'+(m>9 ? m : '0'+m) : m) + ':' + (s>9 ? s : '0'+s);
+};
+
+var WorkerByName = function(name) { // Get worker object by Worker.name
+	for (var i=0; i<Workers.length; i++) {
+		if (Workers[i].name.toLowerCase() === name.toLowerCase()) {
+			return Workers[i];
+		}
+	}
+	return null;
+};
+
+var WorkerById = function(id) { // Get worker object by panel id
+	for (var i=0; i<Workers.length; i++) {
+		if (Workers[i].id === id) {
+			return Workers[i];
+		}
+	}
+	return null;
+};
+
+var Divisor = function(number) { // Find a "nice" value that goes into number up to 20 times
+	var num = number, step = 1;
+	if (num < 20) {
+		return 1;
+	}
+	while (num > 100) {
+		num /= 10;
+		step *= 10;
+	}
+	num -= num % 5;
+	if ((number / step) > 40) {
+		step *= 5;
+	} else if ((number / step) > 20) {
+		step *= 2.5;
+	}
+	return step;
+};
+
+var length = function(obj) { // Find the number of entries in an object (also works on arrays)
+	var l = 0, i;
+	if (typeof obj === 'object') {
+		for(i in obj) {
+			l++;
+		}
+	} else if (typeof obj === 'array') {
+		l = obj.length;
+	}
+	return l;
+};
+
+var unique = function (a) { // Return an array with no duplicates
+	var o = {}, i, l = a.length, r = [];
+	for(i = 0; i < l; i++) {
+		o[a[i]] = a[i];
+	}
+	for(i in o) {
+		r.push(o[i]);
+	}
+	return r;
+};
+
+var deleteElement = function(list, value) { // Removes matching elements from an array
+	while (value in list) {
+		list.splice(list.indexOf(value), 1);
+	}
+}
+			
+var sum = function (a) { // Adds the values of all array entries together
+	var i, t = 0;
+	if (isArray(a)) {
+		for(i=0; i<a.length; i++) {
+			t += sum(a[i]);
+		}
+	} else if (typeof a === 'object') {
+		for(i in a) {
+			t += sum(a[i]);
+		}
+	} else if (typeof a === 'number') {
+		t = a;
+	} else if (typeof a === 'string' && a.search(/^[-+]?[0-9]*\.?[0-9]*$/) >= 0) {
+		t = parseFloat(a);
+	}
+	return t;
+};
+
+var addCommas = function(s) { // Adds commas into a string, ignore any number formatting
+	var a=s ? s.toString() : '0', r=new RegExp('(-?[0-9]+)([0-9]{3})');
+	while(r.test(a)) {
+		a = a.replace(r, '$1,$2');
+	}
+	return a;
+};
+
+var findInArray = function(list, value) {
+	if (typeof list === 'array' || typeof list === 'object') {
+		for (var i in list) {
+			if (list[i] === value) {
+				return true;
+			}
+		}
+	}
+	return false;
+};
+
+var arrayIndexOf = function(list, value) {
+	if (isArray(list)) {
+		for (var i=0; i<list.length; i++) {
+			if (list[i] === value) {
+				return i;
+			}
+		}
+	}
+	return -1;
+};
+
+var arrayLastIndexOf = function(list, value) {
+	if (isArray(list)) {
+		for (var i=list.length-1; i>=0; i--) {
+			if (list[i] === value) {
+				return i;
+			}
+		}
+	}
+	return -1;
+};
+
+
+var sortObject = function(object, sortfunc) {
+	var list = [], output = {};
+	for (i in object) {
+		list.push(i);
+	}
+	list.sort(sortfunc);
+	for (i=0; i<list.length; i++) {
+		output[list[i]] = object[list[i]];
+	}
+	return output;
+};
+
+var getAttDefList = [];
+var getAttDef = function(list, unitfunc, x, count, user) { // Find total att(ack) or def(ense) value from a list of objects (with .att and .def)
+	var units = [], attack = 0, defend = 0, x2 = (x==='att'?'def':'att'), i, own;
+	if (unitfunc) {
+		for (i in list) {
+			unitfunc(units, i, list);
+		}
+	} else {
+		units = getAttDefList;
+	}
+	units.sort(function(a,b) {
+		return (list[b][x] + (0.7 * list[b][x2])) - (list[a][x] + (0.7 * list[a][x2]));
+	});
+	for (i=0; i<units.length; i++) {
+		own = typeof list[units[i]].own === 'number' ? list[units[i]].own : 1;
+		if (user) {
+			if (Math.min(count, own) > 0) {
+//				debug('Using: '+Math.min(count, own)+' x '+units[i]+' = '+JSON.stringify(list[units[i]]));
+				if (!list[units[i]].use) {
+					list[units[i]].use = {};
+				}
+				list[units[i]].use[(user+'_'+x)] = Math.min(count, own);
+			} else if (length(list[units[i]].use)) {
+				delete list[units[i]].use[(user+'_'+x)];
+				if (!length(list[units[i]].use)) {
+					delete list[units[i]].use;
+				}
+			}
+		}
+//		if (count <= 0) {break;}
+		own = Math.min(count, own);
+		attack += own * list[units[i]].att;
+		defend += own * list[units[i]].def;
+		count -= own;
+	}
+	getAttDefList = units;
+	return (x==='att'?attack:(0.7*attack)) + (x==='def'?defend:(0.7*defend));
+};
+
+var tr = function(list, html, attr) {
+	list.push('<tr' + (attr ? ' ' + attr : '') + '>' + (html || '') + '</tr>');
+};
+
+var th = function(list, html, attr) {
+	list.push('<th' + (attr ? ' ' + attr : '') + '>' + (html || '') + '</th>');
+};
+
+var td = function(list, html, attr) {
+	list.push('<td' + (attr ? ' ' + attr : '') + '>' + (html || '') + '</td>');
+};
+
+var isArray = function(obj) {   
+    return obj && typeof obj === 'object' && !(obj.propertyIsEnumerable('length')) && typeof obj.length === 'number';
+};
+
+var isNumber = function(num) {
+	return num && typeof num === 'number';
+};
+
+if (typeof GM_getValue !== 'undefined') {
+	var setItem = function(n,v){GM_setValue(n, v);}
+	var getItem = function(n){return GM_getValue(n);}
+} else {
+	if (typeof localStorage !== 'undefined') {
+		var setItem = function(n,v){localStorage.setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return localStorage.getItem('golem.' + APP + n);}
+	} else if (typeof window.localStorage !== 'undefined') {
+		var setItem = function(n,v){window.localStorage.setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return window.localStorage.getItem('golem.' + APP + n);}
+	} else if (typeof globalStorage !== 'undefined') {
+		var setItem = function(n,v){globalStorage[location.hostname].setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return globalStorage[location.hostname].getItem('golem.' + APP + n);}
+	}
+}
+
+var plural = function(i) {
+	return (i === 1 ? '' : 's');
+};
+
+// Simulates PHP's date function
+Date.prototype.format = function(format) {
+	var returnStr = '';
+	var replace = Date.replaceChars;
+	for (var i = 0; i < format.length; i++) {
+		var curChar = format.charAt(i);
+		if (replace[curChar]) {
+			returnStr += replace[curChar].call(this);
+		} else {
+			returnStr += curChar;
+		}
+	}
+	return returnStr;
+};
+
+Date.replaceChars = {
+	shortMonths: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+	longMonths: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+	shortDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+	longDays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+	// Day
+	d: function() { return (this.getDate() < 10 ? '0' : '') + this.getDate(); },
+	D: function() { return Date.replaceChars.shortDays[this.getDay()]; },
+	j: function() { return this.getDate(); },
+	l: function() { return Date.replaceChars.longDays[this.getDay()]; },
+	N: function() { return this.getDay() + 1; },
+	S: function() { return (this.getDate() % 10 == 1 && this.getDate() != 11 ? 'st' : (this.getDate() % 10 == 2 && this.getDate() != 12 ? 'nd' : (this.getDate() % 10 == 3 && this.getDate() != 13 ? 'rd' : 'th'))); },
+	w: function() { return this.getDay(); },
+	z: function() { return "Not Yet Supported"; },
+	// Week
+	W: function() { return "Not Yet Supported"; },
+	// Month
+	F: function() { return Date.replaceChars.longMonths[this.getMonth()]; },
+	m: function() { return (this.getMonth() < 9 ? '0' : '') + (this.getMonth() + 1); },
+	M: function() { return Date.replaceChars.shortMonths[this.getMonth()]; },
+	n: function() { return this.getMonth() + 1; },
+	t: function() { return "Not Yet Supported"; },
+	// Year
+	L: function() { return (((this.getFullYear()%4==0)&&(this.getFullYear()%100 != 0)) || (this.getFullYear()%400==0)) ? '1' : '0'; },
+	o: function() { return "Not Supported"; },
+	Y: function() { return this.getFullYear(); },
+	y: function() { return ('' + this.getFullYear()).substr(2); },
+	// Time
+	a: function() { return this.getHours() < 12 ? 'am' : 'pm'; },
+	A: function() { return this.getHours() < 12 ? 'AM' : 'PM'; },
+	B: function() { return "Not Yet Supported"; },
+	g: function() { return this.getHours() % 12 || 12; },
+	G: function() { return this.getHours(); },
+	h: function() { return ((this.getHours() % 12 || 12) < 10 ? '0' : '') + (this.getHours() % 12 || 12); },
+	H: function() { return (this.getHours() < 10 ? '0' : '') + this.getHours(); },
+	i: function() { return (this.getMinutes() < 10 ? '0' : '') + this.getMinutes(); },
+	s: function() { return (this.getSeconds() < 10 ? '0' : '') + this.getSeconds(); },
+	// Timezone
+	e: function() { return "Not Yet Supported"; },
+	I: function() { return "Not Supported"; },
+	O: function() { return (-this.getTimezoneOffset() < 0 ? '-' : '+') + (Math.abs(this.getTimezoneOffset() / 60) < 10 ? '0' : '') + (Math.abs(this.getTimezoneOffset() / 60)) + '00'; },
+	P: function() { return (-this.getTimezoneOffset() < 0 ? '-' : '+') + (Math.abs(this.getTimezoneOffset() / 60) < 10 ? '0' : '') + (Math.abs(this.getTimezoneOffset() / 60)) + ':' + (Math.abs(this.getTimezoneOffset() % 60) < 10 ? '0' : '') + (Math.abs(this.getTimezoneOffset() % 60)); },
+	T: function() { var m = this.getMonth(); this.setMonth(0); var result = this.toTimeString().replace(/^.+ \(?([^\)]+)\)?$/, '$1'); this.setMonth(m); return result;},
+	Z: function() { return -this.getTimezoneOffset() * 60; },
+	// Full Date/Time
+	c: function() { return this.format("Y-m-d") + "T" + this.format("H:i:sP"); },
+	r: function() { return this.toString(); },
+	U: function() { return this.getTime() / 1000; }
+};
+
+/* Worker Prototype
+   ----------------
+new Worker(name, pages, settings)
+
+*** User data***
+.id                             - If we have a .display then this is the html #id of the worker
+.name                   - String, the same as our class name.
+.pages                  - String, list of pages that we want in the form "town.soldiers keep.stats"
+.data                   - Object, for public reading, automatically saved
+.option                 - Object, our options, changed from outide ourselves
+.settings               - Object, various values for various sections, default is always false / blank
+                                system (true/false) - exists for all games
+                                unsortable (true/false) - stops a worker being sorted in the queue, prevents this.work(true)
+                                advanced (true/false) - only visible when "Advanced" is checked
+                                before (array of worker names) - never let these workers get before us when sorting
+                                after (array of worker names) - never let these workers get after us when sorting
+                                keep (true/false) - without this data is flushed when not used - only keep if other workers regularly access you
+.display                - Create the display object for the settings page.
+
+*** User functions ***
+.init()                 - After the script has loaded, but before anything else has run. Data has been filled, but nothing has been run.
+                                This is the bext place to put default actions etc...
+                                Cannot rely on other workers having their data filled out...
+.parse(change)  - This can read data from the current page and cannot perform any actions.
+                                change = false - Not allowed to change *anything*, cannot read from other Workers.
+                                change = true - Can now change inline and read from other Workers.
+                                return true - We need to run again with status=1
+                                return false - We're finished
+.work(state)    - Do anything we need to do when it's our turn - this includes page changes.
+                                state = false - It's not our turn, don't start anything if we can't finish in this one call
+                                state = true - It's our turn, do everything - Only true if not interrupted
+                                return true if we need to keep working (after a delay etc)
+                                return false when someone else can work
+.update(type)   - Called when the data or options have been changed (even on this._load()!). If !settings.data and !settings.option then call on data, otherwise whichever is set.
+                                type = "data" or "option"
+.get(what)              - Calls this._get(what)
+                                Official way to get any information from another worker
+                                Overload for "special" data, and pass up to _get if basic data
+.set(what,value)- Calls this._set(what,value)
+                                Official way to set any information for another worker
+                                Overload for "special" data, and pass up to _set if basic data
+
+NOTE: If there is a work() but no display() then work(false) will be called before anything on the queue, but it will never be able to have focus (ie, read only)
+
+*** Private data ***
+._loaded                - true once ._init() has run
+._working               - Prevent recursive calling of various private functions
+._changed               - Timestamp of the last time this.data changed
+._watching              - List of other workers that want to have .update() after this.update()
+
+*** Private functions ***
+._get(what)             - Returns the data requested, auto-loads if needed, what is 'path.to.data'
+._set(what,val) - Sets this.data[what] to value, auto-loading if needed
+
+._setup()               - Only ever called once - might even remove us from the list of workers, otherwise loads the data...
+._init(keep)    - Calls .init(), loads then saves data (for default values), delete this.data if !nokeep and settings.nodata, then removes itself from use
+
+._load(type)    - Loads data / option from storage, merges with current values, calls .update(type) on change
+._save(type)    - Saves data / option to storage, calls .update(type) on change
+
+._flush()               - Calls this._save() then deletes this.data if !this.settings.keep
+._unflush()             - Loads .data if it's not there already
+
+._parse(change) - Calls this.parse(change) inside a try / catch block
+._work(state)   - Calls this.work(state) inside a try / catch block
+
+._update(type)  - Calls this.update(type), loading and flushing .data if needed
+._watch(worker) - Add a watcher to worker - so this.update() gets called whenever worker.update() does
+._remind(secs)  - Calls this._update('reminder') after a specified delay
+*/
+var Workers = [];
+
+function Worker(name,pages,settings) {
+        Workers.push(this);
+
+        // User data
+        this.id = null;
+        this.name = name;
+        this.pages = pages;
+
+        this.defaults = null; // {app:{data:{}, options:{}} - replaces with app-specific data, can be used for any this.* wanted...
+
+        this.settings = settings || {};
+
+        this.data = {};
+        this.option = {};
+        this.runtime = null;// {} - set to default runtime values in your worker!
+        this.display = null;
+
+        // User functions
+        this.init = null; //function() {};
+        this.parse = null; //function(change) {return false;};
+        this.work = null; //function(state) {return false;};
+        this.update = null; //function(type){};
+        this.get = function(what) {return this._get(what);}; // Overload if needed
+        this.set = function(what,value) {return this._set(what,value);}; // Overload if needed
+
+        // Private data
+        this._rootpath = true; // Override save path, replaces userID + '.' with ''
+        this._loaded = false;
+        this._working = {data:false, option:false, runtime:false, update:false};
+        this._changed = Date.now();
+        this._watching = [];
+}
+
+// Private functions - only override if you know exactly what you're doing
+Worker.prototype._flush = function() {
+        this._save();
+        if (!this.settings.keep) {
+                delete this.data;
+        }
+};
+
+Worker.prototype._get = function(what) { // 'path.to.data'
+        var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
+        if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
+                x.unshift('data');
+        }
+        if (x[0] === 'data') {
+                !this._loaded && this._init();
+                this._unflush();
+        }
+        data = this[x.shift()];
+        try {
+                switch(x.length) {
+                        case 0: return data;
+                        case 1: return data[x[0]];
+                        case 2: return data[x[0]][x[1]];
+                        case 3: return data[x[0]][x[1]][x[2]];
+                        case 4: return data[x[0]][x[1]][x[2]][x[3]];
+                        case 5: return data[x[0]][x[1]][x[2]][x[3]][x[4]];
+                        case 6: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]];
+                        case 7: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]];
+                        default:break;
+                }
+        } catch(e) {
+                debug(e.name + ' in ' + this.name + '.get('+what+'): ' + e.message);
+        }
+        return null;
+};
+
+Worker.prototype._init = function() {
+        if (this._loaded) {
+                return;
+        }
+        this._loaded = true;
+        try {
+                this.init && this.init();
+        }catch(e) {
+                debug(e.name + ' in ' + this.name + '.init(): ' + e.message);
+        }
+};
+
+Worker.prototype._load = function(type) {
+        if (type !== 'data' && type !== 'option' && type !== 'runtime') {
+                this._load('data');
+                this._load('option');
+                this._load('runtime');
+                return;
+        }
+        var v = getItem((this._rootpath ? userID + '.' : '') + type + '.' + this.name);
+        if (!v) { // Use default values
+                return;
+        }
+        try {
+                v = JSON.parse(v);
+        } catch(e) {
+                debug(this.name + '._load(' + type + '): Not JSON data, should only appear once for each type...');
+                v = eval(v); // We used to save our data in non-JSON format...
+        }
+        this[type] = $.extend(true, {}, this[type], v);
+};
+
+Worker.prototype._parse = function(change) {
+        try {
+                return this.parse && this.parse(change);
+        }catch(e) {
+                debug(e.name + ' in ' + this.name + '.parse(' + change + '): ' + e.message);
+        }
+        return false;
+};
+
+Worker.prototype._remind = function(seconds) {
+        var me = this;
+        window.setTimeout(function(){me._update('reminder');}, seconds * 1000);
+};
+
+Worker.prototype._save = function(type) {
+        if (type !== 'data' && type !== 'option' && type !== 'runtime') {
+                return this._save('data') + this._save('option') + this._save('runtime');
+        }
+        if (typeof this[type] === 'undefined' || !this[type] || this._working[type]) {
+                return false;
+        }
+        var n = (this._rootpath ? userID + '.' : '') + type + '.' + this.name, v = JSON.stringify(this[type]);
+        if (getItem(n) === 'undefined' || getItem(n) !== v) {
+                this._working[type] = true;
+                this._changed = Date.now();
+                this._update(type);
+                setItem(n, v);
+                this._working[type] = false;
+                return true;
+        }
+        return false;
+};
+
+
+Worker.prototype._set = function(what, value) {
+        var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
+        if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
+                x.unshift('data');
+        }
+        if (x[0] === 'data') {
+                !this._loaded && this._init();
+                this._unflush();
+        }
+        data = this[x.shift()];
+        try {
+                switch(x.length) {
+                        case 0: data = value; break; // Nobody should ever do this!!
+                        case 1: data[x[0]] = value; break;
+                        case 2: data[x[0]][x[1]] = value; break;
+                        case 3: data[x[0]][x[1]][x[2]] = value; break;
+                        case 4: data[x[0]][x[1]][x[2]][x[3]] = value; break;
+                        case 5: data[x[0]][x[1]][x[2]][x[3]][x[4]] = value; break;
+                        case 6: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]] = value; break;
+                        case 7: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]] = value; break;
+                        default:break;
+                }
+//              this._save();
+        } catch(e) {
+                debug(e.name + ' in ' + this.name + '.set('+what+', '+value+'): ' + e.message);
+        }
+        return null;
+};
+
+Worker.prototype._setup = function() {
+        if (this.defaults && this.defaults[APP]) {
+                for (var i in this.defaults[APP]) {
+                        this[i] = this.defaults[APP][i];
+                }
+        }
+        if (this.settings.system || !this.defaults || this.defaults[APP]) {
+                this._load();
+        } else { // Get us out of the list!!!
+                Workers.splice(Workers.indexOf(this), 1);
+        }
+};
+
+Worker.prototype._unflush = function() {
+        !this._loaded && this._init();
+        !this.settings.keep && !this.data && this._load('data');
+		if (typeof caap !== 'undefined') {
+			for (i in this.display) {
+				if (this.display[i].caap) {
+					this.option[this.display[i].id] = gm.getValue(this.display[i].caap);
+					//gm.log(this.display[i].id + ' =  '+ gm.getValue(this.display[i].caap));
+				}
+			}
+		}
+};
+
+Worker.prototype._update = function(type) {
+        if (this._loaded && (this.update || this._watching.length)) {
+                var i, flush = false;
+                this._working.update = true;
+                if (!this.data) {
+                        flush = true;
+                        this._unflush();
+                }
+                try {
+                        this.update && this.update(type);
+                }catch(e) {
+                        debug(e.name + ' in ' + this.name + '.update(' + (type ? (typeof type === 'string' ? type : type.name) : '') + '): ' + e.message);
+                }
+                for (i=0; i<this._watching.length; i++) {
+                        if (this._watching[i] === this) {
+                                try {
+                                        this.update && this.update(this);
+                                }catch(e) {
+                                        debug(e.name + ' in ' + this.name + '.update(this): ' + e.message);
+                                }
+                        } else {
+                                this._watching[i]._update(this);
+                        }
+                }
+                flush && this._flush();
+                this._working.update = false;
+        }
+};
+
+Worker.prototype._watch = function(worker) {
+        !findInArray(worker._watching,this) && worker._watching.push(this);
+};
+
+Worker.prototype._work = function(state) {
+        try {
+                return this.work && this.work(state);
+        }catch(e) {
+                debug(e.name + ' in ' + this.name + '.work(' + state + '): ' + e.message);
+        }
+        return false;
+};
+/********** Worker.Page() **********
+* All navigation including reloading
+*/
+var Page = new Worker('Page');
+
+Page.settings = {
+        system:true,
+        unsortable:true,
+        keep:true
+};
+
+Page.option = {
+        timeout: 15,
+        retry: 5
+};
+
+Page.page = '';
+Page.last = null; // Need to have an "auto retry" after a period
+Page.lastclick = null;
+Page.when = null;
+Page.retry = 0;
+Page.checking = true;
+Page.node_trigger = null;
+Page.loading = false;
+
+Page.display = [
+        {
+                id:'timeout',
+                label:'Retry after',
+                select:[10, 15, 30, 60],
+                after:'seconds'
+        }
+];
+
+Page.defaults = {
+        'castle_age':{
+                pageNames:{
+                        index:                                  {url:'index.php', selector:'#app'+APPID+'_indexNewFeaturesBox'},
+                        quests_quest:                   {url:'quests.php', image:'tab_quest_on.gif'}, // If we ever get this then it means a new land...
+                        quests_quest1:                  {url:'quests.php?land=1', image:'land_fire_sel.gif'},
+                        quests_quest2:                  {url:'quests.php?land=2', image:'land_earth_sel.gif'},
+                        quests_quest3:                  {url:'quests.php?land=3', image:'land_mist_sel.gif'},
+                        quests_quest4:                  {url:'quests.php?land=4', image:'land_water_sel.gif'},
+                        quests_quest5:                  {url:'quests.php?land=5', image:'land_demon_realm_sel.gif'},
+                        quests_quest6:                  {url:'quests.php?land=6', image:'land_undead_realm_sel.gif'},
+                        quests_quest7:                  {url:'quests.php?land=7', image:'tab_underworld_big.gif'},
+                        quests_demiquests:              {url:'symbolquests.php', image:'demi_quest_on.gif'},
+                        quests_atlantis:                {url:'monster_quests.php', image:'tab_atlantis_on.gif'},
+                        battle_battle:                  {url:'battle.php', image:'battle_on.gif'},
+                        battle_training:                {url:'battle_train.php', image:'training_grounds_on_new.gif'},
+                        battle_rank:                    {url:'battlerank.php', image:'tab_battle_rank_on.gif'},
+                        battle_raid:                    {url:'raid.php', image:'tab_raid_on.gif'},
+                        battle_arena:                   {url:'arena.php', image:'tab_arena_on.gif'},
+                        heroes_heroes:                  {url:'mercenary.php', image:'tab_heroes_on.gif'},
+                        heroes_generals:                {url:'generals.php', image:'tab_generals_on.gif'},
+                        town_soldiers:                  {url:'soldiers.php', image:'tab_soldiers_on.gif'},
+                        town_blacksmith:                {url:'item.php', image:'tab_black_smith_on.gif'},
+                        town_magic:                             {url:'magic.php', image:'tab_magic_on.gif'},
+                        town_land:                              {url:'land.php', image:'tab_land_on.gif'},
+                        oracle_oracle:                  {url:'oracle.php', image:'oracle_on.gif'},
+                        oracle_demipower:               {url:'symbols.php', image:'demi_on.gif'},
+                        oracle_treasurealpha:   {url:'treasure_chest.php', image:'tab_treasure_alpha_on.gif'},
+                        oracle_treasurevanguard:{url:'treasure_chest.php?treasure_set=alpha', image:'tab_treasure_vanguard_on.gif'},
+                        oracle_treasureonslaught:{url:'treasure_chest.php?treasure_set=onslaught', image:'tab_treasure_onslaught_on.gif'},
+                        keep_stats:                             {url:'keep.php?user='+userID, image:'tab_stats_on.gif'},
+                        keep_eliteguard:                {url:'party.php?user='+userID, image:'tab_elite_guard_on.gif'},
+                        keep_achievements:              {url:'achievements.php', image:'tab_achievements_on.gif'},
+                        keep_alchemy:                   {url:'alchemy.php', image:'tab_alchemy_on.gif'},
+                        keep_monster:                   {url:'battle_monster.php', image:'tab_monster_on.jpg'},
+                        keep_monster_active2:   {url:'battle_monster.php', selector:'div[style*="nm_monster_list_button.gif"]'},
+                        keep_monster_active:    {url:'raid.php', image:'dragon_view_more.gif'},
+                        army_invite:                    {url:'army.php', image:'invite_on.gif'},
+                        army_gifts:                             {url:'gift.php', selector:'#app'+APPID+'_giftContainer'},
+                        army_viewarmy:                  {url:'army_member.php', image:'view_army_on.gif'},
+                        army_sentinvites:               {url:'army_reqs.php', image:'sent_invites_on.gif'},
+                        army_newsfeed:                  {url:'army_news_feed.php', selector:'#app'+APPID+'_army_feed_header'}
+                }
+        }
+};
+
+Page.init = function() {
+        // Only perform the check on the two id's referenced in get_cached_ajax()
+        // Give a short delay due to multiple children being added at once, 0.1 sec should be more than enough
+        $('body').bind('DOMNodeInserted', function(event){
+                if (!Page.node_trigger && ($(event.target).attr('id') === 'app'+APPID+'_app_body_container' || $(event.target).attr('id') === 'app'+APPID+'_globalContainer')) {
+                        Page.node_trigger = window.setTimeout(function(){Page.node_trigger=null;Page.parse_all();},100);
+                }
+        });
+};
+
+Page.parse_all = function() {
+        Page.identify();
+        var i, list = [];
+        for (i=0; i<Workers.length; i++) {
+                if (Workers[i].parse && Workers[i].pages && (Workers[i].pages.indexOf('*')>=0 || (Page.page && Workers[i].pages.indexOf(Page.page)>=0))) {
+                        Workers[i]._unflush();
+                        if (Workers[i]._parse(false)) {
+                                list.push(Workers[i]);
+                        }
+                }
+        }
+        for (i in list) {
+                list[i]._parse(true);
+        }
+        for (i=0; i<Workers.length; i++) {
+                Workers[i]._flush();
+        }
+}
+
+
+Page.work = function(state) {
+        if (!this.checking) {
+                return false;
+        }
+        var i, l, list, found = null;
+        for (i=0; i<Workers.length && !found; i++) {
+                if (Workers[i].pages) {
+                        list = Workers[i].pages.split(' ');
+                        for (l=0; l<list.length; l++) {
+                                if (list[l] !== '*' && this.pageNames[list[l]] && !this.data[list[l]] && list[l].indexOf('_active') === -1) {
+                                        found = list[l];
+                                        break;
+                                }
+                        }
+                }
+        }
+        if (!state) {
+                if (found) {
+                        return true;
+                }
+                this.checking = false;
+                return false;
+        }
+        if (found && !this.to(found)) {
+                this.data[found] = Date.now(); // Even if it's broken, we need to think we've been there!
+                return true;
+        }
+        return false;
+};
+
+Page.identify = function() {
+        this.page = '';
+        if (!$('#app_content_'+APPID).length) {
+                this.reload();
+                return null;
+        }
+        var app_body = $('#app'+APPID+'_app_body'), p;
+        $('img', app_body).each(function(i,el){
+                var filename = $(el).attr('src').filepart();
+                for (p in Page.pageNames) {
+                        if (Page.pageNames[p].image && filename === Page.pageNames[p].image) {
+                                Page.page = p;
+                                return;
+                        }
+                }
+        });
+        if (!this.page) {
+                for (p in Page.pageNames) {
+                        if (Page.pageNames[p].selector && $(Page.pageNames[p].selector).length) {
+                                Page.page = p;
+                        }
+                }
+        }
+        if (this.page !== '') {
+                this.data[this.page] = Date.now();
+        }
+//      debug('this.identify("'+Page.page+'")');
+        return this.page;
+};
+
+Page.to = function(page, args, force) {
+        if (typeof Queue != 'undefined' && Queue.option.pause) {
+                debug('Trying to load page when paused...');
+                return true;
+        }
+        if (page === this.page && (force || typeof args === 'undefined')) {
+                return true;
+        }
+        if (!args) {
+                args = '';
+        }
+        if (page && this.pageNames[page] && this.pageNames[page].url) {
+                this.clear();
+                this.last = this.pageNames[page].url;
+                this.when = Date.now();
+                if (args.indexOf('?') === 0 && this.last.indexOf('?') > 0) {
+                        this.last = this.last.substr(0, this.last.indexOf('?')) + args;
+                } else {
+                        this.last = this.last + args;
+                }
+                debug('Navigating to ' + page + ' (' + (force ? 'FORCE: ' : '') + this.last + ')');
+                if (force) {
+//                      this.loading=true;
+                        window.location.href = this.last;
+                } else {
+                        this.ajaxload();
+                }
+        }
+        return false;
+};
+
+
+Page.ajaxload = function() {
+        $.ajax({
+                cache:false,
+                dataType:'text',
+                timeout:this.option.timeout * 1000,
+                url:'http://apps.facebook.com/castle_age/'+this.last,
+                error:function() {
+                        debug('Page not loaded correctly, reloading.');
+                        Page.ajaxload();
+                },
+                success:function(data){
+                        if (data.indexOf('</html>') !== -1 && data.indexOf('single_popup') !== -1 && data.indexOf('app'+APPID+'_index') !== -1) { // Last things in source if loaded correctly...
+                                Page.loading = false;
+                                data = data.substring(data.indexOf('<div id="app'+APPID+'_globalContainer"'), data.indexOf('<div class="UIStandardFrame_SidebarAds"'));
+                                $('#app'+APPID+'_AjaxLoadIcon').css('display', 'none');
+                                $('#app'+APPID+'_globalContainer').empty().append(data);
+                        } else {
+                                debug('Page not loaded correctly, reloading.');
+                                Page.ajaxload();
+                        }
+                }
+        });
+        this.loading = true;
+        setTimeout(function() { if (Page.loading) {$('#app'+APPID+'_AjaxLoadIcon').css('display', 'block');} }, 1500);
+};
+
+Page.reload = function() {
+        debug('Page.reload()');
+        window.location.href = window.location.href;
+};
+
+Page.click = function(el) {
+        if (!$(el).length) {
+                debug('Page.click: Unable to find element - '+el);
+                return false;
+        }
+        var e = document.createEvent("MouseEvents");
+        e.initEvent("click", true, true);
+        $(el).get(0).wrappedJSObject.dispatchEvent(e);
+        this.clear();
+        this.lastclick = el;
+        this.when = Date.now();
+        return true;
+};
+
+Page.clear = function() {
+        this.last = this.lastclick = this.when = null;
+        this.retry = 0;
+};
+/********** Worker.Alchemy **********
+* Get all ingredients and recipes
+*/
+var Alchemy = new Worker('Alchemy');
+
+Alchemy.defaults = {
+	castle_age:{
+		pages:'keep_alchemy'
+	}
+};
+
+Alchemy.data = {
+	ingredients:{},
+	summons:{},
+	recipe:{}
+};
+
+Alchemy.option = {
+	perform:true,
+	hearts:false,
+	summon:false
+};
+
+Alchemy.runtime = {
+	best:null
+};
+
+Alchemy.display = [
+	{
+		id:'perform',
+		label:'Automatically Perform',
+		checkbox:true,
+		caap:'AutoAlchemy'
+	},{
+		id:'hearts',
+		label:'Use Battle Hearts',
+		checkbox:true,
+		caap:'AutoAlchemyHearts'
+	},{
+		id:'summon',
+		label:'Use Summon Ingredients',
+		checkbox:true
+	}
+];
+
+Alchemy.parse = function(change) {
+	//gm.log('Alchemy Parse');
+	var ingredients = this.data.ingredients = {}, recipe = this.data.recipe = {};
+	$('div.ingredientUnit').each(function(i,el){
+		var name = $('img', el).attr('src').filepart();
+		ingredients[name] = $(el).text().regex(/x([0-9]+)/);
+	});
+	$('div.alchemyQuestBack,div.alchemyRecipeBack,div.alchemyRecipeBackMonster').each(function(i,el){
+		var me = {}, title = $('div.recipeTitle', el).text().trim().replace('RECIPES: ','');
+		if (title.indexOf(' (')>0) {
+			title = title.substr(0, title.indexOf(' ('));
+		}
+		if ($(el).hasClass('alchemyQuestBack')) {
+			me.type = 'Quest';
+		} else if ($(el).hasClass('alchemyRecipeBack')) {
+			me.type = 'Recipe';
+		} else if ($(el).hasClass('alchemyRecipeBackMonster')) {
+			me.type = 'Summons';
+		}
+		me.ingredients = {};
+		$('div.recipeImgContainer', el).parent().each(function(i,el){
+			var name = $('img', el).attr('src').filepart();
+			me.ingredients[name] = ($(el).text().regex(/x([0-9]+)/) || 1);
+		});
+		recipe[title] = me;
+	});
+};
+
+Alchemy.update = function() {
+	var best = null, recipe = this.data.recipe, r, i;
+	for (r in recipe) {
+		if (recipe[r].type === 'Summons') {
+			for (i in recipe[r].ingredients) {
+				this.data.summons[i] = true;
+			}
+		}
+	}
+	for (r in recipe) {
+		if (recipe[r].type === 'Recipe') {
+			best = r;
+			for (i in recipe[r].ingredients) {
+				if ((!this.option.hearts && i === 'raid_hearts.gif') || (!this.option.summon && this.data.summons[i]) || recipe[r].ingredients[i] > (this.data.ingredients[i] || 0)) {
+					best = null;
+					break;
+				}
+			}
+			if (best) {break;}
+		}
+	}
+	this.runtime.best = best;
+};
+
+Alchemy.work = function(state) {
+	//gm.log('Alchemy Work');
+	if (!this.option.perform || !this.runtime.best) {
+		return false;
+	}
+	if (!state || !Page.to('keep_alchemy')) {
+		return true;
+	}
+	debug('Alchemy: Perform - ' + this.runtime.best);
+	if (!Page.click($('input[type="image"]', $('div.recipeTitle:contains("' + this.runtime.best + '")').next()))) {
+		Page.reload(); // Can't find the recipe we just parsed when coming here...
+	}
+	return true;
+};
+
+/********** Worker.Bank **********
+* Auto-banking
+*/
+var Bank = new Worker('Bank');
+Bank.data = null;
+
+Bank.settings = {
+	after:['Land','Town']
+};
+
+Bank.defaults = {
+	castle_age:{}
+};
+
+Bank.option = {
+	general: true,
+	above: 10000,
+	hand: 0,
+	keep: 10000
+};
+
+Bank.display = [
+	{
+		id:'general',
+		label:'Use Best General',
+		checkbox:true
+	},{
+		id:'above',
+		label:'Bank Above',
+		text:true,
+		caap:'MaxInCash'
+	},{
+		id:'hand',
+		label:'Keep in Cash',
+		text:true,
+		caap:'MinInCash'
+	},{
+		id:'keep',
+		label:'Keep in Bank',
+		text:true,
+		caap:'minInStore'
+	}
+];
+
+Bank.work = function(state) {
+	gm.log('Bank work');
+	if (Player.get('cash') <= 10 || (Player.get('cash') < this.option.above)) {
+		return false;
+	}
+	if (!state || !this.stash(Player.get('cash') - Math.min(this.option.above, this.option.hand))) {
+		return true;
+	}
+	return false;
+};
+
+Bank.stash = function(amount) {
+	if (!amount || !Player.get('cash') || Math.min(Player.get('cash'),amount) <= 10) {
+		return true;
+	}
+	if ((this.option.general && !Generals.to('bank')) || !Page.to('keep_stats')) {
+		return false;
+	}
+	$('input[name="stash_gold"]').val(Math.min(Player.get('cash'), amount));
+	Page.click('input[value="Stash"]');
+	return true;
+};
+
+Bank.retrieve = function(amount) {
+	if (typeof Queue != 'undefined') {
+		WorkerByName(Queue.get('runtime.current')).settings.bank = true;
+	}
+	amount -= Player.get('cash');
+	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
+		return true; // Got to deal with being poor exactly the same as having it in hand...
+	}
+	if (!Page.to('keep_stats')) {
+		return false;
+	}
+	$('input[name="get_gold"]').val(amount.toString());
+	Page.click('input[value="Retrieve"]');
+	return false;
+};
+
+Bank.worth = function(amount) { // Anything withdrawing should check this first!
+	var worth = Player.get('cash') + Math.max(0,Player.get('bank') - this.option.keep);
+	if (typeof amount === 'number') {
+		return (amount <= worth);
+	}
+	return worth;
+};
+
+/********** Worker.History **********
+* History of anything we want.
+* Dashboard is exp, income and bank.
+*
+* History.set('key', value); - sets the current hour's value
+* History.set([hour, 'key'], value); - sets the specified hour's value
+* History.add('key', value); - adds to the current hour's value (use negative value to subtract)
+* History.add([hour, 'key'], value); - adds to the specified hour's value (use negative value to subtract)
+*
+* History.get('key') - gets current hour's value
+* History.get([hour, 'key', 'maths', 'change', recent_hours]) - 'key' is the only non-optional. Must be in this order. Hour = start hour. Recent_hours is 1-168 and the number of hours to get.
+* History.get('key.change') - gets change between this and last value (use for most entries to get relative rather than absolute values)
+* History.get('key.average') - gets standard deviated mean average of values (use .change for average of changes etc) - http://en.wikipedia.org/wiki/Arithmetic_mean
+* History.get('key.geometric') - gets geometric average of values (use .change for average of changes etc) - http://en.wikipedia.org/wiki/Geometric_mean
+* History.get('key.harmonic') - gets harmonic average of values (use .change for average of changes etc) - http://en.wikipedia.org/wiki/Harmonic_mean
+* History.get('key.mode') - gets the most common value (use .change again if needed)
+* History.get('key.median') - gets the center value if all values sorted (use .change again etc)
+* History.get('key.total') - gets total of all values added together
+* History.get('key.max') - gets highest value (use .change for highest change in values)
+* History.get('key.min') - gets lowest value
+*/
+var History = new Worker('History');
+History.option = null;
+
+History.defaults = {
+	castle_age:{
+		init: function() {
+			if (Player.data.history) {
+				this.data = Player.data.history;
+				delete Player.data.history;
+			}
+		}
+	}
+};
+
+History.dashboard = function() {
+	var i, max = 0, list = [], output = [];
+	list.push('<table cellspacing="0" cellpadding="0" class="golem-graph"><thead><tr><th></th><th colspan="73"><span style="float:left;">&lArr; Older</span>72 Hour History<span style="float:right;">Newer &rArr;</span><th></th></th></tr></thead><tbody>');
+	list.push(this.makeGraph(['land', 'income'], 'Income', true, {'Average Income':this.get('land.mean') + this.get('income.mean')}));
+	list.push(this.makeGraph('bank', 'Bank', true, Land.runtime.best ? {'Next Land':Land.runtime.cost} : null)); // <-- probably not the best way to do this, but is there a function to get options like there is for data?
+	list.push(this.makeGraph('exp', 'Experience', false, {'Next Level':Player.get('maxexp')}));
+	list.push(this.makeGraph('exp.change', 'Exp Gain', false, {'Average':this.get('exp.average.change'), 'Standard Deviation':this.get('exp.stddev.change'), 'Ignore entries above':(this.get('exp.mean.change') + (2 * this.get('exp.stddev.change')))} )); // , 'Harmonic Average':this.get('exp.harmonic.change') ,'Median Average':this.get('exp.median.change') ,'Mean Average':this.get('exp.mean.change')
+	list.push('</tbody></table>');
+	$('#golem-`-History').html(list.join(''));
+}
+
+
+History.update = function(type) {
+	var i, hour = Math.floor(Date.now() / 3600000) - 168;
+	for (i in this.data) {
+		if (i < hour) {
+			delete this.data[i];
+		}
+	}
+//	debug('Exp: '+this.get('exp'));
+//	debug('Exp max: '+this.get('exp.max'));
+//	debug('Exp max change: '+this.get('exp.max.change'));
+//	debug('Exp min: '+this.get('exp.min'));
+//	debug('Exp min change: '+this.get('exp.min.change'));
+//	debug('Exp change: '+this.get('exp.change'));
+//	debug('Exp mean: '+this.get('exp.mean.change'));
+//	debug('Exp harmonic: '+this.get('exp.harmonic.change'));
+//	debug('Exp geometric: '+this.get('exp.geometric.change'));
+//	debug('Exp mode: '+this.get('exp.mode.change'));
+//	debug('Exp median: '+this.get('exp.median.change'));
+//	debug('Average Exp = weighted average: ' + this.get('exp.average.change') + ', mean: ' + this.get('exp.mean.change') + ', geometric: ' + this.get('exp.geometric.change') + ', harmonic: ' + this.get('exp.harmonic.change') + ', mode: ' + this.get('exp.mode.change') + ', median: ' + this.get('exp.median.change'));
+};
+
+History.set = function(what, value) {
+	if (!value) {
+		return;
+	}
+	this._unflush();
+	var hour = Math.floor(Date.now() / 3600000), x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []);
+	if (x.length && (typeof x[0] === 'number' || !x[0].regex(/[^0-9]/gi))) {
+		hour = x.shift();
+	}
+	this.data[hour] = this.data[hour] || {}
+	this.data[hour][x[0]] = value;
+};
+
+History.add = function(what, value) {
+	if (!value) {
+		return;
+	}
+	this._unflush();
+	var hour = Math.floor(Date.now() / 3600000), x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []);
+	if (x.length && (typeof x[0] === 'number' || !x[0].regex(/[^0-9]/gi))) {
+		hour = x.shift();
+	}
+	this.data[hour] = this.data[hour] || {}
+	this.data[hour][x[0]] = (this.data[hour][x[0]] || 0) + value;
+};
+
+History.math = {
+	stddev: function(list) {
+		var i, listsum = 0, mean = this.mean(list);
+		for (i in list) {
+			listsum += Math.pow(list[i] - mean, 2);
+		}
+		listsum /= list.length;
+		return Math.sqrt(listsum);
+	},
+	average: function(list) {
+		var i, mean = this.mean(list), stddev = this.stddev(list);
+		for (i in list) {
+			if (Math.abs(list[i] - mean) > stddev * 2) { // The difference between the mean and the entry needs to be in there.
+				delete list[i];
+			}
+		}
+		return sum(list) / list.length;
+	},
+	mean: function(list) {
+		return sum(list) / list.length;
+	},
+	harmonic: function(list) {
+		var i, num = [];
+		for (i in list) {
+			if (list[i]) {
+				num.push(1/list[i])
+			}
+		}
+		return num.length / sum(num);
+	},
+	geometric: function(list) {
+		var i, num = 1;
+		for (i in list) {
+			num *= list[i] || 1;
+		}
+		return Math.pow(num, 1 / list.length);
+	},
+	median: function(list) {
+		list.sort(function(a,b){return a-b;});
+		if (list.length % 2) {
+			return (list[Math.floor(list.length / 2)] + list[Math.ceil(list.length / 2)]) / 2;
+		}
+		return list[Math.floor(list.length / 2)];
+	},
+	mode: function(list) {
+		var i, j = 0, count = 0, num = {};
+		for (i in list) {
+			num[list[i]] = (num[list[i]] || 0) + 1
+		}
+		num = sortObject(num, function(a,b){return num[b]-num[a];});
+		for (i in num) {
+			if (num[i] === num[0]) {
+				j += parseInt(num[i]);
+				count++;
+			}
+		}
+		return j / count;
+	},
+	max: function(list) {
+		list.sort(function(a,b){return b-a;});
+		return list[0];
+	},
+	min: function(list) {
+		list.sort(function(a,b){return a-b;});
+		return list[0];
+	}
+};
+
+History.get = function(what) {
+	this._unflush();
+	var i, j, value, last = null, list = [], data = this.data, x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), hour = Math.floor(Date.now() / 3600000), exact = false, past = 168, change = false;
+	if (x.length && (typeof x[0] === 'number' || !x[0].regex(/[^0-9]/gi))) {
+		hour = x.shift();
+	}
+	if (x.length && (typeof x[x.length-1] === 'number' || !x[x.length-1].regex(/[^0-9]/gi))) {
+		past = Math.range(1, parseInt(x.pop()), 168);
+	}
+	if (!x.length) {
+		return data;
+	}
+	for (i in data) {
+		if (data[i][x[0]] && typeof data[i][x[0]] === 'number') {
+			exact = true;
+			break;
+		}
+	}
+	if (x.length === 1) { // only the current value
+		if (exact) {
+			return data[hour][x[0]];
+		}
+		for (j in data[hour]) {
+			if (j.indexOf(x[0] + '+') === 0 && typeof data[hour][j] === 'number') {
+				value = (value || 0) + data[hour][j];
+			}
+		}
+		return value;
+	}
+	if (x.length === 2 && x[1] === 'change') {
+		if (data[hour] && data[hour-1]) {
+			i = this.get([hour, x[0]]);
+			j = this.get([hour - 1, x[0]]);
+			if (typeof i === 'number' && typeof j === 'number') {
+				return i - j;
+			}
+			return 0;
+		}
+		return 0;
+	}
+	if (x.length > 2 && x[2] === 'change') {
+		change = true;
+	}
+	for (i=hour-past; i<=hour; i++) {
+		if (data[i]) {
+			value = null;
+			if (exact) {
+				if (data[i][x[0]]) {
+					value = data[i][x[0]];
+				}
+			} else {
+				for (j in data[i]) {
+					if (j.indexOf(x[0] + '+') === 0 && typeof data[i][j] === 'number') {
+						value = (value || 0) + data[i][j];
+					}
+				}
+			}
+			if (change) {
+				if (value !== null && last !== null) {
+					list.push(value - last);
+					if (isNaN(list[list.length - 1])) {
+						debug('NaN: '+value+' - '+last);
+					}
+				}
+				last = value;
+			} else {
+				if (value !== null) {
+					list.push(value);
+				}
+			}
+		}
+	}
+	if (History.math[x[1]]) {
+		return History.math[x[1]](list);
+	}
+	throw('Wanting to get unknown History type ' + x[1] + ' on ' + x[0]);
+};
+
+History.getTypes = function(what) {
+	var i, list = [], types = {}, data = this.data, x = what + '+';
+	for (i in data) {
+		if (i.indexOf(x) === 0) {
+			types[i] = true;
+		}
+	}
+	for (i in types) {
+		list.push(i);
+	}
+	return list;
+};
+
+History.makeGraph = function(type, title, iscash, goal) {
+	var i, j, min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, max_s, min_s, goal_s = [], list = [], bars = [], output = [], value = {}, goalbars = '', divide = 1, suffix = '', hour = Math.floor(Date.now() / 3600000), title, numbers;
+	if (typeof goal === 'number') {
+		goal = [goal];
+	} else if (typeof goal !== 'array' && typeof goal !== 'object') {
+		goal = null;
+	}
+	if (goal && length(goal)) {
+		for (i in goal) {
+			min = Math.min(min, goal[i]);
+			max = Math.max(max, goal[i]);
+		}
+	}
+	if (typeof type === 'string') {
+		type = [type];
+	}
+	for (i=hour-72; i<=hour; i++) {
+		value[i] = [0];
+		if (this.data[i]) {
+			for (j in type) {
+				value[i][j] = this.get(i + '.' + type[j]);
+			}
+			min = Math.min(min, sum(value[i]));
+			max = Math.max(max, sum(value[i]));
+		}
+	}
+	if (max >= 1000000000) {
+		divide = 1000000000;
+		suffix = 'b';
+	} else if (max >= 1000000) {
+		divide = 1000000;
+		suffix = 'm';
+	} else if (max >= 1000) {
+		divide = 1000;
+		suffix = 'k';
+	}
+	max = Math.ceil(max / divide) * divide;
+	max_s = (iscash ? '$' : '') + addCommas(max / divide) + suffix;
+	min = Math.floor(min / divide) * divide;
+	min_s = (iscash ? '$' : '') + addCommas(min / divide) + suffix;
+	if (goal && length(goal)) {
+		for (i in goal) {
+			bars.push('<div style="bottom:' + Math.max(Math.floor((goal[i] - min) / (max - min) * 100), 0) + 'px;"></div>');
+			goal_s.push('<div' + (typeof i !== 'number' ? ' title="'+i+'"' : '') + ' style="bottom:' + Math.range(2, Math.ceil((goal[i] - min) / (max - min) * 100)-2, 92) + 'px;">' + (iscash ? '$' : '') + addCommas((goal[i] / divide).round(1)) + suffix + '</div>');
+		}
+		goalbars = '<div class="goal">' + bars.reverse().join('') + '</div>';
+		goal_s.reverse();
+	}
+	th(list, '<div>' + max_s + '</div><div>' + title + '</div><div>' + min_s + '</div>')
+	for (i=hour-72; i<=hour; i++) {
+		bars = []
+		output = [];
+		numbers = [];
+		title = (hour - i) + ' hour' + ((hour - i)==1 ? '' : 's') +' ago';
+		var count = 0;
+		for (j in value[i]) {
+			bars.push('<div style="height:' + Math.max(Math.ceil(100 * (value[i][j] - (!count ? min : 0)) / (max - min)), 0) + 'px;"></div>');
+			count++;
+			if (value[i][j]) {
+				numbers.push((value[i][j] ? (iscash ? '$' : '') + addCommas(value[i][j]) : ''));
+			}
+		}
+		output.push('<div class="bars">' + bars.reverse().join('') + '</div>' + goalbars);
+		numbers.reverse();
+		title = title + (numbers.length ? ', ' : '') + numbers.join(' + ') + (numbers.length > 1 ? ' = ' + (iscash ? '$' : '') + addCommas(sum(value[i])) : '');
+		td(list, output.join(''), 'title="' + title + '"');
+	}
+	th(list, goal_s.join(''));
+	return '<tr>' + list.join('') + '</tr>';
+}
+
+/********** Worker.Land **********
+* Auto-buys property
+*/
+var Land = new Worker('Land');
+
+Land.defaults = {
+	castle_age:{
+		pages:'town_land'
+	}
+};
+
+Land.option = {
+	enabled:true,
+//	wait:48,
+	onlyten:false,
+	sell:false,
+	land_exp:false
+};
+
+Land.runtime = {
+	lastlevel:0,
+	best:null,
+	buy:0,
+	cost:0
+};
+
+Land.display = [
+	{
+		id:'enabled',
+		label:'Auto-Buy Land',
+		checkbox:true,
+		caap:'autoBuyLand'
+	},{
+		advanced:true,
+		id:'sell',
+		label:'Sell Extra Land',
+		checkbox:true,
+		help:'You can sell land above your Max at full price.',
+		caap:'SellLands'
+	},{
+		exploit:true,
+		id:'land_exp',
+		label:'Sell Extra Land 10 at a time',
+		checkbox:true,
+		help:'If you have extra lands, this will sell 10x.  The extra sold lands will be repurchased at a lower cost.'
+//	},{
+/*		id:'wait',
+		label:'Maximum Wait Time',
+		select:[0, 24, 36, 48],
+		suffix:'hours',
+		help:'There has been a lot of testing in this code, it is the fastest way to increase your income despite appearances!'
+	},{*/
+/*		advanced:true,
+		id:'onlyten',
+		label:'Only buy 10x<br>NOTE: This is slower!!!',
+		checkbox:true,
+		help:'The standard method is guaranteed to be the most efficient.  Choosing this option will slow down your income.'
+*/	}
+];
+
+Land.parse = function(change) {
+	//gm.log('Land parse');
+	$('tr.land_buy_row,tr.land_buy_row_unique').each(function(i,el){
+		var name = $('img', el).attr('alt'), tmp;
+		if (!change) {
+			// Fix for broken land page!!
+			!$('.land_buy_image_int', el).length && $('.land_buy_image', el).prepend('<div class="land_buy_image_int"></div>').children('.land_buy_image_int').append($('.land_buy_image >[class!="land_buy_image_int"]', el));
+			!$('.land_buy_info_int', el).length && $('.land_buy_info', el).prepend('<div class="land_buy_info_int"></div>').children('.land_buy_info_int').append($('.land_buy_info >[class!="land_buy_info_int"]', el));
+			Land.data[name] = {};
+			Land.data[name].income = $('.land_buy_info .gold', el).text().replace(/[^0-9]/g,'').regex(/([0-9]+)/);
+			Land.data[name].max = $('.land_buy_info', el).text().regex(/Max Allowed For your level: ([0-9]+)/i);
+			Land.data[name].cost = $('.land_buy_costs .gold', el).text().replace(/[^0-9]/g,'').regex(/([0-9]+)/);
+			tmp = $('option', $('.land_buy_costs .gold', el).parent().next()).last().attr('value');
+			if (tmp) {
+				Land.data[name].buy = tmp;
+			}
+			Land.data[name].own = $('.land_buy_costs span', el).text().replace(/[^0-9]/g,'').regex(/([0-9]+)/);
+		} else {
+			$('.land_buy_info strong:first', el).after('<strong title="Daily Return On Investment - higher is better"> | ROI ' + ((Land.data[name].own < Land.data[name].max) ? (Land.data[name].income * 2400) / Land.data[name].cost : 0).round(3) + '%</strong>');
+		}
+	});
+	return true;
+};
+
+Land.update = function() {
+	//gm.log('Land update');
+	var i, worth = Bank.worth(), best, buy = 0, income = Player.get('income') + History.get('income.mean');
+	
+	if (this.option.land_exp) {
+		$('input:golem(land,sell)').attr('checked',true);
+		this.option.sell = true;
+	}
+	
+	for (var i in this.data) {
+		if (this.option.sell && this.data[i].own > this.data[i].max) {
+			best = i;
+			buy = this.data[i].max - this.data[i].own;// Negative number means sell
+			if (this.option.land_exp) {
+				buy = -10;
+			}
+			break;
+		}
+		if (this.data[i].buy) {
+			if (!best || ((this.data[best].cost / income) + (this.data[i].cost / (income + this.data[best].income))) > ((this.data[i].cost / income) + (this.data[best].cost / (income + this.data[i].income)))) {
+				best = i;
+			}
+		}
+	}
+	if (best) {
+		if (!buy) {
+	/*		if (this.option.onlyten || (this.data[best].cost * 10) <= worth || (this.data[best].cost * 10 / income < this.option.wait)) {
+				buy = Math.min(this.data[best].max - this.data[best].own, 10);
+			} else if ((this.data[best].cost * 5) <= worth || (this.data[best].cost * 5 / income < this.option.wait)) {
+				buy = Math.min(this.data[best].max - this.data[best].own, 5);
+			} else {
+				buy = 1;
+			}*/
+			
+			//	This calculates the perfect time to switch the amounts to buy.
+			//	If the added income from a smaller purchase will pay for the increase in price before you can afford to buy again, buy small.
+			//	In other words, make the smallest purchase where the time to make the purchase is larger than the time to payoff the increased cost with the extra income.
+			//	It's different for each land because each land has a different "time to payoff the increased cost".
+			
+			var cost_increase = this.data[best].cost / (10 + this.data[best].own);		// Increased cost per purchased land.  (Calculated from the current price and the quantity owned, knowing that the price increases by 10% of the original price per purchase.)
+			var time_limit = cost_increase / this.data[best].income;		// How long it will take to payoff the increased cost with only the extra income from the purchase.  (This is constant per property no matter how many are owned.)
+			time_limit = time_limit * 1.5;		// fudge factor to take into account that most of the time we won't be buying the same property twice in a row, so we will have a bit more time to recoup the extra costs.
+//			if (this.option.onlyten || (this.data[best].cost * 10) <= worth) {			// If we can afford 10, buy 10.  (Or if people want to only buy 10.)
+			if ((this.data[best].cost * 10) <= worth) {			// If we can afford 10, buy 10.
+				buy = Math.min(this.data[best].max - this.data[best].own, 10);
+			} else if (this.data[best].cost / income > time_limit){		// If it will take longer to save for 1 land than it will take to payoff the increased cost, buy 1.
+				buy = 1;
+			} else if (this.data[best].cost * 5 / income > time_limit){	// If it will take longer to save for 5 lands than it will take to payoff the increased cost, buy 5.
+				buy = Math.min(this.data[best].max - this.data[best].own, 5);
+			} else {																	// Otherwise buy 10 because that's the max.
+				buy = Math.min(this.data[best].max - this.data[best].own, 10);
+			}
+		}
+		this.runtime.buy = buy;
+		this.runtime.cost = buy * this.data[best].cost; // May be negative if we're making money by selling
+//		Dashboard.status(this, (buy>0 ? (this.runtime.buy ? 'Buying ' : 'Want to buy ') : (this.runtime.buy ? 'Selling ' : 'Want to sell ')) + Math.abs(buy) + 'x ' + best + ' for $' + addCommas(Math.abs(this.runtime.cost)));
+	} else {
+//		Dashboard.status(this);
+	}
+	this.runtime.best = best;
+}
+
+Land.work = function(state) {
+	//gm.log('Land work');
+	if (!this.option.enabled || !this.runtime.best || !this.runtime.buy || !Bank.worth(this.runtime.cost)) {
+		if (!this.runtime.best && this.runtime.lastlevel < Player.get('level')) {
+			if (!state || !Page.to('town_land')) {
+				return true;
+			}
+			this.runtime.lastlevel = Player.get('level');
+		}
+		return false;
+	}
+	if (!state || !Bank.retrieve(this.runtime.cost) || !Page.to('town_land')) {
+		return true;
+	}
+//	var el = $('tr.land_buy_row:contains("'+this.runtime.best+'"),tr.land_buy_row_unique:contains("'+this.runtime.best+'")');
+	$('tr.land_buy_row,tr.land_buy_row_unique').each(function(i,el){
+		if ($('img', el).attr('alt') === Land.runtime.best) {
+			if (Land.runtime.buy > 0) {
+				$('select', $('.land_buy_costs .gold', el).parent().next()).val(Land.runtime.buy > 5 ? 10 : (Land.runtime.buy > 1 ? 5 : 1));
+			} else {
+				$('select', $('.land_buy_costs .gold', el).parent().parent().next()).val(Land.runtime.buy <= -10 ? 10 : (Land.runtime.buy <= -5 ? 5 : 1));
+			}
+			debug('Land: ' + (Land.runtime.buy > 0 ? 'Buy' : 'Sell') + 'ing ' + Math.abs(Land.runtime.buy) + ' x ' + Land.runtime.best + ' for $' + addCommas(Math.abs(Land.runtime.cost)));
+			Page.click($('.land_buy_costs input[name="' + (Land.runtime.buy > 0 ? 'Buy' : 'Sell') + '"]', el));
+		}
+	});
+	return true;
+};
+
+/********** Worker.Player **********
+* Gets all current stats we can see
+*/
+var Player = new Worker('Player');
+Player.option = null;
+
+Player.settings = {
+	keep:true
+};
+
+Player.defaults = {
+	castle_age:{
+		pages:'*'
+	}
+};
+
+Player.runtime = {
+	cash_timeout:null,
+	energy_timeout:null,
+	health_timeout:null,
+	stamina_timeout:null
+};
+
+var use_average_level = false;
+
+Player.init = function() {
+	// Get the gold timer from within the page - should really remove the "official" one, and write a decent one, but we're about playing and not fixing...
+	// gold_increase_ticker(1418, 6317, 3600, 174738470, 'gold', true);
+	// function gold_increase_ticker(ticks_left, stat_current, tick_time, increase_value, first_call)
+	var when = new Date(script_started + ($('*').html().regex(/gold_increase_ticker\(([0-9]+),/) * 1000));
+	this.data.cash_time = when.getSeconds() + (when.getMinutes() * 60);
+	this.runtime.cash_timeout = null;
+	this.runtime.energy_timeout = null;
+	this.runtime.health_timeout = null;
+	this.runtime.stamina_timeout = null;
+};
+
+Player.parse = function(change) {
+	var data = this.data, keep, stats, tmp, energy_used = 0, stamina_used = 0;
+	if ($('#app'+APPID+'_energy_current_value').length) {
+		tmp = $('#app'+APPID+'_energy_current_value').parent().text().regex(/([0-9]+)\s*\/\s*([0-9]+)/);
+		data.energy		= tmp[0] || 0;
+//		data.maxenergy	= tmp[1] || 0;
+	}
+	if ($('#app'+APPID+'_health_current_value').length) {
+		tmp = $('#app'+APPID+'_health_current_value').parent().text().regex(/([0-9]+)\s*\/\s*([0-9]+)/);
+		data.health		= tmp[0] || 0;
+//		data.maxhealth	= tmp[1] || 0;
+	}
+	if ($('#app'+APPID+'_stamina_current_value').length) {
+		tmp = $('#app'+APPID+'_stamina_current_value').parent().text().regex(/([0-9]+)\s*\/\s*([0-9]+)/);
+		data.stamina	= tmp[0] || 0;
+//		data.maxstamina	= tmp[1] || 0;
+	}
+	if ($('#app'+APPID+'_st_2_5 strong:not([title])').length) {
+		tmp = $('#app'+APPID+'_st_2_5').text().regex(/([0-9]+)\s*\/\s*([0-9]+)/);
+		data.exp		= tmp[0] || 0;
+		data.maxexp		= tmp[1] || 0;
+	}
+	data.cash		= parseInt($('strong#app'+APPID+'_gold_current_value').text().replace(/[^0-9]/g, ''), 10);
+	data.level		= $('#app'+APPID+'_st_5').text().regex(/Level: ([0-9]+)!/i);
+	data.armymax	= $('a[href*=army.php]', '#app'+APPID+'_main_bntp').text().regex(/([0-9]+)/);
+	data.army		= Math.min(data.armymax, 501); // XXX Need to check what max army is!
+	data.upgrade	= ($('a[href*=keep.php]', '#app'+APPID+'_main_bntp').text().regex(/([0-9]+)/) || 0);
+//caap	data.general	= $('div.general_name_div3').first().text().trim();
+	data.imagepath	= $('#app'+APPID+'_globalContainer img:eq(0)').attr('src').pathpart();
+	if (Page.page==='keep_stats') {
+		keep = $('div.keep_attribute_section').first(); // Only when it's our own keep and not someone elses
+		if (keep.length) {
+			data.myname = $('div.keep_stat_title > span', keep).text().regex(/"(.*)"/);
+			data.rank = $('td.statsTMainback img[src*=rank_medals]').attr('src').filepart().regex(/([0-9]+)/);
+			stats = $('div.attribute_stat_container', keep);
+			data.maxenergy = $(stats).eq(0).text().regex(/([0-9]+)/);
+			data.maxstamina = $(stats).eq(1).text().regex(/([0-9]+)/);
+			data.attack = $(stats).eq(2).text().regex(/([0-9]+)/);
+			data.defense = $(stats).eq(3).text().regex(/([0-9]+)/);
+			data.maxhealth = $(stats).eq(4).text().regex(/([0-9]+)/);
+			data.bank = parseInt($('td.statsTMainback b.money').text().replace(/[^0-9]/g,''), 10);
+			stats = $('.statsTB table table:contains("Total Income")').text().replace(/[^0-9$]/g,'').regex(/([0-9]+)\$([0-9]+)\$([0-9]+)/);
+			data.maxincome = stats[0];
+			data.upkeep = stats[1];
+			data.income = stats[2];
+		}
+	}
+	if (Page.page==='town_land') {
+		stats = $('.mContTMainback div:last-child');
+		data.income = stats.eq(stats.length - 4).text().replace(/[^0-9]/g,'').regex(/([0-9]+)/);
+	}
+	$('span.result_body').each(function(i,el){
+		var txt = $(el).text().replace(/,|\s+|\n/g, '');
+		History.add('income', sum(txt.regex(/Gain.*\$([0-9]+).*Cost|stealsGold:\+\$([0-9]+)|Youreceived\$([0-9]+)|Yougained\$([0-9]+)/i)));
+		if (txt.regex(/incomepaymentof\$([0-9]+)gold/i)){
+			History.set('land', sum(txt.regex(/incomepaymentof\$([0-9]+)gold|backinthemine:Extra([0-9]+)Gold/i)));
+		}
+	});
+	if ($('#app'+APPID+'_energy_time_value').length) {
+		window.clearTimeout(this.runtime.energy_timeout);
+		this.runtime.energy_timeout = window.setTimeout(function(){Player.get('energy');}, $('#app'+APPID+'_energy_time_value').text().parseTimer() * 1000);
+	}
+	if ($('#app'+APPID+'_health_time_value').length) {
+		window.clearTimeout(this.runtime.health_timeout);
+		this.runtime.health_timeout = window.setTimeout(function(){Player.get('health');}, $('#app'+APPID+'_health_time_value').text().parseTimer() * 1000);
+	}
+	if ($('#app'+APPID+'_stamina_time_value').length) {
+		window.clearTimeout(this.runtime.stamina_timeout);
+		this.runtime.stamina_timeout = window.setTimeout(function(){Player.get('stamina');}, $('#app'+APPID+'_stamina_time_value').text().parseTimer() * 1000);
+	}
+	return false;
+};
+
+Player.update = function(type) {
+	if (type !== 'option') {
+		var i, j, types = ['stamina', 'energy', 'health'], list, step;
+		for (j=0; j<types.length; j++) {
+			list = [];
+			step = Divisor(Player.data['max'+types[j]])
+			for (i=0; i<=Player.data['max'+types[j]]; i+=step) {
+				list.push(i);
+			}
+			if (typeof Config != 'undefined') { //caap
+				Config.set(types[j], list);
+			}
+		}
+		History.set('bank', this.data.bank);
+		History.set('exp', this.data.exp);
+	}
+	if (typeof Dashboard != 'undefined') { //caaps
+		Dashboard.status(this, 'Income: $' + addCommas(Math.max(this.data.income, (History.get('land.average.1') + History.get('income.average.24')).round())) + ' per hour (currently $' + addCommas(History.get('land.average.1')) + ' from land)');
+	}
+};
+
+Player.get = function(what) {
+	var i, j = 0, low = Number.POSITIVE_INFINITY, high = Number.NEGATIVE_INFINITY, min = Number.POSITIVE_INFINITY, max = Number.NEGATIVE_INFINITY, data = this.data, now = Date.now();
+	switch(what) {
+		case 'cash':			return (this.data.cash = parseInt($('strong#app'+APPID+'_gold_current_value').text().replace(/[^0-9]/g, ''), 10));
+		case 'cash_timer':		return $('#app'+APPID+'_gold_time_value').text().parseTimer();
+//		case 'cash_timer':		var when = new Date();
+//								return (3600 + data.cash_time - (when.getSeconds() + (when.getMinutes() * 60))) % 3600;
+		case 'energy':			return (this.data.energy = $('#app'+APPID+'_energy_current_value').parent().text().regex(/([0-9]+)\s*\/\s*[0-9]+/));
+		case 'energy_timer':	return $('#app'+APPID+'_energy_time_value').text().parseTimer();
+		case 'health':			return (this.data.health = $('#app'+APPID+'_health_current_value').parent().text().regex(/([0-9]+)\s*\/\s*[0-9]+/));
+		case 'health_timer':	return $('#app'+APPID+'_health_time_value').text().parseTimer();
+		case 'stamina':			return (this.data.stamina = $('#app'+APPID+'_stamina_current_value').parent().text().regex(/([0-9]+)\s*\/\s*[0-9]+/));
+		case 'stamina_timer':	return $('#app'+APPID+'_stamina_time_value').text().parseTimer();
+		case 'exp_needed':		return data.maxexp - data.exp;
+		default: return this._get(what);
+	}
+};
+

@@ -2310,14 +2310,14 @@ caap = {
 
             if (!this.oneMinuteUpdate('dashboard') && $('#caap_infoMonster').html() && $('#caap_infoMonster').html()) {
                 if (this.UpdateDashboardWaitLog) {
-                    gm.log("Dashboard update is waiting on oneMinuteUpdate");
+                    //gm.log("Dashboard update is waiting on oneMinuteUpdate");
                     this.UpdateDashboardWaitLog = false;
                 }
 
                 return false;
             }
 
-            gm.log("Updating Dashboard");
+            //gm.log("Updating Dashboard");
             this.UpdateDashboardWaitLog = true;
             var html = "<table width=570 cellpadding=0 cellspacing=0 ><tr>";
             var displayItemList = ['Name', 'Damage', 'Damage%', 'Fort%', 'TimeLeft', 'T2K', 'Phase', 'Link'];
@@ -5432,7 +5432,7 @@ caap = {
             return false;
         }
 
-        gm.log('nth battle target: ' + battleUpto + ':' + targets[battleUpto]);
+        //gm.log('nth battle target: ' + battleUpto + ':' + targets[battleUpto]);
         return targets[battleUpto];
     },
 

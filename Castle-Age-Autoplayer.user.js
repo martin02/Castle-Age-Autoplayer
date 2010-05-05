@@ -6649,6 +6649,8 @@ caap = {
         if (!(gm.getValue('monsterOl', ''))) {
             return false;
         }
+	gm.setListObjVal('monsterOl', "Gail's Bahamut, the Volcanic Dragon", 'over','max');
+	gm.setListObjVal('monsterOl', "Gail's Bahamut, the Volcanic Dragon", 'Fort%',99.99);
 
     /*-------------------------------------------------------------------------------------\
     Now we step through the monsterOl objects. We set monsterReviewCounter to the next

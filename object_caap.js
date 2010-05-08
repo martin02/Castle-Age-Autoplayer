@@ -8417,12 +8417,14 @@ caap = {
         //gm.log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
 			worker = WorkerByName(actionsListCopy[action]);		
-			if (worker) {
+			if (actionsListCopy.hasOwnProperty(action)) {
+				result = this[actionsListCopy[action]]();
+			} else if (worker) {
 				worker._unflush();
                 result = worker._work(true);
-			} else if (actionsListCopy.hasOwnProperty(action)) {
-				result = this[actionsListCopy[action]]();
-            }
+            } else {
+				gm.log('ERROR - No function for ' + actionsListCopy[action]);
+			}
 			if (result) {
 				if (worker) gm.log('Doing worker ' + worker.name);
                 //gm.log('Action: ' + actionsListCopy[action]);

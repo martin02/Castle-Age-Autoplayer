@@ -2,7 +2,7 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-// @version        140.22.25
+// @version        140.22.26
 // @require        http://cloutman.com/jquery-latest.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/jquery-ui-1.8.1.custom.min.js
 // @require        http://farbtastic.googlecode.com/svn/branches/farbtastic-1/farbtastic.min.js
@@ -19,7 +19,7 @@
 /*jslint white: true, browser: true, devel: true, undef: true, nomen: true, bitwise: true, plusplus: true, immed: true, regexp: true */
 /*global window,unsafeWindow,$,GM_log,console,GM_getValue,GM_setValue,GM_xmlhttpRequest,GM_openInTab,GM_registerMenuCommand,XPathResult,GM_deleteValue,GM_listValues,GM_addStyle,CM_Listener,CE_message,ConvertGMtoJSON,localStorage */
 
-var caapVersion = "140.22.25";
+var caapVersion = "140.22.26";
 
 ///////////////////////////
 //       Prototypes
@@ -6976,7 +6976,7 @@ caap = {
                 }
 
                 var attackButton = null;
-                var singleButtonList = ['attack_monster_button.jpg','event_attack1.gif','seamonster_attack.gif','event_attack2.gif','attack_monster_button2.jpg'];
+                var singleButtonList = ['button_nm_p_attack.gif','attack_monster_button.jpg','event_attack1.gif','seamonster_attack.gif','event_attack2.gif','attack_monster_button2.jpg'];
                 // Find the attack or fortify button
                 if (fightMode == 'Fortify') {
 					buttonList = ['seamonster_fortify.gif',"button_nm_s_",'button_dispel.gif','attack_monster_button3.jpg'];
@@ -6986,7 +6986,7 @@ caap = {
                 } else {
                     // power attack or if not seamonster power attack or if not regular attack -
                     // need case for seamonster regular attack?
-                    buttonList = ['power_button_','attack_monster_button2.jpg','button_nm_p_','event_attack2.gif','seamonster_power.gif','event_attack1.gif','attack_monster_button.jpg'].concat(singleButtonList);
+                    buttonList = ['button_nm_p_power','power_button_','attack_monster_button2.jpg','event_attack2.gif','seamonster_power.gif','event_attack1.gif','attack_monster_button.jpg'].concat(singleButtonList);
 				}
 				
 				for (i in buttonList) {
@@ -8110,10 +8110,10 @@ caap = {
             return false;
         }
 
-        return this.CaapBank();
+        return this.Bank();
     },
 
-    CaapBank: function () {
+    Bank: function () {
         var maxInCash = gm.getNumber('MaxInCash', -1);
         var minInCash = gm.getNumber('MinInCash', 0);
         if (!maxInCash || maxInCash < 0 || this.stats.cash <= minInCash || this.stats.cash < maxInCash || this.stats.cash < 10) {
@@ -9391,7 +9391,7 @@ caap = {
         0x0B: 'Quests',
         0x0C: 'PassiveGeneral',
         0x0D: 'Land',
-        0x0E: 'CaapBank',
+        0x0E: 'Bank',
         0x0F: 'AutoBless',
         0x10: 'AutoStat',
         0x11: 'AutoGift',
@@ -9514,7 +9514,7 @@ caap = {
                 "Quests",
                 "PassiveGeneral",
                 "Land",
-                "CaapBank",
+                "Bank",
                 "AutoBless",
                 "AutoStat",
                 "AutoGift",

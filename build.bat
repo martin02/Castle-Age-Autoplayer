@@ -27,6 +27,7 @@ echo Installing new version to Firefox
 copy _normal.user.js Castle-Age-Autoplayer.user.js >nul
 copy Castle-Age-Autoplayer.user.js Chrome/Castle-Age-Autoplayer.user.js >nul
 copy README Chrome/README >nul
+del /F /Q _normal.user.js
 
 rem --------------------------------------------------------------------------------------
 rem MINIMISED VERSION - This will fail on errors so use is advised - required for release!
@@ -35,7 +36,7 @@ rem http://code.google.com/closure/compiler/
 
 echo Creating minimised version (will also show errors)
 copy _head.js _min.user.js >nul
-"C:\Program Files\Java\jre6\bin\java.exe" -jar compiler.jar --js "_normal.user.js" >> "_min.user.js"
+"C:\Program Files\Java\jre6\bin\java.exe" -jar compiler.jar --js "Castle-Age-Autoplayer.user.js" >> "_min.user.js"
 
 echo Press any key to quit.
 pause>nul

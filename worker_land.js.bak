@@ -21,8 +21,10 @@ Land.caap_load = function() {
 	valuesList = {'enabled':'autoBuyLand','sell':'SellLands'};
 	for (i in valuesList) {
 		this.option[i] = gm.getValue(valuesList[i]);
+		gm.log(i + ' =  '+ gm.getValue(valuesList[i]));
 	}
 };
+
 
 Land.runtime = {
 	lastlevel:0,
@@ -64,6 +66,7 @@ Land.display = [
 ];
 
 Land.parse = function(change) {
+	//gm.log('Land parse');
 	$('tr.land_buy_row,tr.land_buy_row_unique').each(function(i,el){
 		var name = $('img', el).attr('alt'), tmp;
 		if (!change) {

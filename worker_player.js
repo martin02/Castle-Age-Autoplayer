@@ -62,7 +62,7 @@ Player.parse = function(change) {
 	data.armymax	= $('a[href*=army.php]', '#app'+APPID+'_main_bntp').text().regex(/([0-9]+)/);
 	data.army		= Math.min(data.armymax, 501); // XXX Need to check what max army is!
 	data.upgrade	= ($('a[href*=keep.php]', '#app'+APPID+'_main_bntp').text().regex(/([0-9]+)/) || 0);
-//caap	data.general	= $('div.general_name_div3').first().text().trim();
+	data.general	= $('div.general_name_div3').first().text().trim();
 	data.imagepath	= $('#app'+APPID+'_globalContainer img:eq(0)').attr('src').pathpart();
 	if (Page.page==='keep_stats') {
 		keep = $('div.keep_attribute_section').first(); // Only when it's our own keep and not someone elses
@@ -117,16 +117,12 @@ Player.update = function(type) {
 			for (i=0; i<=Player.data['max'+types[j]]; i+=step) {
 				list.push(i);
 			}
-			if (typeof Config != 'undefined') { //caap
-				Config.set(types[j], list);
-			}
+			Config.set(types[j], list);
 		}
 		History.set('bank', this.data.bank);
 		History.set('exp', this.data.exp);
 	}
-	if (typeof Dashboard != 'undefined') { //caaps
-		Dashboard.status(this, 'Income: $' + addCommas(Math.max(this.data.income, (History.get('land.average.1') + History.get('income.average.24')).round())) + ' per hour (currently $' + addCommas(History.get('land.average.1')) + ' from land)');
-	}
+	Dashboard.status(this, 'Income: $' + addCommas(Math.max(this.data.income, (History.get('land.average.1') + History.get('income.average.24')).round())) + ' per hour (currently $' + addCommas(History.get('land.average.1')) + ' from land)');
 };
 
 Player.get = function(what) {

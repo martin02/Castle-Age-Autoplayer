@@ -4510,7 +4510,9 @@ caap = {
             return false;
         }
 
-        target = target.toLowerCase();
+        if (typeof target == 'string') {
+			target = target.toLowerCase();
+		}
 
         if (!this.CheckStamina('Battle', ((target == 'arena') ? 5 : 1))) {
             return false;
@@ -8289,7 +8291,7 @@ caap = {
         'AutoElite': 'Fill Elite Guard',
         'ArenaElite': 'Fill Arena Elite',
         'AutoPotions': 'Auto Potions',
-        'AutoAlchemy': 'Auto Alchemy',
+        'Alchemy': 'Auto Alchemy',
         'AutoBless': 'Auto Bless',
         'AutoGift': 'Auto Gifting',
         'MonsterFinder': 'Monster Finder',
@@ -8297,7 +8299,7 @@ caap = {
         'Monsters': 'Fighting Monsters',
         'Heal': 'Auto Healing',
         'Bank': 'Auto Banking',
-        'Lands': 'Land Operations'
+        'Land': 'Buy/Sell Land'
     },
 
     CheckLastAction: function (thisAction) {
@@ -8595,16 +8597,17 @@ caap = {
         //gm.log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
 			worker = WorkerByName(actionsListCopy[action]);		
-			if (actionsListCopy.hasOwnProperty(action)) {
+			if (actionsListCopy.hasOwnProperty(action) &&
+					typeof this[actionsListCopy[action]] == 'function') {
 				result = this[actionsListCopy[action]]();
 			} else if (worker) {
 				worker._unflush();
                 result = worker._work(true);
+				if (result) gm.log('Doing worker ' + worker.name);
             } else {
 				gm.log('ERROR - No function for ' + actionsListCopy[action]);
 			}
 			if (result) {
-				if (worker) gm.log('Doing worker ' + worker.name);
                 //gm.log('Action: ' + actionsListCopy[action]);
                     this.CheckLastAction(actionsListCopy[action]);
                     break;

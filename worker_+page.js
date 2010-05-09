@@ -100,7 +100,7 @@ Page.parse_all = function() {
                 }
         }
         for (i in list) {
-                list[i]._parse(true);
+                list[i]._parse(!iscaap());
         }
         for (i=0; i<Workers.length; i++) {
                 Workers[i]._flush();

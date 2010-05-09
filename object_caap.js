@@ -7051,10 +7051,10 @@ caap = {
             return false;
         }
 
-        return this.CaapBank();
+        return this.Bank();
     },
 
-    CaapBank: function () {
+    Bank: function () {
         var maxInCash = gm.getNumber('MaxInCash', -1);
         var minInCash = gm.getNumber('MinInCash', 0);
         if (!maxInCash || maxInCash < 0 || this.stats.cash <= minInCash || this.stats.cash < maxInCash || this.stats.cash < 10) {
@@ -8332,7 +8332,7 @@ caap = {
         0x0B: 'Quests',
         0x0C: 'PassiveGeneral',
         0x0D: 'Land',
-        0x0E: 'CaapBank',
+        0x0E: 'Bank',
         0x0F: 'AutoBless',
         0x10: 'AutoStat',
         0x11: 'AutoGift',
@@ -8455,7 +8455,7 @@ caap = {
                 "Quests",
                 "PassiveGeneral",
                 "Land",
-                "CaapBank",
+                "Bank",
                 "AutoBless",
                 "AutoStat",
                 "AutoGift",

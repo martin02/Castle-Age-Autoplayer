@@ -25,6 +25,10 @@ Queue.option = {
 	energy: 0
 };
 
+Queue.caap_load = function() {
+	this.option.pause = false;
+};
+
 Queue.display = [
 	{
 		label:'Drag the unlocked panels into the order you wish them run.'

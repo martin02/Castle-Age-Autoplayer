@@ -37,15 +37,20 @@ gm = {
     },
 
     isInt: function (value) {
-        var vstr = value.toString();
-        if (/[\n\t\f,]/.test(vstr) || (vstr.length > 1 && vstr.substring(0, 1) === '0')) {
-            return false;
-        }
+        try {
+            var vstr = value.toString();
+            if (/[\n\t\f,]/.test(vstr) || (vstr.length > 1 && /[0\.]/.test(vstr.substring(0, 1)))) {
+                return false;
+            }
 
-        var pInt = parseInt(value, 10);
-        if ((parseFloat(value) == pInt) && !isNaN(pInt)) {
-            return true;
-        } else {
+            var pInt = parseInt(value, 10);
+            if ((parseFloat(value) == pInt) && !isNaN(pInt)) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (err) {
+            gm.log("ERROR in gm.isInt: " + err);
             return false;
         }
     },
@@ -76,12 +81,8 @@ gm = {
         GM_deleteValue(global.gameName + "__" + n);
     },
 
-    IsArray: function (testObject) {
-        return testObject && !(testObject.propertyIsEnumerable('length')) && typeof testObject === 'object' && typeof testObject.length === 'number';
-    },
-
     setList: function (n, v) {
-        if (!this.IsArray(v)) {
+        if (!$.isArray(v)) {
             this.log('Attempted to SetList ' + n + ' to ' + v.toString() + ' which is not an array.');
             return undefined;
         }

@@ -19,9 +19,6 @@ Dashboard.option = {
 };
 
 Dashboard.init = function() {
-	if (iscaap()) {
-		return false;
-	}
 	var id, $btn, tabs = [], divs = [], active = this.option.active;
 	for (i=0; i<Workers.length; i++) {
 		if (Workers[i].dashboard) {
@@ -33,6 +30,9 @@ Dashboard.init = function() {
 			divs.push('<div id="'+id+'"'+(active===id ? '' : ' style="display:none;"')+'></div>');
 			this._watch(Workers[i]);
 		}
+	}
+	if (iscaap()) {
+		return false;
 	}
 	$('<div id="golem-dashboard" style="top:' + $('#app'+APPID+'_main_bn').offset().top+'px;display:' + this.option.display+';">' + tabs.join('') + '<div>' + divs.join('') + '</div></div>').prependTo('.UIStandardFrame_Content');
 	$('.golem-tab-header').click(function(){
@@ -101,9 +101,6 @@ Dashboard.parse = function(change) {
 };
 
 Dashboard.update = function(type) {
-	if (iscaap()) {
-		return false;
-	}
 	if (!this._loaded || (type && typeof type !== 'object')) {
 		return;
 	}

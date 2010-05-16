@@ -114,24 +114,20 @@ caap = {
 
     generalList: [],
 
-    generalBuyList: [],
-
-    generalIncomeList: [],
-
-    generalBankingList: [],
-
     standardGeneralList: [
         'Idle',
         'Monster',
         'Fortify',
         'Battle',
-        'SubQuest'
+        'SubQuest',
+		'Buy',
+		'Income'
     ],
 
     BuildGeneralLists: function () {
         try {
             this.generalList = [
-                'Get General List',
+                'Best',
                 'Use Current',
                 'Under Level 4'
             ].concat(gm.getList('AllGenerals'));
@@ -140,77 +136,9 @@ caap = {
                 return (caap.generalList.indexOf(checkItem) >= 0);
             };
 
-            this.generalBuyList = [
-                'Get General List',
-                'Use Current',
-                'Darius',
-                'Lucius',
-                'Garlan',
-                'Penelope'
-            ].filter(crossList);
-
-            this.generalIncomeList = [
-                'Get General List',
-                'Use Current',
-                'Scarlett',
-                'Mercedes',
-                'Cid'
-            ].filter(crossList);
-
-            this.generalBankingList = [
-                'Get General List',
-                'Use Current',
-                'Aeris'
-            ].filter(crossList);
-
             return true;
         } catch (err) {
             gm.log("ERROR in BuildGeneralLists: " + err);
-            return false;
-        }
-    },
-
-    GetCurrentGeneral: function () {
-        try {
-            var webSlice = nHtml.FindByAttrContains(document.body, "div", "class", 'general_name_div3');
-            if (!webSlice) {
-                throw "Couldn't find current general div";
-            }
-
-            return $.trim(webSlice.innerHTML);
-        } catch (err) {
-            gm.log("ERROR in GetCurrentGeneral: " + err);
-            return 'Use Current';
-        }
-    },
-
-    CheckResults_generals: function () {
-        try {
-            var gens = nHtml.getX('//div[@class=\'generalSmallContainer2\']', document, nHtml.xpath.unordered);
-            gm.setValue('AllGenerals', '');
-            gm.setValue('GeneralImages', '');
-            gm.setValue('LevelUpGenerals', '');
-            for (var x = 0; x < gens.snapshotLength; x += 1) {
-                var gen = nHtml.getX('./div[@class=\'general_name_div3\']/div[1]/text()', gens.snapshotItem(x), nHtml.xpath.string).replace(/[\t\r\n]/g, '');
-                var img = nHtml.getX('.//input[@class=\'imgButton\']/@src', gens.snapshotItem(x), nHtml.xpath.string);
-                img = nHtml.getHTMLPredicate(img);
-                //var atk = nHtml.getX('./div[@class=\'generals_indv_stats\']/div[1]/text()', gens.snapshotItem(x), nHtml.xpath.string);
-                //var def = nHtml.getX('./div[@class=\'generals_indv_stats\']/div[2]/text()', gens.snapshotItem(x), nHtml.xpath.string);
-                //var skills = nHtml.getX('.//table//td[1]/div/text()', gens.snapshotItem(x), nHtml.xpath.string).replace(/[\t\r\n]/gm,'');
-                var level = nHtml.getX('./div[4]/div[2]/text()', gens.snapshotItem(x), nHtml.xpath.string).replace(/Level /gi, '').replace(/[\t\r\n]/g, '');
-                //var genatts = gen + ":" + atk + "/" + def + ":L" + level + ":" + img + ","
-                gm.listPush('AllGenerals', gen);
-                gm.listPush('GeneralImages', gen + ':' + img);
-                if (level < 4) {
-                    gm.listPush('LevelUpGenerals', gen);
-                }
-            }
-
-            gm.setList('AllGenerals', gm.getList('AllGenerals').sort());
-            //gm.log("All Generals: " + gm.getList('AllGenerals'));
-            return true;
-        } catch (err) {
-            gm.log("ERROR in CheckResults_generals: " + err);
             return false;
         }
     },
@@ -226,9 +154,9 @@ caap = {
                 }
             }
 
-            this.ChangeDropDownList('BuyGeneral', this.generalBuyList, gm.getValue('BuyGeneral', 'Use Current'));
-            this.ChangeDropDownList('IncomeGeneral', this.generalIncomeList, gm.getValue('IncomeGeneral', 'Use Current'));
-            this.ChangeDropDownList('BankingGeneral', this.generalBankingList, gm.getValue('BankingGeneral', 'Use Current'));
+            this.ChangeDropDownList('BuyGeneral', this.generalList, gm.getValue('BuyGeneral', 'Use Current'));
+            this.ChangeDropDownList('IncomeGeneral', this.generalList, gm.getValue('IncomeGeneral', 'Use Current'));
+            this.ChangeDropDownList('BankingGeneral', this.generalList, gm.getValue('BankingGeneral', 'Use Current'));
             this.ChangeDropDownList('LevelUpGeneral', this.generalList, gm.getValue('LevelUpGeneral', 'Use Current'));
             return true;
         } catch (err) {
@@ -238,78 +166,11 @@ caap = {
     },
 
     SelectGeneral: function (whichGeneral) {
-        try {
-            if (gm.getValue('LevelUpGeneral', 'Use Current') != 'Use Current') {
-                var generalType = $.trim(whichGeneral.replace(/General/i, ''));
-                if (gm.getValue(generalType + 'LevelUpGeneral', false) &&
-                    this.stats.exp.dif &&
-                    this.stats.exp.dif <= gm.getValue('LevelUpGeneralExp', 0)) {
-                    whichGeneral = 'LevelUpGeneral';
-                    gm.log('Using level up general');
-                }
-            }
-
-            var general = gm.getValue(whichGeneral, '');
-            if (!general) {
-                return false;
-            }
-
-            if (!general || /use current/i.test(general)) {
-                return false;
-            }
-
-            if (/under level 4/i.test(general)) {
-                if (!gm.getList('LevelUpGenerals').length) {
-                    return this.ClearGeneral(whichGeneral);
-                }
-
-                if (gm.getValue('ReverseLevelUpGenerals')) {
-                    general = gm.getList('LevelUpGenerals').reverse().pop();
-                } else {
-                    general = gm.getList('LevelUpGenerals').pop();
-                }
-            }
-
-            var getCurrentGeneral = this.GetCurrentGeneral();
-            if (!getCurrentGeneral) {
-                this.ReloadCastleAge();
-            }
-
-            var currentGeneral = getCurrentGeneral.replace('**', '');
-            if (general.indexOf(currentGeneral) >= 0) {
-                return false;
-            }
-
-            gm.log('Changing from ' + currentGeneral + ' to ' + general);
-            if (this.NavigateTo('mercenary,generals', 'tab_generals_on.gif')) {
-                return true;
-            }
-
-            if (/get general list/i.test(general)) {
-                return this.ClearGeneral(whichGeneral);
-            }
-
-            var hasGeneral = function (genImg) {
-                return (genImg.indexOf(general.replace(new RegExp(":.+"), '')) >= 0);
-            };
-
-            var generalImage = gm.getList('GeneralImages').filter(hasGeneral).toString().replace(new RegExp(".+:"), '');
-            if (this.CheckForImage(generalImage)) {
-                return this.NavigateTo(generalImage);
-            }
-
-            this.SetDivContent('Could not find ' + general);
-            gm.log('Could not find ' + generalImage);
-            if (gm.getValue('ignoreGeneralImage', false)) {
-                return false;
-            } else {
-                return this.ClearGeneral(whichGeneral);
-            }
-        } catch (err) {
-            gm.log("ERROR in SelectGeneral: " + err);
-            return false;
-        }
-    },
+		if (!Generals.to(Generals.best(whichGeneral))) {
+			return true;
+		}
+		return false;
+   },
 
     oneMinuteUpdate: function (funcName) {
         try {
@@ -1386,9 +1247,7 @@ caap = {
             var LevelUpGenInstructions5 = "Use the Level Up General for doing sub-quests.";
             var LevelUpGenInstructions6 = "Use the Level Up General for doing primary quests " +
                 "(Warning: May cause you not to gain influence if wrong general is equipped.)";
-            htmlCode += "<tr><td>Buy</td><td style='text-align: right'>" + this.MakeDropDown('BuyGeneral', this.generalBuyList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
-            htmlCode += "<tr><td>Income</td><td style='text-align: right'>" + this.MakeDropDown('IncomeGeneral', this.generalIncomeList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
-            htmlCode += "<tr><td>Banking</td><td style='text-align: right'>" + this.MakeDropDown('BankingGeneral', this.generalBankingList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
+            htmlCode += "<tr><td>Banking</td><td style='text-align: right'>" + this.MakeDropDown('BankingGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
             htmlCode += "<tr><td>Level Up</td><td style='text-align: right'>" + this.MakeDropDown('LevelUpGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr></table>';
             htmlCode += "<div id='caap_LevelUpGeneralHide' style='display: " + (gm.getValue('LevelUpGeneral', false) != 'Use Current' ? 'block' : 'none') + "'>";
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
@@ -3235,7 +3094,7 @@ caap = {
             if (this.SelectGeneral('SubQuestGeneral')) {
                 return true;
             }
-        } else if ((general) && general != this.GetCurrentGeneral()) {
+        } else if (general && general != Player.get('general')) {
             if (gm.getValue('LevelUpGeneral', 'Use Current') != 'Use Current' &&
                 gm.getValue('QuestLevelUpGeneral', false) &&
                 this.stats.exp.dif &&

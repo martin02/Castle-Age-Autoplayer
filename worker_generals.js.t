@@ -161,35 +161,40 @@ Generals.to = function(name) {
 Generals.best = function(type) {
 	this._unflush();
 	var rx = '', best = null, bestval = 0, i, value, list = [];
+	type = type.toLowerCase();
 	if (iscaap()) {
 		var caapGenerals = {
-			'BuyGeneral':			'cost',
-			'LevelUpGeneral':		'stamina',
-			'IncomeGeneral':		'income',
-			'SubQuestGeneral':		'influence',
-			'MonsterGeneral':		'cash',
-			'BankingGeneral':			'bank',
-			'BattleGeneral':		'invade',
-			'MonsterGeneral':		'monster',
-			'FortifyGeneral':		'dispel',
-			'IdleGeneral':			'defense'
+			'cost':			'BuyGeneral',
+			'stamina':		'LevelUpGeneral',
+			'energy':		'LevelUpGeneral',
+			'income':		'IncomeGeneral',
+			'item':			'SubQuestGeneral',
+			'influence':	'SubQuestGeneral',
+			'attack':		'BattleGeneral',
+			'defense':		'BattleGeneral',
+			'cash':			'MonsterGeneral',
+			'bank':			'BankGeneral',
+			'invade':		'BattleGeneral',
+			'duel':			'BattleGeneral',
+			'raid-invade':	'BattleGeneral',
+			'raid-duel':	'BattleGeneral',
+			'monster':		'MonsterGeneral',
+			'dispel':		'FortifyGeneral',
+			'fortify':		'FortifyGeneral',
+			'defend':		'FortifyGeneral'
 		};
-		//gm.log('which ' + type + ' lookup ' + caapGenerals[type]);
 		if (caapGenerals[type]) {
-			var caapGeneral = gm.getValue(type,'best');
+			var caapGeneral = gm.getValue(caapGenerals[type],'best');
 			if (/under level 4/i.test(caapGeneral)) {
 				type = 'under level 4';
 			} else if (/use current/i.test(caapGeneral)) {
 				return 'any';
 			} else if (!/^best$/i.test(caapGeneral)) {
 				return caapGeneral;
-			} else {
-				type = caapGenerals[type];
 			}
 		}
-		// Need to add reverse lookup for when golem code calls something set in caap
 	}
-	switch(type.toLowerCase()) {
+	switch(type) {
 		case 'cost':		rx = /Decrease Soldier Cost by ([0-9]+)/i; break;
 		case 'stamina':		rx = /Increase Max Stamina by ([0-9]+)|\+([0-9]+) Max Stamina/i; break;
 		case 'energy':		rx = /Increase Max Energy by ([0-9]+)|\+([0-9]+) Max Energy/i; break;

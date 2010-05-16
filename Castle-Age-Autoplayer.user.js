@@ -8256,55 +8256,7 @@ caap = {
             return false;
         }
 
-        return this.Bank();
-    },
-
-    Bank: function () {
-        try {
-            var maxInCash = gm.getNumber('MaxInCash', -1);
-            var minInCash = gm.getNumber('MinInCash', 0);
-            if (!maxInCash || maxInCash < 0 || this.stats.cash <= minInCash || this.stats.cash < maxInCash || this.stats.cash < 10) {
-                return false;
-            }
-
-            if (this.SelectGeneral('BankingGeneral')) {
-                return true;
-            }
-
-            var depositButton = this.CheckForImage('btn_stash.gif');
-            if (!depositButton) {
-                // Cannot find the link
-                return this.NavigateTo('keep');
-            }
-
-            var depositForm = depositButton.form;
-            var numberInput = nHtml.FindByAttrXPath(depositForm, 'input', "@type='' or @type='text'");
-            if (numberInput) {
-                numberInput.value = parseInt(numberInput.value, 10) - minInCash;
-            } else {
-                gm.log('Cannot find box to put in number for bank deposit.');
-                return false;
-            }
-
-            gm.log('Depositing into bank');
-            this.Click(depositButton);
-            // added a true result by default until we can find a fix for the result check
-            return true;
-
-            /*
-            var checkBanked = nHtml.FindByAttrContains(div, "div", "class", 'result');
-            if (checkBanked && (checkBanked.firstChild.data.indexOf("You have stashed") < 0)) {
-                gm.log('Banking succeeded!');
-                return true;
-            }
-
-            gm.log('Banking failed! Cannot find result or not stashed!');
-            return false;
-            */
-        } catch (err) {
-            gm.log("ERROR in Bank: " + err);
-            return false;
-        }
+        return Bank.work();
     },
 
     RetrieveFromBank: function (num) {
@@ -9714,7 +9666,9 @@ caap = {
                     gm.log("Get Action List: " + this.actionsList);
                 }
             }
-			this.actionsList.unshift('Page');
+			if (this.actionsList[0] != 'Page') {
+				this.actionsList.unshift('Page');
+			}
             return true;
         } catch (e) {
             // Something went wrong, log it and use the emergency Action List.
@@ -12186,7 +12140,7 @@ Bank.caap_load = function() {
 	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
 	for (i in valuesList) {
 		this.option[i] = gm.getValue(valuesList[i]);
-		gm.log(i + ' =  '+ gm.getValue(valuesList[i]));
+		//gm.log(i + ' =  '+ gm.getValue(valuesList[i]));
 	}
 };
 
@@ -12211,6 +12165,9 @@ Bank.display = [
 ];
 
 Bank.work = function(state) {
+	if (iscaap() && this.option.above === '') {
+		return false;
+	}
 	if (Player.get('cash') <= 10 || (Player.get('cash') < this.option.above && (!Queue.get('runtime.current') || WorkerByName(Queue.get('runtime.current')).settings.bank))) {
 		return false;
 	}
@@ -13090,13 +13047,13 @@ Generals.best = function(type) {
 			'IncomeGeneral':		'income',
 			'SubQuestGeneral':		'influence',
 			'MonsterGeneral':		'cash',
-			'BankGeneral':			'bank',
+			'BankingGeneral':			'bank',
 			'BattleGeneral':		'invade',
 			'MonsterGeneral':		'monster',
 			'FortifyGeneral':		'dispel',
 			'IdleGeneral':			'defense'
 		};
-		gm.log('which ' + type + ' lookup ' + caapGenerals[type]);
+		//gm.log('which ' + type + ' lookup ' + caapGenerals[type]);
 		if (caapGenerals[type]) {
 			var caapGeneral = gm.getValue(type,'best');
 			if (/under level 4/i.test(caapGeneral)) {

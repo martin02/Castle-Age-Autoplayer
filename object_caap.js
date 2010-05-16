@@ -2628,6 +2628,10 @@ caap = {
     },
 
     pageList: {
+        'index': {
+            signaturePic: 'gif',
+            CheckResultsFunction: 'CheckResults_index',
+        },
         'battle_monster': {
             signaturePic: 'tab_monster_on.jpg',
             CheckResultsFunction: 'CheckResults_fightList',
@@ -2670,14 +2674,10 @@ caap = {
             signaturePic: 'tab_atlantis_on.gif',
             CheckResultsFunction: 'CheckResults_quests'
         },
-        'army': {
-            signaturePic: 'invite_on.gif',
-            CheckResultsFunction: 'CheckResults_army'
+        'gift_accept': {
+            signaturePic: 'gif',
+            CheckResultsFunction: 'CheckResults_gift_accept'
         },
-        'gift': {
-            signaturePic: 'invite_on.gif',
-            CheckResultsFunction: 'CheckResults_army'
-        }
         /*
         ,
         'keep': {
@@ -7467,14 +7467,13 @@ caap = {
     //                              AUTOGIFT
     /////////////////////////////////////////////////////////////////////
 
-    CheckResults_army: function (resultsText) {
+    CheckResults_gift_accept: function (resultsText) {
         // Confirm gifts actually sent
-        if (resultsText.match(/^\d+ requests? sent\.$/)) {
+		if ($('#app46755028429_app_body').text().match(/You have sent \d+ gifts?/)) {
             gm.log('Confirmed gifts sent out.');
             gm.setValue('RandomGiftPic', '');
             gm.setValue('FBSendList', '');
         }
-
         var listHref = $('div[style="padding: 0pt 0pt 10px 0px; overflow: hidden; float: left; width: 240px; height: 50px;"]')
             .find('a[text="Ignore"]');
         for (var i = 0; i < listHref.length; i += 1) {
@@ -7489,6 +7488,9 @@ caap = {
         }
 
     },
+    CheckResults_index: function (resultsText) {
+		this.JustDidIt('checkForGifts');
+	},
 
     AutoGift: function () {
         try {
@@ -7653,7 +7655,7 @@ caap = {
             var givenGiftType = '';
             var giftPic = '';
             var giftChoice = gm.getValue('GiftChoice');
-            var giftList = null;
+            var giftList = gm.getList('GiftList');
             //if (global.is_chrome) giftChoice = 'Random Gift';
             switch (giftChoice) {
             case 'Random Gift':
@@ -7662,7 +7664,7 @@ caap = {
                     break;
                 }
 
-                var picNum = Math.floor(Math.random() * (gm.getList('GiftList').length));
+                var picNum = Math.floor(Math.random() * (giftList.length));
                 var n = 0;
                 for (var picN in giftNamePic) {
                     if (giftNamePic.hasOwnProperty(picN)) {
@@ -7681,11 +7683,10 @@ caap = {
                 break;
             case 'Same Gift As Received':
                 givenGiftType = giverList[0].split(global.vs)[2];
-                giftList = gm.getList('GiftList');
                 gm.log('Looking for same gift as ' + givenGiftType);
                 if (giftList.indexOf(givenGiftType) < 0) {
                     gm.log('No gift type match. Using first gift as default.');
-                    givenGiftType = gm.getList('GiftList').shift();
+                    givenGiftType = gm.getList('GiftList')[0];
                 }
                 giftPic = giftNamePic[givenGiftType];
                 break;
@@ -7728,8 +7729,8 @@ caap = {
                     var giverData = giverList[p].split(global.vs);
                     var giverID = giverData[0];
                     var giftType = giverData[2];
-                    if (giftChoice == 'Same Gift As Received' && giftType != givenGiftType && giftType != 'Unknown Gift') {
-                        gm.log('giftType ' + giftType + ' givenGiftType ' + givenGiftType);
+                    if (giftChoice == 'Same Gift As Received' && giftType != givenGiftType && giftList.indexOf(giftType) >= 0) {
+                        //gm.log('giftType ' + giftType + ' givenGiftType ' + givenGiftType);
                         gm.listPush('ReceivedList', giverList[p]);
                         continue;
                     }
@@ -8226,6 +8227,10 @@ caap = {
         //Update Monster Finder
         if (this.WhileSinceDidIt("clearedMonsterFinderLinks", 72 * 60 * 60)) {
             this.clearLinks(true);
+        }
+
+        if (this.WhileSinceDidIt("checkForGifts", 5 * 60)) {
+            this.NavigateTo('index');
         }
 
         this.AutoFillArmy(this.friendListType.giftc, this.friendListType.facebook);

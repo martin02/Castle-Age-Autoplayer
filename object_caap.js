@@ -2738,13 +2738,10 @@ caap = {
         'gift_accept': {
             signaturePic: 'gif',
             CheckResultsFunction: 'CheckResults_gift_accept'
-<<<<<<< HEAD
-=======
         },
         'army': {
             signaturePic: 'invite_on.gif',
             CheckResultsFunction: 'CheckResults_army'
->>>>>>> master
         }
         /*
         ,
@@ -2916,7 +2913,7 @@ caap = {
         'Demon Realm': 'land_demon_realm',
         'Undead Realm': 'land_undead_realm',
         'Underworld': 'tab_underworld',
-        'Kindom of Heaven': 'tab_heaven_big2'
+        'Kindom of Heaven': 'tab_heaven'
     },
 
     demiQuestTable : {

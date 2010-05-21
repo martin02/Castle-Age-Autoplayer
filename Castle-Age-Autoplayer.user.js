@@ -2,11 +2,7 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-<<<<<<< HEAD
-// @version        140.23.9
-=======
 // @version        140.23.10
->>>>>>> master
 // @require        http://cloutman.com/jquery-latest.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/jquery-ui-1.8.1/js/jquery-ui-1.8.1.custom.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/farbtastic12/farbtastic/farbtastic.min.js
@@ -23,11 +19,7 @@
 /*jslint white: true, browser: true, devel: true, undef: true, nomen: true, bitwise: true, plusplus: true, immed: true, regexp: true */
 /*global window,unsafeWindow,$,GM_log,console,GM_getValue,GM_setValue,GM_xmlhttpRequest,GM_openInTab,GM_registerMenuCommand,XPathResult,GM_deleteValue,GM_listValues,GM_addStyle,CM_Listener,CE_message,ConvertGMtoJSON,localStorage */
 
-<<<<<<< HEAD
-var caapVersion = "140.23.9";
-=======
 var caapVersion = "140.23.10";
->>>>>>> master
 
 ///////////////////////////
 //       Prototypes
@@ -3385,13 +3377,10 @@ caap = {
         'gift_accept': {
             signaturePic: 'gif',
             CheckResultsFunction: 'CheckResults_gift_accept'
-<<<<<<< HEAD
-=======
         },
         'army': {
             signaturePic: 'invite_on.gif',
             CheckResultsFunction: 'CheckResults_army'
->>>>>>> master
         }
         /*
         ,

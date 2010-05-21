@@ -2,11 +2,7 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-<<<<<<< HEAD
-// @version        140.23.4
-=======
-// @version        140.23.8
->>>>>>> master
+// @version        140.23.9
 // @require        http://cloutman.com/jquery-latest.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/jquery-ui-1.8.1/js/jquery-ui-1.8.1.custom.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/farbtastic12/farbtastic/farbtastic.min.js
@@ -23,11 +19,7 @@
 /*jslint white: true, browser: true, devel: true, undef: true, nomen: true, bitwise: true, plusplus: true, immed: true, regexp: true */
 /*global window,unsafeWindow,$,GM_log,console,GM_getValue,GM_setValue,GM_xmlhttpRequest,GM_openInTab,GM_registerMenuCommand,XPathResult,GM_deleteValue,GM_listValues,GM_addStyle,CM_Listener,CE_message,ConvertGMtoJSON,localStorage */
 
-<<<<<<< HEAD
-var caapVersion = "140.23.4";
-=======
-var caapVersion = "140.23.8";
->>>>>>> master
+var caapVersion = "140.23.9";
 
 ///////////////////////////
 //       Prototypes
@@ -4609,7 +4601,7 @@ caap = {
                     (bpnum >= gm.getValue('ReconBPWon', 0) || (goldnum >= gm.getValue('ReconGoldWon', 0)))) {
                     now = (new Date().getTime()).toString();
                     newelement = now + global.vs + userId + global.vs + userName + global.vs + wins + global.vs + bpnum + global.vs + goldnum;
-                    gm.listPush('BattlesWonList', newelement, 500);
+                    gm.listPush('BattlesWonList', newelement, 200);
                 }
 
                 this.SetCheckResultsFunction('');
@@ -4627,7 +4619,7 @@ caap = {
                 now = (new Date().getTime()).toString();
                 newelement = now + global.vs + userId + global.vs + userName;
                 if (!gm.getValue('IgnoreBattleLoss', false)) {
-                    gm.listPush('BattlesLostList', newelement, 500);
+                    gm.listPush('BattlesLostList', newelement, 200);
                 }
             }
 
@@ -9268,7 +9260,7 @@ caap = {
     And then we add/update targetsOL database with information on the target. We include
     the max value of the number of entries on the first update
     \-------------------------------------------------------------------------------------*/
-                var entryLimit = gm.setValue('LimitTargets', 1000);
+                var entryLimit = gm.getValue('LimitTargets', 100);
                 gm.setListObjVal('targetsOl', userID, 'nameStr', nameStr, entryLimit);          /* Target name */
                 gm.setListObjVal('targetsOl', userID, 'rankStr', rankStr);                     /* Target rank */
                 gm.setListObjVal('targetsOl', userID, 'rankNum', rankNum);                     /* Target rank number */

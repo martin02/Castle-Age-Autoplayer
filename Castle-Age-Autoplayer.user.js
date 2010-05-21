@@ -2,7 +2,7 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-// @version        140.23.5
+// @version        140.23.4
 // @require        http://cloutman.com/jquery-latest.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/jquery-ui-1.8.1.custom.min.js
 // @require        http://farbtastic.googlecode.com/svn/branches/farbtastic-1/farbtastic.min.js
@@ -19,7 +19,7 @@
 /*jslint white: true, browser: true, devel: true, undef: true, nomen: true, bitwise: true, plusplus: true, immed: true, regexp: true */
 /*global window,unsafeWindow,$,GM_log,console,GM_getValue,GM_setValue,GM_xmlhttpRequest,GM_openInTab,GM_registerMenuCommand,XPathResult,GM_deleteValue,GM_listValues,GM_addStyle,CM_Listener,CE_message,ConvertGMtoJSON,localStorage */
 
-var caapVersion = "140.23.5";
+var caapVersion = "140.23.4";
 
 ///////////////////////////
 //       Prototypes
@@ -3694,7 +3694,7 @@ caap = {
     pageList: {
         'index': {
             signaturePic: 'gif',
-            CheckResultsFunction: 'CheckResults_index',
+            CheckResultsFunction: 'CheckResults_index'
         },
         'battle_monster': {
             signaturePic: 'tab_monster_on.jpg',
@@ -3741,7 +3741,7 @@ caap = {
         'gift_accept': {
             signaturePic: 'gif',
             CheckResultsFunction: 'CheckResults_gift_accept'
-        },
+        }
         /*
         ,
         'keep': {
@@ -4939,7 +4939,7 @@ caap = {
                     (bpnum >= gm.getValue('ReconBPWon', 0) || (goldnum >= gm.getValue('ReconGoldWon', 0)))) {
                     now = (new Date().getTime()).toString();
                     newelement = now + global.vs + userId + global.vs + userName + global.vs + wins + global.vs + bpnum + global.vs + goldnum;
-                    gm.listPush('BattlesWonList', newelement, 100);
+                    gm.listPush('BattlesWonList', newelement, 500);
                 }
 
                 this.SetCheckResultsFunction('');
@@ -4957,7 +4957,7 @@ caap = {
                 now = (new Date().getTime()).toString();
                 newelement = now + global.vs + userId + global.vs + userName;
                 if (!gm.getValue('IgnoreBattleLoss', false)) {
-                    gm.listPush('BattlesLostList', newelement, 100);
+                    gm.listPush('BattlesLostList', newelement, 500);
                 }
             }
 
@@ -9458,7 +9458,7 @@ caap = {
     And then we add/update targetsOL database with information on the target. We include
     the max value of the number of entries on the first update
     \-------------------------------------------------------------------------------------*/
-                var entryLimit = gm.getValue('LimitTargets', 100);
+                var entryLimit = gm.setValue('LimitTargets', 1000);
                 gm.setListObjVal('targetsOl', userID, 'nameStr', nameStr, entryLimit);          /* Target name */
                 gm.setListObjVal('targetsOl', userID, 'rankStr', rankStr);                     /* Target rank */
                 gm.setListObjVal('targetsOl', userID, 'rankNum', rankNum);                     /* Target rank number */
@@ -13052,7 +13052,7 @@ Generals.best = function(type) {
 			'IncomeGeneral':		'income',
 			'SubQuestGeneral':		'influence',
 			'MonsterGeneral':		'cash',
-			'BankingGeneral':			'bank',
+			'BankingGeneral':		'bank',
 			'BattleGeneral':		'invade',
 			'MonsterGeneral':		'monster',
 			'FortifyGeneral':		'dispel',

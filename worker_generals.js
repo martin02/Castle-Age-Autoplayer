@@ -168,7 +168,7 @@ Generals.best = function(type) {
 			'IncomeGeneral':		'income',
 			'SubQuestGeneral':		'influence',
 			'MonsterGeneral':		'cash',
-			'BankingGeneral':			'bank',
+			'BankingGeneral':		'bank',
 			'BattleGeneral':		'invade',
 			'MonsterGeneral':		'monster',
 			'FortifyGeneral':		'dispel',

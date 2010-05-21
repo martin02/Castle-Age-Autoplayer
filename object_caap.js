@@ -2630,7 +2630,7 @@ caap = {
     pageList: {
         'index': {
             signaturePic: 'gif',
-            CheckResultsFunction: 'CheckResults_index',
+            CheckResultsFunction: 'CheckResults_index'
         },
         'battle_monster': {
             signaturePic: 'tab_monster_on.jpg',
@@ -2677,7 +2677,7 @@ caap = {
         'gift_accept': {
             signaturePic: 'gif',
             CheckResultsFunction: 'CheckResults_gift_accept'
-        },
+        }
         /*
         ,
         'keep': {
@@ -3875,7 +3875,7 @@ caap = {
                     (bpnum >= gm.getValue('ReconBPWon', 0) || (goldnum >= gm.getValue('ReconGoldWon', 0)))) {
                     now = (new Date().getTime()).toString();
                     newelement = now + global.vs + userId + global.vs + userName + global.vs + wins + global.vs + bpnum + global.vs + goldnum;
-                    gm.listPush('BattlesWonList', newelement, 100);
+                    gm.listPush('BattlesWonList', newelement, 200);
                 }
 
                 this.SetCheckResultsFunction('');
@@ -3893,7 +3893,7 @@ caap = {
                 now = (new Date().getTime()).toString();
                 newelement = now + global.vs + userId + global.vs + userName;
                 if (!gm.getValue('IgnoreBattleLoss', false)) {
-                    gm.listPush('BattlesLostList', newelement, 100);
+                    gm.listPush('BattlesLostList', newelement, 200);
                 }
             }
 

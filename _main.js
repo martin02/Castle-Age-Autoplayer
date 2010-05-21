@@ -233,10 +233,10 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
             convertToArray('BattleTargets');
         }
 
-        if (gm.getValue('LastVersion', 0) < '140.23.3') {
-            gm.setValue('AutoEliteGetList', 0);
-            gm.setValue('AutoEliteReqNext', 0);
-            gm.setValue('AutoEliteEnd', '');
+        if (gm.getValue('LastVersion', 0) < '140.23.6') {
+            gm.deleteValue('AutoEliteGetList');
+            gm.deleteValue('AutoEliteReqNext');
+            gm.deleteValue('AutoEliteEnd');
             gm.deleteValue('MyEliteTodo');
         }
 
@@ -252,7 +252,14 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 
 $(function () {
     gm.log('Full page load completed');
+    // If unable to read in gm.values, then reload the page
+    if (gm.getValue('caapPause', 'none') !== 'none' && gm.getValue('caapPause', 'none') !== 'block') {
+        gm.log('Refresh page because unable to load gm.values due to unsafewindow error');
+        window.location.href = window.location.href;
+    }
+
     gm.setValue('clickUrl', window.location.href);
+    global.AddCSS();
     if (window.location.href.indexOf('facebook.com/castle_age/') >= 0) {
         gm.setValue('caapPause', 'none');
         gm.setValue('ReleaseControl', true);

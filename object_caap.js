@@ -773,16 +773,6 @@ caap = {
         }
     },
 
-    MakeListBox: function (idName, instructions, formatParms) {
-        try {
-            var htmlCode = "<textarea title=" + '"' + instructions + '"' + " type='text' id='caap_" + idName + "' " + formatParms + ">" + gm.getList(idName) + "</textarea>";
-            return htmlCode;
-        } catch (err) {
-            gm.log("ERROR in MakeTextBox: " + err);
-            return '';
-        }
-    },
-
     SaveBoxText: function (idName) {
         try {
             var boxText = $("#caap_" + idName).val();
@@ -1267,7 +1257,7 @@ caap = {
             htmlCode += "</div>";
             htmlCode += "</div>";
             htmlCode += "<div align=right id='caap_UserIdsSub' style='display: " + (gm.getValue('TargetType', false) == 'Userid List' ? 'block' : 'none') + "'>";
-            htmlCode += this.MakeListBox('BattleTargets', userIdInstructions, " rows='3' cols='25'");
+            htmlCode += this.MakeTextBox('BattleTargets', userIdInstructions, " rows='3' cols='25'");
             htmlCode += "</div>";
             htmlCode += "</div>";
             htmlCode += "<hr/></div>";
@@ -1550,7 +1540,7 @@ caap = {
             htmlCode += this.MakeCheckTR('Auto Elite Army', 'AutoElite', true, 'AutoEliteControl', autoEliteInstructions, true);
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += "<tr><td><input type='button' id='caap_resetElite' value='Do Now' style='font-size: 10px; width: 55px'></tr></td>";
-            htmlCode += '<tr><td>' + this.MakeListBox('EliteArmyList', "Try these UserIDs first. Use ',' between each UserID", " rows='3' cols='25'") + '</td></tr></table>';
+            htmlCode += '<tr><td>' + this.MakeTextBox('EliteArmyList', "Try these UserIDs first. Use ',' between each UserID", " rows='3' cols='25'") + '</td></tr></table>';
             htmlCode += '</div>';
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += this.MakeCheckTR('Auto Return Gifts', 'AutoGift', false, 'GiftControl', giftInstructions, true);
@@ -2294,27 +2284,7 @@ caap = {
                 gm.setValue('monsterReview', 0);
                 gm.setValue('monsterReviewCounter', -3);
             }
-
-            if (idName == 'EliteArmyList' || idName == 'BattleTargets') {
-                var eList = [];
-                if (value.length) {
-                    value = value.replace(/\n/gi, ',');
-                    eList = value.split(',');
-                    var fEmpty = function (e) {
-                        return e !== '';
-                    };
-
-                    eList = eList.filter(fEmpty);
-                    if (!eList.length) {
-                        eList = [];
-                    }
-                }
-
-                gm.setList(idName, eList);
-                e.target.value = eList;
-            } else {
-                caap.SaveBoxText(idName);
-            }
+            caap.SaveBoxText(idName);
 
             return true;
         } catch (err) {
@@ -5199,14 +5169,7 @@ caap = {
             return target;
         }
 
-        /*
-        target = gm.getValue('BattleTargets', '');
-        if (!target) {
-            return false;
-        }
-        */
-
-        var targets = gm.getList('BattleTargets');
+        var targets = gm.getListFromText('BattleTargets');
         if (!targets.length) {
             return false;
         }
@@ -6171,11 +6134,11 @@ caap = {
                     var attackOrderList = [];
                     // The extra apostrophe at the end of attack order makes it match any "soandos's monster" so it always selects a monster if available
                     if (selectType == 'any') {
-                        var attackOrderList1 = gm.getValue('orderbattle_monster', '').split(/[\n,]/);
-                        var attackOrderList2 = gm.getValue('orderraid', '').split(/[\n,]/).concat('your', "'");
+                        var attackOrderList1 = gm.getListFromText('orderbattle_monster', '');
+                        var attackOrderList2 = gm.getListFromText('orderraid', '').concat('your', "'");
                         attackOrderList = attackOrderList1.concat(attackOrderList2);
                     } else {
-                        attackOrderList = gm.getValue('order' + selectType, '').split(/[\n,]/).concat('your', "'");
+                        attackOrderList = gm.getListFromText('order' + selectType, '').concat('your', "'");
                     }
 
                     var monster = '';
@@ -6183,75 +6146,69 @@ caap = {
                     var monstType = '';
                     // Next we step through the users list getting the name and conditions
                     for (var p in attackOrderList) {
-                        if (attackOrderList.hasOwnProperty(p)) {
-                            if (!($.trim(attackOrderList[p]))) {
-                                continue;
-                            }
+						var attackOrderName = $.trim(attackOrderList[p].match(new RegExp("^[^:]+")).toString()).toLowerCase();
+						monsterConditions = $.trim(attackOrderList[p].replace(new RegExp("^[^:]+"), '').toString());
+						var monsterListCurrent = monsterList[selectType];
+						// Now we try to match the users name agains our list of monsters
+						for (var m in monsterListCurrent) {
+							if (monsterListCurrent.hasOwnProperty(m)) {
+								var monsterObj = monsterListCurrent[m];
+								monster = monsterObj.split(global.vs)[0];
+								monstPage = gm.getObjVal(monsterObj, 'page');
 
-                            var attackOrderName = $.trim(attackOrderList[p].match(new RegExp("^[^:]+")).toString()).toLowerCase();
-                            monsterConditions = $.trim(attackOrderList[p].replace(new RegExp("^[^:]+"), '').toString());
-                            var monsterListCurrent = monsterList[selectType];
-                            // Now we try to match the users name agains our list of monsters
-                            for (var m in monsterListCurrent) {
-                                if (monsterListCurrent.hasOwnProperty(m)) {
-                                    var monsterObj = monsterListCurrent[m];
-                                    monster = monsterObj.split(global.vs)[0];
-                                    monstPage = gm.getObjVal(monsterObj, 'page');
+								// If we set conditions on this monster already then we do not reprocess
+								if (gm.getListObjVal('monsterOl', monster, 'conditions') != 'none') {
+									continue;
+								}
 
-                                    // If we set conditions on this monster already then we do not reprocess
-                                    if (gm.getListObjVal('monsterOl', monster, 'conditions') != 'none') {
-                                        continue;
-                                    }
+								//If this monster does not match, skip to next one
+								// Or if this monster is dead, skip to next one
+								// Or if this monster is not the correct type, skip to next one
+								if ((monster.toLowerCase().indexOf(attackOrderName) < 0) || (selectType != 'any' && monstPage != selectType)) {
+									continue;
+								}
 
-                                    //If this monster does not match, skip to next one
-                                    // Or if this monster is dead, skip to next one
-                                    // Or if this monster is not the correct type, skip to next one
-                                    if ((monster.toLowerCase().indexOf(attackOrderName) < 0) || (selectType != 'any' && monstPage != selectType)) {
-                                        continue;
-                                    }
+								//Monster is a match so we set the conditions
+								gm.setListObjVal('monsterOl', monster, 'conditions', monsterConditions);
 
-                                    //Monster is a match so we set the conditions
-                                    gm.setListObjVal('monsterOl', monster, 'conditions', monsterConditions);
+								// If it's complete or collect rewards, no need to process further
+								var color = gm.getObjVal(monsterObj, 'color', '');
+								if (color == 'grey') {
+									continue;
+								}
 
-                                    // If it's complete or collect rewards, no need to process further
-                                    var color = gm.getObjVal(monsterObj, 'color', '');
-                                    if (color == 'grey') {
-                                        continue;
-                                    }
+								// checkMonsterDamage would have set our 'color' and 'over' values. We need to check
+								// these to see if this is the monster we should select/
+								var over = gm.getObjVal(monsterObj, 'over', '');
+								if (!firstUnderMax && color != 'purple') {
+									if (over == 'ach') {
+										if (!firstOverAch) {
+											firstOverAch = monster;
+										}
+									} else if (over != 'max') {
+										firstUnderMax = monster;
+									}
+								}
 
-                                    // checkMonsterDamage would have set our 'color' and 'over' values. We need to check
-                                    // these to see if this is the monster we should select/
-                                    var over = gm.getObjVal(monsterObj, 'over', '');
-                                    if (!firstUnderMax && color != 'purple') {
-                                        if (over == 'ach') {
-                                            if (!firstOverAch) {
-                                                firstOverAch = monster;
-                                            }
-                                        } else if (over != 'max') {
-                                            firstUnderMax = monster;
-                                        }
-                                    }
-
-                                    var monsterFort = parseFloat(gm.getObjVal(monsterObj, 'Fort%', 0));
-                                    var maxToFortify = (this.parseCondition('f%', monsterConditions)  !== false) ? this.parseCondition('f%', monsterConditions) : gm.getNumber('MaxToFortify', 0);
-                                    monstType = this.getMonstType(monster);
-                                    //gm.log(monster + ' monsterFort < maxToFortify ' + (monsterFort < maxToFortify) + ' this.monsterInfo[monstType] ' + this.monsterInfo[monstType]+ ' this.monsterInfo[monstType].fort ' + this.monsterInfo[monstType].fort);
-                                    if (!firstFortUnderMax && monsterFort < maxToFortify &&
-                                            monstPage == 'battle_monster' &&
-                                            this.monsterInfo[monstType] &&
-                                            this.monsterInfo[monstType].fort) {
-                                        if (over == 'ach') {
-                                            if (!firstFortOverAch) {
-                                                //gm.log('hitit');
-                                                firstFortOverAch = monster;
-                                            }
-                                        } else if (over != 'max') {
-                                            //gm.log('norm hitit');
-                                            firstFortUnderMax = monster;
-                                        }
-                                    }
-                                }
-                            }
+								var monsterFort = parseFloat(gm.getObjVal(monsterObj, 'Fort%', 0));
+								var maxToFortify = (this.parseCondition('f%', monsterConditions)  !== false) ? this.parseCondition('f%', monsterConditions) : gm.getNumber('MaxToFortify', 0);
+								monstType = this.getMonstType(monster);
+								//gm.log(monster + ' monsterFort < maxToFortify ' + (monsterFort < maxToFortify) + ' this.monsterInfo[monstType] ' + this.monsterInfo[monstType]+ ' this.monsterInfo[monstType].fort ' + this.monsterInfo[monstType].fort);
+								if (!firstFortUnderMax && monsterFort < maxToFortify &&
+										monstPage == 'battle_monster' &&
+										this.monsterInfo[monstType] &&
+										this.monsterInfo[monstType].fort) {
+									if (over == 'ach') {
+										if (!firstFortOverAch) {
+											//gm.log('hitit');
+											firstFortOverAch = monster;
+										}
+									} else if (over != 'max') {
+										//gm.log('norm hitit');
+										firstFortUnderMax = monster;
+									}
+								}
+							}
                         }
                     }
 
@@ -7990,7 +7947,7 @@ caap = {
             gm.log('Elite Guard cycle');
             var MergeMyEliteTodo = function (list) {
                 gm.log('Elite Guard MergeMyEliteTodo list');
-                var eliteArmyList = gm.getList('EliteArmyList');
+                var eliteArmyList = gm.getListFromText('EliteArmyList');
                 if (eliteArmyList.length) {
                     gm.log('Merge and save Elite Guard MyEliteTodo list');
                     var diffList = list.filter(function (todoID) {

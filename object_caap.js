@@ -47,7 +47,6 @@ caap = {
             this.AddControl();
             this.AddColorWheels();
             this.AddDashboard();
-            this.AddExpDisplay();
             this.AddListeners();
             this.CheckResults();
             return true;
@@ -1806,27 +1805,6 @@ caap = {
     },
     */
 
-    AddExpDisplay: function () {
-        try {
-            var exp = $("#app46755028429_st_2_5 strong").text();
-            if (!exp) {
-                throw 'Unable to get text';
-            }
-
-            if (/\(/.test(exp)) {
-                return false;
-            }
-
-            this.stats.exp = this.GetStatusNumbers(exp);
-            $("#app46755028429_st_2_5 strong").prepend("(<span style='color:red'>" + (this.stats.exp.dif) + "</span>) ");
-            this.SetDivContent('exp_mess', "Experience to next level: " + this.stats.exp.dif);
-            return true;
-        } catch (e) {
-            gm.log("ERROR in AddExpDisplay: " + e);
-            return false;
-        }
-    },
-
     /////////////////////////////////////////////////////////////////////
     //                          EVENT LISTENERS
     // Watch for changes and update the controls
@@ -2388,11 +2366,6 @@ caap = {
 
                     caap.waitingForDomLoad = false;
 
-                    // Update experience and display
-                    window.setTimeout(function () {
-                        caap.AddExpDisplay();
-                    }, 0);
-
                     //gm.log("Refreshing DOM Listeners");
                     $('#app46755028429_globalContainer').find('a').unbind('click', caap.whatClickedURLListener);
                     $('#app46755028429_globalContainer').find('a').bind('click', caap.whatClickedURLListener);
@@ -2592,21 +2565,17 @@ caap = {
             var cash = this.NumberOnly(cashTxt);
             this.stats.cash = cash;
 
-            // experience
-            var exp = nHtml.FindByAttrContains(document.body, 'div', 'id', 'st_2_5');
-            this.stats.exp = this.GetStatusNumbers(exp);
-
             // time to next level
-            if (this.stats.exp) {
-                var expPerStamina = 2.4;
-                var expPerEnergy = parseFloat(gm.getObjVal('AutoQuest', 'expRatio')) || 1.4;
-                var minutesToLevel = (this.stats.exp.dif - this.stats.stamina.num * expPerStamina - this.stats.energy.num * expPerEnergy) / (expPerStamina + expPerEnergy) / 12 * 60;
-                this.stats.levelTime = new Date();
-                var minutes = this.stats.levelTime.getMinutes();
-                minutes += minutesToLevel;
-                this.stats.levelTime.setMinutes(minutes);
-                this.SetDivContent('level_mess', 'Expected next level: ' + this.FormatTime(this.stats.levelTime));
-            }
+			this.stats.exp = {};
+			this.stats.exp.dif = Player.get('exp_needed');
+			var expPerStamina = 2.4;
+			var expPerEnergy = parseFloat(gm.getObjVal('AutoQuest', 'expRatio')) || 1.4;
+			var minutesToLevel = (Player.get('exp_needed') - this.stats.stamina.num * expPerStamina - this.stats.energy.num * expPerEnergy) / (expPerStamina + expPerEnergy) / 12 * 60;
+			this.stats.levelTime = new Date();
+			var minutes = this.stats.levelTime.getMinutes();
+			minutes += minutesToLevel;
+			this.stats.levelTime.setMinutes(minutes);
+			this.SetDivContent('level_mess', 'Expected next level: ' + this.FormatTime(this.stats.levelTime));
 
             if (this.DisplayTimer('DemiPointTimer')) {
                 if (this.CheckTimer('DemiPointTimer')) {
@@ -2745,7 +2714,6 @@ caap = {
 
             this.performanceTimer('Start CheckResults');
             this.JustDidIt('CheckResultsTimer');
-            //this.AddExpDisplay();
             gm.setValue('page', '');
             var pageUrl = gm.getValue('clickUrl');
             //gm.log("Page url: " + pageUrl);

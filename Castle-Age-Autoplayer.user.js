@@ -218,7 +218,6 @@ gm = {
         var ret = getTheList.filter(function (item) {
             return item.trim() || false;
         });
-        gm.log('getListFromText ' + n + ' value ' + ret.toString());
         return ret;
     },
 

@@ -23,7 +23,6 @@ Bank.caap_load = function() {
 	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
 	for (i in valuesList) {
 		this.option[i] = gm.getValue(valuesList[i]);
-		//gm.log(i + ' =  '+ gm.getValue(valuesList[i]));
 	}
 };
 

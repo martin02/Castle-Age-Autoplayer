@@ -2945,9 +2945,8 @@ caap = {
 
             $('#caap_ResetMenuLocation').click(this.ResetMenuLocationListener);
             $('#caap_resetElite').click(function (e) {
-                gm.setValue('AutoEliteGetList', 0);
-                gm.setValue('AutoEliteReqNext', 0);
-                gm.setValue('AutoEliteEnd', '');
+				Elite.runtime.waitelite = 0;
+				gm.log(' elite run ' + Elite.runtime.waitelite);
                 if (!gm.getValue('FillArmy', false)) {
                     gm.deleteValue(caap.friendListType.giftc.name + 'Requested');
                     gm.deleteValue(caap.friendListType.giftc.name + 'Responded');
@@ -3444,9 +3443,9 @@ caap = {
 
             // Check for Elite Guard Add image
             if (this.CheckForImage('elite_guard_add')) {
-                if (gm.getValue('AutoEliteEnd', 'NoArmy') != 'NoArmy') {
-                    gm.setValue('AutoEliteGetList', 0);
-                }
+                //if (gm.getValue('AutoEliteEnd', 'NoArmy') != 'NoArmy') {
+                    Elite.runtime.waitelite = 0;
+                //}
             }
 
             // Check for Gold Stored
@@ -9259,7 +9258,7 @@ caap = {
         'Battle': 'Battling Players',
         'MonsterReview': 'Review Monsters/Raids',
         'ImmediateAutoStat': 'Immediate Auto Stats',
-        'AutoElite': 'Fill Elite Guard',
+        'Elite': 'Fill Elite Guard',
         'ArenaElite': 'Fill Arena Elite',
         'AutoPotions': 'Auto Potions',
         'Alchemy': 'Auto Alchemy',
@@ -9289,7 +9288,7 @@ caap = {
 
     // The Master Action List
     masterActionList: {
-        0x00: 'AutoElite',
+        0x00: 'Elite',
         0x01: 'ArenaElite',
         0x02: 'Heal',
         0x03: 'ImmediateBanking',
@@ -9414,7 +9413,7 @@ caap = {
             gm.log("ERROR in MakeActionsList: " + e);
             this.actionsList = [
 				'Page',
-                "AutoElite",
+                "Elite",
                 "ArenaElite",
                 "Heal",
                 "ImmediateBanking",
@@ -12472,6 +12471,12 @@ Elite.option = {
 	every:24,
 	prefer:[],
 	armyperpage:25 // Read only, but if they change it and I don't notice...
+};
+
+Elite.caap_load = function() {
+	this.option.prefer = gm.getListFromText('EliteArmyList');
+	this.option.elite = gm.getValue('AutoElite', false);
+	this.option.every = 1;
 };
 
 Elite.runtime = {

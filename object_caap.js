@@ -7254,7 +7254,7 @@ caap = {
             return false;
         }
 
-        return Bank.work();
+        return Bank.work(true);
     },
 
     RetrieveFromBank: function (num) {

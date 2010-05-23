@@ -19,13 +19,6 @@ Bank.option = {
 	keep: 10000
 };
 
-Bank.caap_load = function() {
-	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-};
-
 Bank.display = [
 	{
 		id:'general',

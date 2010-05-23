@@ -21,14 +21,6 @@ Alchemy.option = {
 	summon:false
 };
 
-Alchemy.caap_load = function() {
-	valuesList = {'perform':'AutoAlchemy','hearts':'AutoAlchemyHearts'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-	this.option.summon = true;
-};
-
 Alchemy.runtime = {
 	best:null
 };
@@ -37,13 +29,11 @@ Alchemy.display = [
 	{
 		id:'perform',
 		label:'Automatically Perform',
-		checkbox:true,
-		caap:'AutoAlchemy'
+		checkbox:true
 	},{
 		id:'hearts',
 		label:'Use Battle Hearts',
-		checkbox:true,
-		caap:'AutoAlchemyHearts'
+		checkbox:true
 	},{
 		id:'summon',
 		label:'Use Summon Ingredients',

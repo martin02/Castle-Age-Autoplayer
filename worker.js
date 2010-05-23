@@ -249,7 +249,6 @@ Worker.prototype._setup = function() {
 Worker.prototype._unflush = function() {
         !this._loaded && this._init();
         !this.settings.keep && !this.data && this._load('data');
-		iscaap() && (typeof this.caap_load == 'function') && this.caap_load();
 };
 
 Worker.prototype._update = function(type) {

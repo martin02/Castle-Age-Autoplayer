@@ -7903,7 +7903,7 @@ caap = {
             return false;
         }
 
-        return Bank.work();
+        return Bank.work(true);
     },
 
     RetrieveFromBank: function (num) {
@@ -10535,7 +10535,6 @@ Worker.prototype._setup = function() {
 Worker.prototype._unflush = function() {
         !this._loaded && this._init();
         !this.settings.keep && !this.data && this._load('data');
-		iscaap() && (typeof this.caap_load == 'function') && this.caap_load();
 };
 
 Worker.prototype._update = function(type) {
@@ -10579,6 +10578,7 @@ Worker.prototype._work = function(state) {
         }
         return false;
 };
+
 /********** Worker.Config **********
 * Has everything to do with the config
 */
@@ -11142,7 +11142,8 @@ Page.defaults = {
                         army_gifts:                             {url:'gift.php', selector:'#app'+APPID+'_giftContainer'},
                         army_viewarmy:                  {url:'army_member.php', image:'view_army_on.gif'},
                         army_sentinvites:               {url:'army_reqs.php', image:'sent_invites_on.gif'},
-                        army_newsfeed:                  {url:'army_news_feed.php', selector:'#app'+APPID+'_army_feed_header'}
+			army_newsfeed:			{url:'army_news_feed.php', selector:'#app'+APPID+'_army_feed_header'},
+                        apprentice_collect:             {url:'apprentice.php?collect=true', image:'ma_view_progress2.gif'}
                 }
         }
 };
@@ -11233,13 +11234,13 @@ Page.identify = function() {
         if (this.page !== '') {
                 this.data[this.page] = Date.now();
         }
-//      debug('this.identify("'+Page.page+'")');
+	//debug(this.name,'this.identify("'+Page.page+'")');
         return this.page;
 };
 
 Page.to = function(page, args, force) {
-        if (typeof Queue != 'undefined' && Queue.option.pause) {
-                debug('Trying to load page when paused...');
+	if (Queue.option.pause) {
+		debug(this.name,'Trying to load page when paused...');
                 return true;
         }
         if (page === this.page && (force || typeof args === 'undefined')) {
@@ -11257,7 +11258,7 @@ Page.to = function(page, args, force) {
                 } else {
                         this.last = this.last + args;
                 }
-                debug('Navigating to ' + page + ' (' + (force ? 'FORCE: ' : '') + this.last + ')');
+		debug(this.name,'Navigating to ' + page + ' (' + (force ? 'FORCE: ' : '') + this.last + ')');
                 if (force) {
 //                      this.loading=true;
                         window.location.href = this.last;
@@ -11267,7 +11268,6 @@ Page.to = function(page, args, force) {
         }
         return false;
 };
-
 
 Page.ajaxload = function() {
         $.ajax({
@@ -11280,7 +11280,7 @@ Page.ajaxload = function() {
                         Page.ajaxload();
                 },
                 success:function(data){
-                        if (data.indexOf('</html>') !== -1 && data.indexOf('single_popup') !== -1 && data.indexOf('app'+APPID+'_index') !== -1) { // Last things in source if loaded correctly...
+		if (data.indexOf('app'+APPID+'_results_container') !== -1 && data.indexOf('</html>') !== -1 && data.indexOf('single_popup') !== -1 && data.indexOf('app'+APPID+'_index') !== -1) { // Last things in source if loaded correctly...
                                 Page.loading = false;
                                 data = data.substring(data.indexOf('<div id="app'+APPID+'_globalContainer"'), data.indexOf('<div class="UIStandardFrame_SidebarAds"'));
                                 $('#app'+APPID+'_AjaxLoadIcon').css('display', 'none');
@@ -11296,13 +11296,13 @@ Page.ajaxload = function() {
 };
 
 Page.reload = function() {
-        debug('Page.reload()');
+	debug(this.name,'Page.reload()');
         window.location.href = window.location.href;
 };
 
 Page.click = function(el) {
         if (!$(el).length) {
-                debug('Page.click: Unable to find element - '+el);
+		log(this.name,'Page.click: Unable to find element - '+el);
                 return false;
         }
         var e = document.createEvent("MouseEvents");
@@ -11318,6 +11318,7 @@ Page.clear = function() {
         this.last = this.lastclick = this.when = null;
         this.retry = 0;
 };
+
 /********** Worker.Queue() **********
 * Keeps track of the worker queue
 */
@@ -11343,10 +11344,6 @@ Queue.option = {
 	stamina: 0,
 	start_energy: 0,
 	energy: 0
-};
-
-Queue.caap_load = function() {
-	this.option.pause = false;
 };
 
 Queue.display = [
@@ -11764,14 +11761,6 @@ Alchemy.option = {
 	summon:false
 };
 
-Alchemy.caap_load = function() {
-	valuesList = {'perform':'AutoAlchemy','hearts':'AutoAlchemyHearts'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-	this.option.summon = true;
-};
-
 Alchemy.runtime = {
 	best:null
 };
@@ -11780,13 +11769,11 @@ Alchemy.display = [
 	{
 		id:'perform',
 		label:'Automatically Perform',
-		checkbox:true,
-		caap:'AutoAlchemy'
+		checkbox:true
 	},{
 		id:'hearts',
 		label:'Use Battle Hearts',
-		checkbox:true,
-		caap:'AutoAlchemyHearts'
+		checkbox:true
 	},{
 		id:'summon',
 		label:'Use Summon Ingredients',
@@ -11880,14 +11867,6 @@ Bank.option = {
 	above: 10000,
 	hand: 0,
 	keep: 10000
-};
-
-Bank.caap_load = function() {
-	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-		//gm.log(i + ' =  '+ gm.getValue(valuesList[i]));
-	}
 };
 
 Bank.display = [
@@ -12473,12 +12452,6 @@ Elite.option = {
 	armyperpage:25 // Read only, but if they change it and I don't notice...
 };
 
-Elite.caap_load = function() {
-	this.option.prefer = gm.getListFromText('EliteArmyList');
-	this.option.elite = gm.getValue('AutoElite', false);
-	this.option.every = 1;
-};
-
 Elite.runtime = {
 	armylastpage:1,
 	armyextra:0,
@@ -12717,7 +12690,6 @@ Generals.update = function(type) {
 	// End Priority Stuff
 	
 	if ((type === 'data' || type === Town) && invade && duel) {
-		//debug(this.name,'Calculating stats');
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
 			defense_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Defense|Increase Player Defense by ([0-9]+)/i))	+ ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Defense for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -13894,13 +13866,6 @@ Land.option = {
 	land_exp:false
 };
 
-Land.caap_load = function() {
-	valuesList = {'enabled':'autoBuyLand','sell':'SellLands'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-};
-
 Land.runtime = {
 	lastlevel:0,
 	best:null,
@@ -13972,7 +13937,7 @@ Land.update = function() {
 		this.option.sell = true;
 	}
 	
-	for (var i in this.data) {
+	for (i in this.data) {
 		if (this.option.sell && this.data[i].own > this.data[i].max) {
 			best = i;
 			buy = this.data[i].max - this.data[i].own;// Negative number means sell
@@ -14046,7 +14011,7 @@ Land.work = function(state) {
 			} else {
 				$('select', $('.land_buy_costs .gold', el).parent().parent().next()).val(Land.runtime.buy <= -10 ? 10 : (Land.runtime.buy <= -5 ? 5 : 1));
 			}
-			debug(this.name,(Land.runtime.buy > 0 ? 'Buy' : 'Sell') + 'ing ' + Math.abs(Land.runtime.buy) + ' x ' + Land.runtime.best + ' for $' + addCommas(Math.abs(Land.runtime.cost)));
+			debug('Land',(Land.runtime.buy > 0 ? 'Buy' : 'Sell') + 'ing ' + Math.abs(Land.runtime.buy) + ' x ' + Land.runtime.best + ' for $' + addCommas(Math.abs(Land.runtime.cost)));
 			Page.click($('.land_buy_costs input[name="' + (Land.runtime.buy > 0 ? 'Buy' : 'Sell') + '"]', el));
 		}
 	});
@@ -16365,5 +16330,54 @@ Upgrade.work = function(state) {
 		Page.reload(); // Only get here if we can't click!
 	}
 	return true;
+};
+
+/********** Worker.Caap() **********
+* Build your elite army
+*/
+var Caap = new Worker('Caap', 'keep_eliteguard army_viewarmy battle_arena');
+Caap.data = {};
+
+Caap.init = function() { //overload unflush
+	worker.prototype._oldunflush = worker.prototype._unflush;
+	worker.prototype._unflush = function() {
+		this._oldunflush();
+		if (typeof this.caap_values != 'undefined') {
+			for (i in this.caap_values) {
+				this.option[i] = gm.getValue(valuesList[i]);
+			}
+		}
+		(typeof this.caap_load == 'function') && this.caap_load();
+	}
+};
+
+Elite.caap_load = function() {
+	this.option.prefer = gm.getListFromText('CaapArmyList');
+	this.option.elite = gm.getValue('AutoCaap', false);
+	this.option.every = 1;
+};
+
+Land.caap_values = {
+	'enabled':	'autoBuyLand',
+	'sell':		'SellLands'
+};
+
+Bank.caap_values = {
+	'above':	'MaxInCash',
+	'hand':		'MinInCash',
+	'keep':		'minInStore'
+};
+
+Alchemy.caap_values = {
+	'perform':	'AutoAlchemy',
+	'hearts':	'AutoAlchemyHearts'
+};
+
+Alchemy.caap_load = function() {
+	this.option.summon = true;
+};
+
+Queue.caap_load = function() {
+	this.option.pause = false;
 };
 

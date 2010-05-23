@@ -2,10 +2,10 @@
 // @name           Castle Age Autoplayer
 // @namespace      caap
 // @description    Auto player for Castle Age
-// @version        140.23.10
+// @version        140.23.19
 // @require        http://cloutman.com/jquery-latest.min.js
 // @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/jquery-ui-1.8.1/js/jquery-ui-1.8.1.custom.min.js
-// @require        http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/farbtastic12/farbtastic/farbtastic.min.js
+// @require        http://gihub.com/Xotic750/Castle-Age-Autoplayer/raw/master/farbtastic12/farbtastic/farbtastic.min.js
 // @include        http*://apps.*facebook.com/castle_age/*
 // @include        http://www.facebook.com/common/error.html
 // @include        http://www.facebook.com/reqs.php#confirm_46755028429_0
@@ -19,7 +19,7 @@
 /*jslint white: true, browser: true, devel: true, undef: true, nomen: true, bitwise: true, plusplus: true, immed: true, regexp: true */
 /*global window,unsafeWindow,$,GM_log,console,GM_getValue,GM_setValue,GM_xmlhttpRequest,GM_openInTab,GM_registerMenuCommand,XPathResult,GM_deleteValue,GM_listValues,GM_addStyle,CM_Listener,CE_message,ConvertGMtoJSON,localStorage */
 
-var caapVersion = "140.23.10";
+var caapVersion = "140.23.19";
 
 ///////////////////////////
 //       Prototypes
@@ -1571,6 +1571,7 @@ caap = {
     },
 
     divList: [
+        'banner',
         'activity_mess',
         'idle_mess',
         'quest_mess',
@@ -1921,6 +1922,7 @@ caap = {
             var demiPointsFirstInstructions = "Don't attack monsters until you've gotten all your demi points from battling.";
             var powerattackInstructions = "Use power attacks. Only do normal attacks if power attack not possible";
             var powerattackMaxInstructions = "(EXPERIMENTAL) Use maximum power attacks globally on Skaar, Genesis, Ragnarok, and Bahamut types. Only do normal power attacks if maximum power attack not possible";
+            var powerfortifyMaxInstructions = "(EXPERIMENTAL) Use maximum power fortify globally on Skaar, Genesis, Ragnarok, and Bahamut types. Only do normal power attacks if maximum power attack not possible";
             var dosiegeInstructions = "Turns on or off automatic siege assist for all monsters and raids.";
             htmlCode += this.ToggleControl('Monster', 'MONSTER');
             var mbattleList = [
@@ -1953,6 +1955,7 @@ caap = {
             htmlCode += this.MakeCheckTR("&nbsp;&nbsp;&nbsp;Power Attack Max", 'PowerAttackMax', false, '', powerattackMaxInstructions) + "</table>";
             htmlCode += "</div>";
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
+            htmlCode += this.MakeCheckTR("Power Fortify Max", 'PowerFortifyMax', false, '', powerfortifyMaxInstructions);
             htmlCode += this.MakeCheckTR("Siege weapon assist", 'DoSiege', true, '', dosiegeInstructions);
             htmlCode += this.MakeCheckTR("Clear Complete Monsters", 'clearCompleteMonsters', false, '', '');
             htmlCode += this.MakeCheckTR("Achievement Mode", 'AchievementMode', true, '', monsterachieveInstructions);
@@ -2153,6 +2156,11 @@ caap = {
             var autoPotionsInstructions5 = "Do not consume potions if the " +
                 "experience points to the next level are within this value.";
             var autoEliteInstructions = "Enable or disable Auto Elite function";
+            var autoEliteIgnoreInstructions = "Use this option if you have a small " +
+                "army and are unable to fill all 10 Elite positions. This prevents " +
+                "the script from checking for any empty places and will cause " +
+                "Auto Elite to run on its timer only.";
+            var bannerInstructions = "Uncheck if you wish to hide the CAAP banner.";
             htmlCode += this.ToggleControl('Other', 'OTHER OPTIONS');
             var giftChoiceList = [
                 'Same Gift As Received',
@@ -2161,6 +2169,7 @@ caap = {
             giftChoiceList = giftChoiceList.concat(gm.getList('GiftList'));
             giftChoiceList.push('Get Gift List');
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
+            htmlCode += this.MakeCheckTR('Display CAAP Banner', 'BannerDisplay', true, '', bannerInstructions);
             htmlCode += this.MakeCheckTR('Use 24 Hour Format', 'use24hr', true, '', timeInstructions);
             htmlCode += this.MakeCheckTR('Set Title', 'SetTitle', false, 'SetTitle_Adv', titleInstructions0, true);
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
@@ -2188,7 +2197,9 @@ caap = {
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += this.MakeCheckTR('Auto Elite Army', 'AutoElite', true, 'AutoEliteControl', autoEliteInstructions, true);
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
-            htmlCode += "<tr><td><input type='button' id='caap_resetElite' value='Do Now' style='font-size: 10px; width: 55px'></tr></td>";
+            htmlCode += this.MakeCheckTR('&nbsp;&nbsp;&nbsp;Timed Only', 'AutoEliteIgnore', false, '', autoEliteIgnoreInstructions) + '</table>';
+            htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
+            htmlCode += "<tr><td><input type='button' id='caap_resetElite' value='Do Now' style='padding: 0; font-size: 10px; height: 18px' /></tr></td>";
             htmlCode += '<tr><td>' + this.MakeTextBox('EliteArmyList', "Try these UserIDs first. Use ',' between each UserID", " rows='3' cols='25'") + '</td></tr></table>';
             htmlCode += '</div>';
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
@@ -2216,26 +2227,35 @@ caap = {
             htmlCode += "<tr><td style='width: 50%'>Style</td><td style='text-align: right'>" + this.MakeDropDown('DisplayStyle', styleList, '', "style='font-size: 10px; width: 100%'") + '</td></tr></table>';
             htmlCode += "<div id='caap_DisplayStyleHide' style='display: " + (gm.getValue('DisplayStyle', false) == 'Custom' ? 'block' : 'none') + "'>";
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
-            htmlCode += "<tr><td style='padding-left: 10px'><b>Started</b></td><td style='text-align: right'><input type='button' id='caap_StartedColorSelect' value='Select' style='font-size: 10px; width: 55px'></td></tr>";
+            htmlCode += "<tr><td style='padding-left: 10px'><b>Started</b></td><td style='text-align: right'><input type='button' id='caap_StartedColorSelect' value='Select' style='padding: 0; font-size: 10px; height: 18px' /></td></tr>";
             htmlCode += "<tr><td style='padding-left: 20px'>RGB Color</td><td style='text-align: right'>" + this.MakeNumberForm('StyleBackgroundLight', 'FFF or FFFFFF', '#E0C691', "type='text' size='5' style='font-size: 10px; text-align: right'") + '</td></tr>';
-            htmlCode += "<tr><td style='padding-left: 20px'>Transparency</td><td style='text-align: right'>" + this.MakeNumberForm('StyleOpacityLight', '0 ~ 1', '1', "type='text' size='5' style='font-size: 10px; text-align: right'") + '</td></tr>';
-            htmlCode += "<tr><td style='padding-left: 10px'><b>Stoped</b></td><td style='text-align: right'><input type='button' id='caap_StopedColorSelect' value='Select' style='font-size: 10px; width: 55px'></td></tr>";
+            htmlCode += "<tr><td style='padding-left: 20px'>Transparency</td><td style='text-align: right'>" + this.MakeNumberForm('StyleOpacityLight', '0 ~ 1', '1', "type='text' size='5' style='vertical-align: middle; font-size: 10px; text-align: right'") + '</td></tr>';
+            htmlCode += "<tr><td style='padding-left: 10px'><b>Stoped</b></td><td style='text-align: right'><input type='button' id='caap_StopedColorSelect' value='Select' style='padding: 0; font-size: 10px; height: 18px' /></td></tr>";
             htmlCode += "<tr><td style='padding-left: 20px'>RGB Color</td><td style='text-align: right'>" + this.MakeNumberForm('StyleBackgroundDark', 'FFF or FFFFFF', '#B09060', "type='text' size='5' style='font-size: 10px; text-align: right'") + '</td></tr>';
             htmlCode += "<tr><td style='padding-left: 20px'>Transparency</td><td style='text-align: right'>" + this.MakeNumberForm('StyleOpacityDark', '0 ~ 1', '1', "type='text' size='5' style='font-size: 10px; text-align: right'") + '</td></tr></table>';
             htmlCode += "</div>";
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px' style='margin-top: 3px'>";
-            htmlCode += "<tr><td><input type='button' id='caap_FillArmy' value='Fill Army' style='font-size: 10px; width: 55px'></td></tr></table>";
+            htmlCode += "<tr><td><input type='button' id='caap_FillArmy' value='Fill Army' style='padding: 0; font-size: 10px; height: 18px' /></td></tr></table>";
             htmlCode += '</div>';
             htmlCode += "<hr/></div>";
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
-            htmlCode += "<tr><td style='width: 90%'>Unlock Menu <input type='button' id='caap_ResetMenuLocation' value='Reset' style='font-size: 10px; width: 55px'></td><td style='width: 10%; text-align: right'><input type='checkbox' id='unlockMenu' /></td></tr></table>";
+            htmlCode += "<tr><td style='width: 90%'>Unlock Menu <input type='button' id='caap_ResetMenuLocation' value='Reset' style='padding: 0; font-size: 10px; height: 18px' /></td><td style='width: 10%; text-align: right'><input type='checkbox' id='unlockMenu' /></td></tr></table>";
             htmlCode += "Version: " + caapVersion + " - <a href='" + global.discussionURL + "' target='_blank'>CAAP Forum</a><br />";
             if (global.newVersionAvailable) {
                 htmlCode += "<a href='http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/Castle-Age-Autoplayer.user.js'>Install new CAAP version: " + gm.getValue('SUC_remote_version') + "!</a>";
             }
 
+            var banner = "<div id='caap_BannerHide' style='display: " + (gm.getValue('BannerDisplay', true) ? 'block' : 'none') + "'>";
+            banner += "<img src='http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/Castle-Age-Autoplayer.png' alt='Castle Age Auto Player' /><br /><hr /></div>";
+            this.SetDivContent('banner', banner);
+
             this.SetDivContent('control', htmlCode);
             this.CheckLastAction(gm.getValue('LastAction', 'none'));
+            $("#caap_resetElite").button();
+            $("#caap_StartedColourSelect").button();
+            $("#caap_StopedColourSelect").button();
+            $("#caap_FillArmy").button();
+            $("#caap_ResetMenuLocation").button();
             return true;
         } catch (err) {
             gm.log("ERROR in AddControl: " + err);
@@ -2299,16 +2319,16 @@ caap = {
              Next we put in our Refresh Monster List button which will only show when we have
              selected the Monster display.
             \-------------------------------------------------------------------------------------*/
-            layout += "<div id='caap_buttonMonster' style='position:absolute;top:0px;left:250px;display:" + (gm.getValue('DBDisplay', 'Monster') == 'Monster' ? 'block' : 'none') + "'> <input type='button' id='caap_refreshMonsters' value='Refresh Monster List' style='font-size: 9px; width:50; height:50'></div>";
+            layout += "<div id='caap_buttonMonster' style='position:absolute;top:0px;left:250px;display:" + (gm.getValue('DBDisplay', 'Monster') == 'Monster' ? 'block' : 'none') + "'><input type='button' id='caap_refreshMonsters' value='Refresh Monster List' style='padding: 0; font-size: 9px; height: 18px' /></div>";
             /*-------------------------------------------------------------------------------------\
              Next we put in the Clear Target List button which will only show when we have
              selected the Target List display
             \-------------------------------------------------------------------------------------*/
-            layout += "<div id='caap_buttonTargets' style='position:absolute;top:0px;left:250px;display:" + (gm.getValue('DBDisplay', 'Monster') == 'Target List' ? 'block' : 'none') + "'> <input type='button' id='caap_clearTargets' value='Clear Targets List' style='font-size: 9px; width:50; height:50'></div>";
+            layout += "<div id='caap_buttonTargets' style='position:absolute;top:0px;left:250px;display:" + (gm.getValue('DBDisplay', 'Monster') == 'Target List' ? 'block' : 'none') + "'><input type='button' id='caap_clearTargets' value='Clear Targets List' style='padding: 0; font-size: 9px; height: 18px' /></div>";
             /*-------------------------------------------------------------------------------------\
              Then we put in the Live Feed link since we overlay the Castle Age link.
             \-------------------------------------------------------------------------------------*/
-            layout += "<div id='caap_buttonFeed' style='position:absolute;top:0px;left:0px;'><input id='caap_liveFeed' type='button' value='LIVE FEED! Your friends are calling.' style='font-size: 9px; width:50; height:50'></div>";
+            layout += "<div id='caap_buttonFeed' style='position:absolute;top:0px;left:0px;'><input id='caap_liveFeed' type='button' value='LIVE FEED! Your friends are calling.' style='padding: 0; font-size: 9px; height: 18px' /></div>";
             /*-------------------------------------------------------------------------------------\
              We install the display selection box that allows the user to toggle through the
              available displays.
@@ -2343,6 +2363,9 @@ caap = {
             }).appendTo(document.body);
 
             this.caapTopObject = $('#caap_top');
+            $("#caap_refreshMonsters").button();
+            $("#caap_clearTargets").button();
+            $("#caap_liveFeed").button();
 
             return true;
         } catch (err) {
@@ -2412,9 +2435,25 @@ caap = {
             var monsterList = gm.getList('monsterOl');
             monsterList.forEach(function (monsterObj) {
                 var monster = monsterObj.split(global.vs)[0];
+                var monstType = caap.getMonstType(monster);
+                var nodeNum = 0;
+                var staLvl = caap.monsterInfo[monstType].staLvl;
+                if (gm.getValue('PowerFortifyMax') && staLvl) {
+                    for (nodeNum = caap.monsterInfo[monstType].staLvl.length - 1; nodeNum >= 0; nodeNum -= 1) {
+                        if (caap.stats.stamina.max > caap.monsterInfo[monstType].staLvl[nodeNum]) {
+                            break;
+                        }
+                    }
+                }
+
+                var energyRequire = 10;
+                if (nodeNum && gm.getValue('PowerAttackMax')) {
+                    energyRequire = caap.monsterInfo[monstType].nrgMax[nodeNum];
+                }
+
                 var color = '';
                 html += "<tr>";
-                if (monster == gm.getValue('targetFromfortify') && caap.CheckEnergy(10, gm.getValue('WhenFortify', 'Energy Available'), 'fortify_mess')) {
+                if (monster == gm.getValue('targetFromfortify') && caap.CheckEnergy(energyRequire, gm.getValue('WhenFortify', 'Energy Available'), 'fortify_mess')) {
                     color = 'blue';
                 } else if (monster == gm.getValue('targetFromraid') || monster == gm.getValue('targetFrombattle_monster')) {
                     color = 'green';
@@ -2665,6 +2704,15 @@ caap = {
                     $('.UIStandardFrame_SidebarAds').css('display', 'none');
                 } else {
                     $('.UIStandardFrame_SidebarAds').css('display', 'block');
+                }
+
+                break;
+            case "BannerDisplay" :
+                //gm.log("HideAds");
+                if (e.target.checked) {
+                    $('#caap_BannerHide').css('display', 'block');
+                } else {
+                    $('#caap_BannerHide').css('display', 'none');
                 }
 
                 break;
@@ -3108,9 +3156,9 @@ caap = {
 
             $('#caap_ResetMenuLocation').click(this.ResetMenuLocationListener);
             $('#caap_resetElite').click(function (e) {
-                gm.setValue('AutoEliteGetList', 0);
-                gm.setValue('AutoEliteReqNext', 0);
-                gm.setValue('AutoEliteEnd', '');
+                gm.deleteValue('AutoEliteGetList');
+                gm.deleteValue('AutoEliteReqNext');
+                gm.deleteValue('AutoEliteEnd');
                 if (!gm.getValue('FillArmy', false)) {
                     gm.deleteValue(caap.friendListType.giftc.name + 'Requested');
                     gm.deleteValue(caap.friendListType.giftc.name + 'Responded');
@@ -3616,9 +3664,9 @@ caap = {
             }
 
             // Check for Elite Guard Add image
-            if (this.CheckForImage('elite_guard_add')) {
-                if (gm.getValue('AutoEliteEnd', 'NoArmy') != 'NoArmy') {
-                    gm.setValue('AutoEliteGetList', 0);
+            if (!gm.getValue('AutoEliteIgnore', false)) {
+                if (this.CheckForImage('elite_guard_add') && gm.getValue('AutoEliteEnd', 'NoArmy') != 'NoArmy') {
+                    gm.deleteValue('AutoEliteGetList');
                 }
             }
 
@@ -3767,11 +3815,11 @@ caap = {
             var subQArea = gm.getValue('QuestSubArea', 'Land of Fire');
             var landPic = this.baseQuestTable[subQArea];
             var imgExist = false;
-             if (landPic == 'tab_underworld') {
+            if (landPic == 'tab_underworld') {
                 imgExist = this.NavigateTo('quests,jobs_tab_more.gif,' + landPic + '_small.gif', landPic + '_big');
             } else if (landPic == 'tab_heaven') {
                 imgExist = this.NavigateTo('quests,jobs_tab_more.gif,' + landPic + '_small2.gif', landPic + '_big2.gif');
-           } else if ((landPic == 'land_demon_realm') || (landPic == 'land_undead_realm')) {
+            } else if ((landPic == 'land_demon_realm') || (landPic == 'land_undead_realm')) {
                 imgExist = this.NavigateTo('quests,jobs_tab_more.gif,' + landPic + '.gif', landPic + '_sel');
             } else {
                 imgExist = this.NavigateTo('quests,jobs_tab_back.gif,' + landPic + '.gif', landPic + '_sel');
@@ -4376,6 +4424,7 @@ caap = {
             if (msgdiv) {
                 this.SetDivContent(msgdiv, 'Waiting for more energy: ' + this.stats.energy.num + "/" + (energy ? energy : ""));
             }
+
             return false;
         } else if (condition == 'At Max Energy') {
             if (!gm.getValue('MaxIdleEnergy', 0)) {
@@ -4391,12 +4440,14 @@ caap = {
                 if (msgdiv) {
                     this.SetDivContent(msgdiv, 'Burning all energy to level up');
                 }
+
                 return true;
             }
 
             if (msgdiv) {
                 this.SetDivContent(msgdiv, 'Waiting for max energy:' + this.stats.energy.num + "/" + gm.getValue('MaxIdleEnergy'));
             }
+
             return false;
         }
 
@@ -5875,9 +5926,8 @@ caap = {
             siege_img : '/graphics/death_siege_small',
             fort : true,
             staUse : 5,
-            staLvl : [10, 100, 300, 500],
+            staLvl : [0, 100, 200, 500],
             staMax : [5, 10, 20, 50],
-            nrgLvl : [10, 200, 400, 1000],
             nrgMax : [10, 20, 40, 100],
             reqAtkButton : 'attack_monster_button.jpg',
             v : 'attack_monster_button2.jpg',
@@ -5894,9 +5944,8 @@ caap = {
             siege_img : '/graphics/water_siege_small',
             fort : true,
             staUse : 5,
-            staLvl : [10, 100, 300, 500],
+            staLvl : [0, 100, 200, 500],
             staMax : [5, 10, 20, 50],
-            nrgLvl : [10, 200, 400, 1000],
             nrgMax : [10, 20, 40, 100],
             reqAtkButton : 'attack_monster_button.jpg',
             pwrAtkButton : 'attack_monster_button2.jpg',
@@ -5920,9 +5969,8 @@ caap = {
             siege_img : '/graphics/earth_siege_small',
             fort : true,
             staUse : 5,
-            staLvl : [10, 100, 300, 500],
+            staLvl : [0, 100, 200, 500],
             staMax : [5, 10, 20, 50],
-            nrgLvl : [10, 200, 400, 1000],
             nrgMax : [10, 20, 40, 100],
             reqAtkButton : 'attack_monster_button.jpg',
             pwrAtkButton : 'attack_monster_button2.jpg',
@@ -5995,9 +6043,8 @@ caap = {
             siege_img : '/graphics/water_siege_',
             fort : true,
             staUse : 5,
-            staLvl : [10, 100, 300, 500],
+            staLvl : [0, 100, 200, 500],
             staMax : [5, 10, 20, 50],
-            nrgLvl : [10, 200, 400, 1000],
             nrgMax : [10, 20, 40, 100],
             general: '',
             charClass : {
@@ -6036,9 +6083,47 @@ caap = {
             siege_img2 : '/graphics/alpha_bahamut_siege_blizzard_',
             fort : true,
             staUse : 5,
-            staLvl : [10, 100, 300, 500],
+            staLvl : [0, 100, 200, 500],
             staMax : [5, 10, 20, 50],
-            nrgLvl : [10, 200, 400, 1000],
+            nrgMax : [10, 20, 40, 100],
+            general: '',
+            charClass : {
+                'Warrior' : {
+                    statusWord      : 'jaws',
+                    pwrAtkButton    : 'nm_primary',
+                    defButton       : 'nm_secondary'
+                },
+                'Rogue' : {
+                    statusWord      : 'heal',
+                    pwrAtkButton    : 'nm_primary',
+                    defButton       : 'nm_secondary'
+                },
+                'Mage' : {
+                    statusWord      : 'lava',
+                    pwrAtkButton    : 'nm_primary',
+                    defButton       : 'nm_secondary'
+                },
+                'Cleric' : {
+                    status          : 'mana',
+                    pwrAtkButton    : 'nm_primary',
+                    defButton       : 'nm_secondary'
+                }
+            }
+        },
+        // http://castleage.wikia.com/wiki/Azriel,_the_Angel_of_Wrath
+        'Wrath' : {
+            duration : 168,
+            hp : 600000000,
+            ach : 4000000,
+            siege : 6,
+            siegeClicks : [30, 60, 90, 120, 200, 200],
+            siegeDam : [28000000, 32500000, 40000000, 45000000, 47500000, 52500000],
+            siege_img : '/graphics/water_siege_',
+            siege_img2 : '/graphics/alpha_bahamut_siege_blizzard_',
+            fort : true,
+            staUse : 5,
+            staLvl : [0, 100, 200, 500],
+            staMax : [5, 10, 20, 50],
             nrgMax : [10, 20, 40, 100],
             general: '',
             charClass : {
@@ -6351,6 +6436,9 @@ caap = {
             } else if (this.CheckForImage('nm_volcanic_title_2.jpg')) {
                 monster = monster.match(yourRegEx) + 'Alpha Bahamut, the Volcanic Dragon';
                 monster = $.trim(monster);
+            } else if (this.CheckForImage('nm_azriel_title.jpg')) {
+                monster = monster.match(yourRegEx) + 'Azriel, the Angel of Wrath';
+                monster = $.trim(monster);
             } else {
                 monster = $.trim(monster.substring(0, monster.indexOf('You have (')));
             }
@@ -6363,6 +6451,8 @@ caap = {
                 monstType = 'Raid II';
             } else if (this.CheckForImage('nm_volcanic_large_2.jpg')) {
                 monstType = 'Alpha Volcanic Dragon';
+            } else if (this.CheckForImage('nm_azriel_large2.jpg')) {
+                monstType = 'Wrath';
             } else {
                 monstType = this.getMonstType(monster);
             }
@@ -6506,7 +6596,7 @@ caap = {
 
             var hp = 0;
             var monstHealthImg = '';
-            if (monstType.indexOf('Volcanic') >= 0) {
+            if (monstType.indexOf('Volcanic') >= 0 || monstType.indexOf('Wrath') >= 0) {
                 monstHealthImg = 'nm_red.jpg';
             } else {
                 monstHealthImg = 'monster_health_background.jpg';
@@ -6537,9 +6627,9 @@ caap = {
 
                 if (boss && boss.siege) {
                     var missRegEx = new RegExp(".*Need (\\d+) more.*");
-                    if (monstType.indexOf('Volcanic') >= 0) {
+                    if (monstType.indexOf('Volcanic') >= 0 || monstType.indexOf('Wrath') >= 0) {
                         miss = $.trim($("#app46755028429_action_logs").prev().children().eq(1).children().eq(3).text().replace(missRegEx, "$1"));
-                        if (monstType.indexOf('Alpha') >= 0) {
+                        if (monstType.indexOf('Alpha') >= 0 || monstType.indexOf('Wrath') >= 0) {
                             var waterCount = $("img[src*=" + boss.siege_img + "]").size();
                             var alphaCount = $("img[src*=" + boss.siege_img2 + "]").size();
                             var totalCount = waterCount + alphaCount;
@@ -6867,6 +6957,7 @@ caap = {
                     if (!monster) {
                         monster = firstOverAch;
                     }
+
                     if (selectType != 'raid') {
                         gm.setValue('targetFromfortify', firstFortUnderMax);
                         if (!gm.getValue('targetFromfortify', '')) {
@@ -6885,8 +6976,8 @@ caap = {
                         if (monstPage == 'battle_monster') {
                             var nodeNum = -1;
                             if (this.monsterInfo[monstType] && this.monsterInfo[monstType].staLvl) {
-                                for (nodeNum = 0; nodeNum < this.monsterInfo[monstType].staLvl.length; nodeNum += 1) {
-                                    if (this.stats.stamina.max <= this.monsterInfo[monstType].staLvl[nodeNum]) {
+                                for (nodeNum = this.monsterInfo[monstType].staLvl.length - 1; nodeNum >= 0; nodeNum -= 1) {
+                                    if (this.stats.stamina.max > this.monsterInfo[monstType].staLvl[nodeNum]) {
                                         break;
                                     }
                                 }
@@ -6939,6 +7030,9 @@ caap = {
                 monsterOnPage = $.trim(monsterOnPage);
             } else if (this.CheckForImage('nm_volcanic_title_2.jpg')) {
                 monsterOnPage = monsterOnPage.match(yourRegEx) + 'Alpha Bahamut, the Volcanic Dragon';
+                monsterOnPage = $.trim(monsterOnPage);
+            } else if (this.CheckForImage('nm_azriel_title.jpg')) {
+                monsterOnPage = monsterOnPage.match(yourRegEx) + 'Azriel, the Angel of Wrath';
                 monsterOnPage = $.trim(monsterOnPage);
             } else {
                 monsterOnPage = $.trim(monsterOnPage.substring(0, monsterOnPage.indexOf('You have (')));
@@ -7142,7 +7236,26 @@ caap = {
             var fightMode = '';
             // Check to see if we should fortify, attack monster, or battle raid
             var monster = gm.getValue('targetFromfortify');
-            if (monster && this.CheckEnergy(10, gm.getValue('WhenFortify', 'Energy Available'), 'fortify_mess')) {
+            var monstType = this.getMonstType(monster);
+            var nodeNum = 0;
+            var staLvl = null;
+            var energyRequire = 10;
+            if (monstType) {
+                staLvl = this.monsterInfo[monstType].staLvl;
+                if (gm.getValue('PowerFortifyMax') && staLvl) {
+                    for (nodeNum = this.monsterInfo[monstType].staLvl.length - 1; nodeNum >= 0; nodeNum -= 1) {
+                        if (this.stats.stamina.max > this.monsterInfo[monstType].staLvl[nodeNum]) {
+                            break;
+                        }
+                    }
+                }
+
+                if (nodeNum && gm.getValue('PowerAttackMax')) {
+                    energyRequire = this.monsterInfo[monstType].nrgMax[nodeNum];
+                }
+            }
+
+            if (monster && this.CheckEnergy(energyRequire, gm.getValue('WhenFortify', 'Energy Available'), 'fortify_mess')) {
                 fightMode = gm.setValue('fightMode', 'Fortify');
             } else {
                 monster = gm.getValue('targetFrombattle_monster');
@@ -7160,16 +7273,17 @@ caap = {
                 return true;
             }
 
+            monstType = this.getMonstType(monster);
             // Check if on engage monster page
-            var monstType = this.getMonstType(monster);
             var imageTest = '';
-            if (monstType == 'Volcanic Dragon') {
+            if (monstType == 'Volcanic Dragon' || monstType == 'Wrath') {
                 imageTest = 'nm_top.jpg';
             } else if (monstType == 'Alpha Volcanic Dragon') {
                 imageTest = 'nm_top_2.jpg';
             } else {
                 imageTest = 'dragon_title_owner.jpg';
             }
+
             var webSlice = this.CheckForImage(imageTest);
             if (webSlice) {
                 if (this.monsterConfirmRightPage(webSlice, monster)) {
@@ -7215,12 +7329,22 @@ caap = {
                     ].concat(singleButtonList);
                 }
 
-                var nodeNum = null;
-                var staLvl = this.monsterInfo[monstType].staLvl;
-                if (fightMode != 'Fortify' && gm.getValue('PowerAttack') && gm.getValue('PowerAttackMax') && staLvl) {
-                    for (nodeNum = 0; nodeNum < this.monsterInfo[monstType].staLvl.length; nodeNum += 1) {
-                        if (this.stats.stamina.max <= this.monsterInfo[monstType].staLvl[nodeNum]) {
-                            break;
+                nodeNum = 0;
+                staLvl = this.monsterInfo[monstType].staLvl;
+                if (fightMode == 'Fortify') {
+                    if (gm.getValue('PowerFortifyMax') && staLvl) {
+                        for (nodeNum = this.monsterInfo[monstType].staLvl.length - 1; nodeNum >= 0; nodeNum -= 1) {
+                            if (this.stats.stamina.max > this.monsterInfo[monstType].staLvl[nodeNum]) {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    if (gm.getValue('PowerAttack') && gm.getValue('PowerAttackMax') && staLvl) {
+                        for (nodeNum = this.monsterInfo[monstType].staLvl.length - 1; nodeNum >= 0; nodeNum -= 1) {
+                            if (this.stats.stamina.max > this.monsterInfo[monstType].staLvl[nodeNum]) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -9515,8 +9639,8 @@ caap = {
                 gm.log("Filling army");
             }
 
-            if (gm.getValue(caListType.name + 'Responded', false) !== true &&
-                    gm.getValue(fbListType.name + 'Responded', false) !== true) {
+            if (gm.getValue(caListType.name + 'Responded', false) === true ||
+                    gm.getValue(fbListType.name + 'Responded', false) === true) {
                 this.SetDivContent('idle_mess', '<b>Fill Army Completed</b>');
                 gm.log("Fill Army Completed: no friends found");
                 window.setTimeout(function () {

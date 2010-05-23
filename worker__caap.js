@@ -47,3 +47,8 @@ Queue.caap_load = function() {
 	this.option.pause = false;
 };
 
+Heal.caap_values = {
+	stamina: 	'MinStamToHeal',
+	health: 	'MinToHeal'
+};
+

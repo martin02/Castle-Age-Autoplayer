@@ -5,21 +5,22 @@ var Caap = new Worker('Caap', 'keep_eliteguard army_viewarmy battle_arena');
 Caap.data = {};
 
 Caap.init = function() { //overload unflush
-	worker.prototype._oldunflush = worker.prototype._unflush;
-	worker.prototype._unflush = function() {
-		this._oldunflush();
-		if (typeof this.caap_values != 'undefined') {
-			for (i in this.caap_values) {
-				this.option[i] = gm.getValue(valuesList[i]);
-			}
-		}
-		(typeof this.caap_load == 'function') && this.caap_load();
-	}
 };
 
+Worker.prototype._oldunflush = Worker.prototype._unflush;
+Worker.prototype._unflush = function() {
+	this._oldunflush();
+	if (typeof this.caap_values != 'undefined') {
+		for (i in this.caap_values) {
+			this.option[i] = gm.getValue(this.caap_values[i]);
+		}
+	}
+	(typeof this.caap_load == 'function') && this.caap_load();
+}; 
+
 Elite.caap_load = function() {
-	this.option.prefer = gm.getListFromText('CaapArmyList');
-	this.option.elite = gm.getValue('AutoCaap', false);
+	this.option.prefer = gm.getListFromText('EliteArmyList');
+	this.option.elite = gm.getValue('AutoElite', false);
 	this.option.every = 1;
 };
 

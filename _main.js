@@ -268,6 +268,11 @@ $(function () {
         }
 
         nHtml.setTimeout(function () {
+			userID = $('head').html().regex(/user:([0-9]+),/i);
+			if (!userID || typeof userID !== 'number' || userID === 0) {
+				log('ERROR: No Facebook UserID!!!');
+				window.location.href = window.location.href; // Force reload without retrying
+			}
 			Page.identify();
 			gm.log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {

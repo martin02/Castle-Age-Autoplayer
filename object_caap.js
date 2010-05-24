@@ -8490,7 +8490,7 @@ caap = {
         'MonsterReview': 'Review Monsters/Raids',
         'ImmediateAutoStat': 'Immediate Auto Stats',
         'Elite': 'Fill Elite Guard',
-        'ArenaElite': 'Fill Arena Elite',
+//      'ArenaElite': 'Fill Arena Elite',
         'AutoPotions': 'Auto Potions',
         'Alchemy': 'Auto Alchemy',
         'AutoBless': 'Auto Bless',
@@ -8520,7 +8520,7 @@ caap = {
     // The Master Action List
     masterActionList: {
         0x00: 'Elite',
-        0x01: 'ArenaElite',
+//      0x01: 'ArenaElite',
         0x02: 'Heal',
         0x03: 'ImmediateBanking',
         0x04: 'ImmediateAutoStat',
@@ -8645,7 +8645,7 @@ caap = {
             this.actionsList = [
 				'Page',
                 "Elite",
-                "ArenaElite",
+//                "ArenaElite",
                 "Heal",
                 "ImmediateBanking",
                 "ImmediateAutoStat",

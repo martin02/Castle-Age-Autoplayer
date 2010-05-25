@@ -16493,9 +16493,10 @@ Upgrade.work = function(state) {
 var Caap = new Worker('Caap', 'keep_eliteguard army_viewarmy battle_arena');
 Caap.data = {};
 
-Caap.init = function() { //overload unflush
+Caap.init = function() { 
 };
 
+//overload unflush
 Worker.prototype._oldunflush = Worker.prototype._unflush;
 Worker.prototype._unflush = function() {
 	this._oldunflush();

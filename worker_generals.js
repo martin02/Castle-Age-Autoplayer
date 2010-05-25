@@ -160,7 +160,6 @@ Generals.to = function(name) {
 Generals.best = function(type) {
 	this._unflush();
 	var rx = '', best = null, bestval = 0, i, value, list = [];
-	gm.log('iscaap ' + iscaap());
 	if (iscaap()) {
 		var caapGenerals = {
 			'BuyGeneral':			'cost',

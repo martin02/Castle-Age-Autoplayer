@@ -14,9 +14,9 @@ cat object_html.js >>_normal.user.js
 cat object_caap.js >>_normal.user.js
 cat _main.js >>_normal.user.js
 #cat css.js >>_normal.user.js
-#cat utility.js >>_normal.user.js
-#cat worker.js >>_normal.user.js
-#cat worker_*.js >>_normal.user.js
+cat utility.js >>_normal.user.js
+cat worker.js >>_normal.user.js
+cat worker_*.js >>_normal.user.js
 
 # ----------------------------------------------------------------------
 # INSTALLED VERSION - Means you only need to hit F5 / refresh in Firefox
@@ -24,6 +24,7 @@ cat _main.js >>_normal.user.js
 
 echo "Installing new version to Firefox"
 cp _normal.user.js Castle-Age-Autoplayer.user.js
+echo "Installing new version to Chrome"
 cp Castle-Age-Autoplayer.user.js Chrome/Castle-Age-Autoplayer.user.js
 cp README Chrome/README
 

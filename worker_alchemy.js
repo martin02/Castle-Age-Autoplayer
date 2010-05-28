@@ -42,7 +42,6 @@ Alchemy.display = [
 ];
 
 Alchemy.parse = function(change) {
-	//gm.log('Alchemy Parse');
 	var ingredients = this.data.ingredients = {}, recipe = this.data.recipe = {};
 	$('div.ingredientUnit').each(function(i,el){
 		var name = $('img', el).attr('src').filepart();
@@ -94,17 +93,16 @@ Alchemy.update = function() {
 };
 
 Alchemy.work = function(state) {
-	//gm.log('Alchemy Work');
 	if (!this.option.perform || !this.runtime.best) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('keep_alchemy')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
-	debug(this.name,'Perform - ' + this.runtime.best);
+	debug('Perform - ' + this.runtime.best);
 	if (!Page.click($('input[type="image"]', $('div.recipeTitle:contains("' + this.runtime.best + '")').next()))) {
 		Page.reload(); // Can't find the recipe we just parsed when coming here...
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 

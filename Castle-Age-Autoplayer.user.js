@@ -9709,6 +9709,7 @@ var script_started = Date.now();
 // Automatically filled
 var userID = 0;
 var imagepath = '';
+var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
 
 // Decide which facebook app we're in...
 var applications = {
@@ -9732,7 +9733,7 @@ var log = console.log;
 
 if (show_debug) {
 	var debug = function(txt) {
-		console.log('[' + (new Date()).format('G:i:s') + '] ' + txt);
+				console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
 	};
 } else {
 	var debug = function(){};
@@ -10253,21 +10254,9 @@ var isNumber = function(num) {
 	return num && typeof num === 'number';
 };
 
-if (typeof GM_getValue !== 'undefined') {
-	var setItem = function(n,v){GM_setValue(n, v);}
-	var getItem = function(n){return GM_getValue(n);}
-} else {
-	if (typeof localStorage !== 'undefined') {
-		var setItem = function(n,v){localStorage.setItem('golem.' + APP + n, v);}
-		var getItem = function(n){return localStorage.getItem('golem.' + APP + n);}
-	} else if (typeof window.localStorage !== 'undefined') {
-		var setItem = function(n,v){window.localStorage.setItem('golem.' + APP + n, v);}
-		var getItem = function(n){return window.localStorage.getItem('golem.' + APP + n);}
-	} else if (typeof globalStorage !== 'undefined') {
-		var setItem = function(n,v){globalStorage[location.hostname].setItem('golem.' + APP + n, v);}
-		var getItem = function(n){return globalStorage[location.hostname].getItem('golem.' + APP + n);}
-	}
-}
+var isWorker = function(obj) {
+	return obj && findInArray(Workers,obj); // Only a worker if it's an active worker
+};
 
 var plural = function(i) {
 	return (i === 1 ? '' : 's');
@@ -10346,294 +10335,344 @@ var iscaap = function() {
 new Worker(name, pages, settings)
 
 *** User data***
-.id                             - If we have a .display then this is the html #id of the worker
-.name                   - String, the same as our class name.
-.pages                  - String, list of pages that we want in the form "town.soldiers keep.stats"
-.data                   - Object, for public reading, automatically saved
-.option                 - Object, our options, changed from outide ourselves
-.settings               - Object, various values for various sections, default is always false / blank
-                                system (true/false) - exists for all games
-                                unsortable (true/false) - stops a worker being sorted in the queue, prevents this.work(true)
-                                advanced (true/false) - only visible when "Advanced" is checked
-                                before (array of worker names) - never let these workers get before us when sorting
-                                after (array of worker names) - never let these workers get after us when sorting
-                                keep (true/false) - without this data is flushed when not used - only keep if other workers regularly access you
-.display                - Create the display object for the settings page.
+.id			     - If we have a .display then this is the html #id of the worker
+.name		   - String, the same as our class name.
+.pages		  - String, list of pages that we want in the form "town.soldiers keep.stats"
+.data		   - Object, for public reading, automatically saved
+.option		 - Object, our options, changed from outide ourselves
+.settings	       - Object, various values for various sections, default is always false / blank
+				system (true/false) - exists for all games
+				unsortable (true/false) - stops a worker being sorted in the queue, prevents this.work(true)
+				advanced (true/false) - only visible when "Advanced" is checked
+				before (array of worker names) - never let these workers get before us when sorting
+				after (array of worker names) - never let these workers get after us when sorting
+				keep (true/false) - without this data is flushed when not used - only keep if other workers regularly access you
+				important (true/false) - can interrupt stateful workers [false]
+				stateful (true/false) - only interrupt when we return QUEUE_RELEASE from work(true)
+.display		- Create the display object for the settings page.
 
 *** User functions ***
-.init()                 - After the script has loaded, but before anything else has run. Data has been filled, but nothing has been run.
-                                This is the bext place to put default actions etc...
-                                Cannot rely on other workers having their data filled out...
+.init()		 - After the script has loaded, but before anything else has run. Data has been filled, but nothing has been run.
+				This is the bext place to put default actions etc...
+				Cannot rely on other workers having their data filled out...
 .parse(change)  - This can read data from the current page and cannot perform any actions.
-                                change = false - Not allowed to change *anything*, cannot read from other Workers.
-                                change = true - Can now change inline and read from other Workers.
-                                return true - We need to run again with status=1
-                                return false - We're finished
+				change = false - Not allowed to change *anything*, cannot read from other Workers.
+				change = true - Can now change inline and read from other Workers.
+				return true - We need to run again with status=1
+				return QUEUE_RELEASE - We want to run again with status=1, but feel free to interrupt (makes us stateful)
+				return false - We're finished
 .work(state)    - Do anything we need to do when it's our turn - this includes page changes.
-                                state = false - It's not our turn, don't start anything if we can't finish in this one call
-                                state = true - It's our turn, do everything - Only true if not interrupted
-                                return true if we need to keep working (after a delay etc)
-                                return false when someone else can work
+				state = false - It's not our turn, don't start anything if we can't finish in this one call
+				state = true - It's our turn, do everything - Only true if not interrupted
+				return true if we need to keep working (after a delay etc)
+				return false when someone else can work
 .update(type)   - Called when the data or options have been changed (even on this._load()!). If !settings.data and !settings.option then call on data, otherwise whichever is set.
-                                type = "data" or "option"
-.get(what)              - Calls this._get(what)
-                                Official way to get any information from another worker
-                                Overload for "special" data, and pass up to _get if basic data
+				type = "data" or "option"
+.get(what)	      - Calls this._get(what)
+				Official way to get any information from another worker
+				Overload for "special" data, and pass up to _get if basic data
 .set(what,value)- Calls this._set(what,value)
-                                Official way to set any information for another worker
-                                Overload for "special" data, and pass up to _set if basic data
+				Official way to set any information for another worker
+				Overload for "special" data, and pass up to _set if basic data
 
 NOTE: If there is a work() but no display() then work(false) will be called before anything on the queue, but it will never be able to have focus (ie, read only)
 
 *** Private data ***
-._loaded                - true once ._init() has run
-._working               - Prevent recursive calling of various private functions
-._changed               - Timestamp of the last time this.data changed
-._watching              - List of other workers that want to have .update() after this.update()
+._loaded		- true once ._init() has run
+._working		- Prevent recursive calling of various private functions
+._changed		- Timestamp of the last time this.data changed
+._watching		- List of other workers that want to have .update() after this.update()
 
 *** Private functions ***
-._get(what)             - Returns the data requested, auto-loads if needed, what is 'path.to.data'
-._set(what,val) - Sets this.data[what] to value, auto-loading if needed
+._get(what)				- Returns the data requested, auto-loads if needed, what is 'path.to.data'
+._set(what,val)			- Sets this.data[what] to value, auto-loading if needed
 
-._setup()               - Only ever called once - might even remove us from the list of workers, otherwise loads the data...
-._init(keep)    - Calls .init(), loads then saves data (for default values), delete this.data if !nokeep and settings.nodata, then removes itself from use
+._setup()				- Only ever called once - might even remove us from the list of workers, otherwise loads the data...
+._init(keep)			- Calls .init(), loads then saves data (for default values), delete this.data if !nokeep and settings.nodata, then removes itself from use
 
-._load(type)    - Loads data / option from storage, merges with current values, calls .update(type) on change
-._save(type)    - Saves data / option to storage, calls .update(type) on change
+._load(type)			- Loads data / option from storage, merges with current values, calls .update(type) on change
+._save(type)			- Saves data / option to storage, calls .update(type) on change
 
-._flush()               - Calls this._save() then deletes this.data if !this.settings.keep
-._unflush()             - Loads .data if it's not there already
+._flush()				- Calls this._save() then deletes this.data if !this.settings.keep
+._unflush()				- Loads .data if it's not there already
 
-._parse(change) - Calls this.parse(change) inside a try / catch block
-._work(state)   - Calls this.work(state) inside a try / catch block
+._parse(change)			- Calls this.parse(change) inside a try / catch block
+._work(state)			- Calls this.work(state) inside a try / catch block
 
-._update(type)  - Calls this.update(type), loading and flushing .data if needed
-._watch(worker) - Add a watcher to worker - so this.update() gets called whenever worker.update() does
-._remind(secs)  - Calls this._update('reminder') after a specified delay
+._update(type,worker)	- Calls this.update(type,worker), loading and flushing .data if needed. worker is "null" unless a watched worker.
+._watch(worker)			- Add a watcher to worker - so this.update() gets called whenever worker.update() does
+._unwatch(worker)		- Removes a watcher from worker (safe to call if not watching).
+._remind(secs)			- Calls this._update('reminder') after a specified delay
 */
 var Workers = [];
+var WorkerStack = []; // Use "WorkerStack.length && WorkerStack[WorkerStack.length-1].name" for current worker name...
+/*
+if (typeof GM_getValue !== 'undefined') {
+	var setItem = function(n,v){GM_setValue(n, v);}
+	var getItem = function(n){return GM_getValue(n);}
+} else {
+	if (typeof localStorage !== 'undefined') {
+		var setItem = function(n,v){localStorage.setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return localStorage.getItem('golem.' + APP + n);}
+	} else if (typeof window.localStorage !== 'undefined') {
+		var setItem = function(n,v){window.localStorage.setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return window.localStorage.getItem('golem.' + APP + n);}
+	} else if (typeof globalStorage !== 'undefined') {
+		var setItem = function(n,v){globalStorage[location.hostname].setItem('golem.' + APP + n, v);}
+		var getItem = function(n){return globalStorage[location.hostname].getItem('golem.' + APP + n);}
+	}
+}
+*/
+if (isGreasemonkey) {
+	var setItem = function(n,v){GM_setValue(n, v);}
+	var getItem = function(n){return GM_getValue(n);}
+} else {
+	var setItem = function(n,v){localStorage.setItem('golem.' + APP + '.' + n, v);}
+	var getItem = function(n){return localStorage.getItem('golem.' + APP + '.' + n);}
+}
 
 function Worker(name,pages,settings) {
-        Workers.push(this);
+	Workers.push(this);
 
-        // User data
-        this.id = null;
-        this.name = name;
-        this.pages = pages;
+	// User data
+	this.id = null;
+	this.name = name;
+	this.pages = pages;
 
-        this.defaults = null; // {app:{data:{}, options:{}} - replaces with app-specific data, can be used for any this.* wanted...
+	this.defaults = null; // {app:{data:{}, options:{}} - replaces with app-specific data, can be used for any this.* wanted...
 
-        this.settings = settings || {};
+	this.settings = settings || {};
 
-        this.data = {};
-        this.option = {};
-        this.runtime = null;// {} - set to default runtime values in your worker!
-        this.display = null;
+	this.data = {};
+	this.option = {};
+	this.runtime = null;// {} - set to default runtime values in your worker!
+	this.display = null;
 
-        // User functions
-        this.init = null; //function() {};
-        this.parse = null; //function(change) {return false;};
-        this.work = null; //function(state) {return false;};
-        this.update = null; //function(type){};
-        this.get = function(what) {return this._get(what);}; // Overload if needed
-        this.set = function(what,value) {return this._set(what,value);}; // Overload if needed
+	// User functions
+	this.init = null; //function() {};
+	this.parse = null; //function(change) {return false;};
+	this.work = null; //function(state) {return false;};
+	this.update = null; //function(type,worker){};
+	this.get = function(what) {return this._get(what);}; // Overload if needed
+	this.set = function(what,value) {return this._set(what,value);}; // Overload if needed
 
-        // Private data
-        this._rootpath = true; // Override save path, replaces userID + '.' with ''
-        this._loaded = false;
-        this._working = {data:false, option:false, runtime:false, update:false};
-        this._changed = Date.now();
-        this._watching = [];
+	// Private data
+	this._rootpath = true; // Override save path, replaces userID + '.' with ''
+	this._loaded = false;
+	this._working = {data:false, option:false, runtime:false, update:false};
+	this._changed = Date.now();
+	this._watching = [];
 }
 
 // Private functions - only override if you know exactly what you're doing
 Worker.prototype._flush = function() {
-        this._save();
-        if (!this.settings.keep) {
-                delete this.data;
-        }
+	WorkerStack.push(this);
+	this._save();
+	if (!this.settings.keep) {
+		delete this.data;
+	}
+	WorkerStack.pop();
 };
 
 Worker.prototype._get = function(what) { // 'path.to.data'
-        var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
-        if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
-                x.unshift('data');
-        }
-        if (x[0] === 'data') {
-                !this._loaded && this._init();
-                this._unflush();
-        }
-        data = this[x.shift()];
-        try {
-                switch(x.length) {
-                        case 0: return data;
-                        case 1: return data[x[0]];
-                        case 2: return data[x[0]][x[1]];
-                        case 3: return data[x[0]][x[1]][x[2]];
-                        case 4: return data[x[0]][x[1]][x[2]][x[3]];
-                        case 5: return data[x[0]][x[1]][x[2]][x[3]][x[4]];
-                        case 6: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]];
-                        case 7: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]];
-                        default:break;
-                }
-        } catch(e) {
+	var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
+	if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
+		x.unshift('data');
+	}
+	if (x[0] === 'data') {
+		!this._loaded && this._init();
+		this._unflush();
+	}
+	data = this[x.shift()];
+	try {
+		switch(x.length) {
+			case 0: return data;
+			case 1: return data[x[0]];
+			case 2: return data[x[0]][x[1]];
+			case 3: return data[x[0]][x[1]][x[2]];
+			case 4: return data[x[0]][x[1]][x[2]][x[3]];
+			case 5: return data[x[0]][x[1]][x[2]][x[3]][x[4]];
+			case 6: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]];
+			case 7: return data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]];
+			default:break;
+		}
+	} catch(e) {
+		WorkerStack.push(this);
 		debug(this.name,e.name + ' in ' + this.name + '.get('+what+'): ' + e.message);
-        }
-        return null;
+		WorkerStack.pop();
+	}
+	return null;
 };
 
 Worker.prototype._init = function() {
-        if (this._loaded) {
-                return;
-        }
-        this._loaded = true;
-        try {
-                this.init && this.init();
-        }catch(e) {
-		debug(this.name,e.name + ' in ' + this.name + '.init(): ' + e.message);
-        }
+	if (this._loaded) {
+		return;
+	}
+	WorkerStack.push(this);
+	this._loaded = true;
+	try {
+		this.init && this.init();
+	}catch(e) {
+		debug(e.name + ' in ' + this.name + '.init(): ' + e.message);
+	}
+	WorkerStack.pop();
 };
 
 Worker.prototype._load = function(type) {
-        if (type !== 'data' && type !== 'option' && type !== 'runtime') {
-                this._load('data');
-                this._load('option');
-                this._load('runtime');
-                return;
-        }
-        var v = getItem((this._rootpath ? userID + '.' : '') + type + '.' + this.name);
-        if (!v) { // Use default values
-                return;
-        }
-        try {
-                v = JSON.parse(v);
-        } catch(e) {
-		debug(this.name,this.name + '._load(' + type + '): Not JSON data, should only appear once for each type...');
-                v = eval(v); // We used to save our data in non-JSON format...
-        }
-        this[type] = $.extend(true, {}, this[type], v);
+	if (type !== 'data' && type !== 'option' && type !== 'runtime') {
+		this._load('data');
+		this._load('option');
+		this._load('runtime');
+		return;
+	}
+	WorkerStack.push(this);
+	var v = getItem((this._rootpath ? userID + '.' : '') + type + '.' + this.name);
+	if (v) {
+		try {
+			v = JSON.parse(v);
+		} catch(e) {
+			debug(this.name + '._load(' + type + '): Not JSON data, should only appear once for each type...');
+			v = eval(v); // We used to save our data in non-JSON format...
+		}
+		this[type] = $.extend(true, {}, this[type], v);
+	}
+	WorkerStack.pop();
 };
 
 Worker.prototype._parse = function(change) {
-        try {
-                return this.parse && this.parse(change);
-        }catch(e) {
-		debug(this.name,e.name + ' in ' + this.name + '.parse(' + change + '): ' + e.message);
-        }
-        return false;
+	WorkerStack.push(this);
+	var result = false;
+	try {
+		result = this.parse && this.parse(change);
+	}catch(e) {
+		debug(e.name + ' in ' + this.name + '.parse(' + change + '): ' + e.message);
+	}
+	WorkerStack.pop();
+	return result;
 };
 
 Worker.prototype._remind = function(seconds) {
-        var me = this;
-        window.setTimeout(function(){me._update('reminder');}, seconds * 1000);
+	var me = this;
+	window.setTimeout(function(){me._update('reminder', null);}, seconds * 1000);
 };
 
 Worker.prototype._save = function(type) {
-        if (type !== 'data' && type !== 'option' && type !== 'runtime') {
-                return this._save('data') + this._save('option') + this._save('runtime');
-        }
-        if (typeof this[type] === 'undefined' || !this[type] || this._working[type]) {
-                return false;
-        }
-        var n = (this._rootpath ? userID + '.' : '') + type + '.' + this.name, v = JSON.stringify(this[type]);
-        if (getItem(n) === 'undefined' || getItem(n) !== v) {
-                this._working[type] = true;
-                this._changed = Date.now();
-                this._update(type);
-                setItem(n, v);
-                this._working[type] = false;
-                return true;
-        }
-        return false;
+	if (type !== 'data' && type !== 'option' && type !== 'runtime') {
+		return this._save('data') + this._save('option') + this._save('runtime');
+	}
+	if (typeof this[type] === 'undefined' || !this[type] || this._working[type]) {
+		return false;
+	}
+	var n = (this._rootpath ? userID + '.' : '') + type + '.' + this.name, v = JSON.stringify(this[type]);
+	if (getItem(n) === 'undefined' || getItem(n) !== v) {
+		WorkerStack.push(this);
+		this._working[type] = true;
+		this._changed = Date.now();
+		this._update(type, null);
+		setItem(n, v);
+		this._working[type] = false;
+		WorkerStack.pop();
+		return true;
+	}
+	return false;
 };
 
 Worker.prototype._set = function(what, value) {
-        var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
-        if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
-                x.unshift('data');
-        }
-        if (x[0] === 'data') {
-                !this._loaded && this._init();
-                this._unflush();
-        }
-        data = this[x.shift()];
-        try {
-                switch(x.length) {
-                        case 0: data = value; break; // Nobody should ever do this!!
-                        case 1: data[x[0]] = value; break;
-                        case 2: data[x[0]][x[1]] = value; break;
-                        case 3: data[x[0]][x[1]][x[2]] = value; break;
-                        case 4: data[x[0]][x[1]][x[2]][x[3]] = value; break;
-                        case 5: data[x[0]][x[1]][x[2]][x[3]][x[4]] = value; break;
-                        case 6: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]] = value; break;
-                        case 7: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]] = value; break;
-                        default:break;
-                }
-//              this._save();
-        } catch(e) {
-		debug(this.name,e.name + ' in ' + this.name + '.set('+what+', '+value+'): ' + e.message);
-        }
-        return null;
+	WorkerStack.push(this);
+	var x = typeof what === 'string' ? what.split('.') : (typeof what === 'object' ? what : []), data;
+	if (!x.length || (x[0] !== 'data' && x[0] !== 'option' && x[0] !== 'runtime')) {
+		x.unshift('data');
+	}
+	if (x[0] === 'data') {
+		!this._loaded && this._init();
+		this._unflush();
+	}
+	data = this[x.shift()];
+	try {
+		switch(x.length) {
+			case 0: data = value; break; // Nobody should ever do this!!
+			case 1: data[x[0]] = value; break;
+			case 2: data[x[0]][x[1]] = value; break;
+			case 3: data[x[0]][x[1]][x[2]] = value; break;
+			case 4: data[x[0]][x[1]][x[2]][x[3]] = value; break;
+			case 5: data[x[0]][x[1]][x[2]][x[3]][x[4]] = value; break;
+			case 6: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]] = value; break;
+			case 7: data[x[0]][x[1]][x[2]][x[3]][x[4]][x[5]][x[6]] = value; break;
+			default:break;
+		}
+//	      this._save();
+	} catch(e) {
+		debug(e.name + ' in ' + this.name + '.set('+what+', '+value+'): ' + e.message);
+	}
+	WorkerStack.pop();
+	return null;
 };
 
 Worker.prototype._setup = function() {
-        if (this.defaults && this.defaults[APP]) {
-                for (var i in this.defaults[APP]) {
-                        this[i] = this.defaults[APP][i];
-                }
-        }
-        if (this.settings.system || !this.defaults || this.defaults[APP]) {
-                this._load();
-        } else { // Get us out of the list!!!
-                Workers.splice(Workers.indexOf(this), 1);
-        }
+	WorkerStack.push(this);
+	if (this.defaults && this.defaults[APP]) {
+		for (var i in this.defaults[APP]) {
+			this[i] = this.defaults[APP][i];
+		}
+	}
+	if (this.settings.system || !this.defaults || this.defaults[APP]) {
+		this._load();
+	} else { // Get us out of the list!!!
+		Workers.splice(Workers.indexOf(this), 1);
+	}
+	WorkerStack.pop();
 };
 
 Worker.prototype._unflush = function() {
-        !this._loaded && this._init();
-        !this.settings.keep && !this.data && this._load('data');
+	WorkerStack.push(this);
+	!this._loaded && this._init();
+	!this.settings.keep && !this.data && this._load('data');
+	WorkerStack.pop();
 };
 
-Worker.prototype._update = function(type) {
-        if (this._loaded && (this.update || this._watching.length)) {
-                var i, flush = false;
-                this._working.update = true;
-                if (!this.data) {
-                        flush = true;
-                        this._unflush();
-                }
-                try {
-                        this.update && this.update(type);
-                }catch(e) {
-			debug(this.name,e.name + ' in ' + this.name + '.update(' + (type ? (typeof type === 'string' ? type : type.name) : '') + '): ' + e.message);
-                }
-                for (i=0; i<this._watching.length; i++) {
-                        if (this._watching[i] === this) {
-                                try {
-                                        this.update && this.update(this);
-                                }catch(e) {
-					debug(this.name,e.name + ' in ' + this.name + '.update(this): ' + e.message);
-                                }
-                        } else {
-                                this._watching[i]._update(this);
-                        }
-                }
-                flush && this._flush();
-                this._working.update = false;
-        }
+Worker.prototype._unwatch = function(worker) {
+	deleteElement(worker._watching,this);
+};
+
+Worker.prototype._update = function(type, worker) {
+	if (this._loaded && (this.update || this._watching.length)) {
+		WorkerStack.push(this);
+		var i, flush = false;
+		this._working.update = true;
+		if (typeof this.data === 'undefined') {
+			flush = true;
+			this._unflush();
+		}
+		try {
+			this.update && this.update(type, worker);
+		}catch(e) {
+			debug(e.name + ' in ' + this.name + '.update(' + (type ? type : 'null') + ', ' + (worker ? worker.name : 'null') + '): ' + e.message);
+		}
+		if (!worker) {
+			for (i=0; i<this._watching.length; i++) {
+				this._watching[i]._update(type, this);
+			}
+		}
+		flush && this._flush();
+		this._working.update = false;
+		WorkerStack.pop();
+	}
 };
 
 Worker.prototype._watch = function(worker) {
-        !findInArray(worker._watching,this) && worker._watching.push(this);
+	!findInArray(worker._watching,this) && worker._watching.push(this);
 };
 
 Worker.prototype._work = function(state) {
-        try {
-                return this.work && this.work(state);
-        }catch(e) {
-		debug(this.name,e.name + ' in ' + this.name + '.work(' + state + '): ' + e.message);
-        }
-        return false;
+	WorkerStack.push(this);
+	var result = false;
+	try {
+		result = this.work && this.work(state);
+	}catch(e) {
+		debug(e.name + ' in ' + this.name + '.work(' + state + '): ' + e.message);
+	}
+	WorkerStack.pop();
+	return result;
 };
 
 /********** Worker.Config **********
@@ -10659,7 +10698,7 @@ Config.init = function() {
 	}
 	$('head').append('<link rel="stylesheet" href="http://cloutman.com/css/base/jquery-ui.css" type="text/css" />');
 	var $btn, $golem_config, $newPanel, i, j, k;
-	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem v' + VERSION + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
+	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem v' + VERSION + (revision && revision !== '$WCREV$' ? 'r'+revision : '') + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
 	$('#golem_options').click(function(){
 		$(this).toggleClass('golem-button golem-button-active');
 		Config.option.display = Config.option.display==='block' ? 'none' : 'block';
@@ -10727,7 +10766,7 @@ refreshPositions:true, stop:function(){Config.updateOptions();} })
 					k.settings.after = k.settings.after || [];
 					k.settings.after.push(Workers[i].name);
 					k.settings.after = unique(k.settings.after);
-//					debug(this.name,'Pushing '+k.name+' after '+Workers[i].name+' = '+k.settings.after);
+//					debug('Pushing '+k.name+' after '+Workers[i].name+' = '+k.settings.after);
 				}
 			}
 		}
@@ -10738,7 +10777,7 @@ refreshPositions:true, stop:function(){Config.updateOptions();} })
 					k.settings.before = k.settings.before || [];
 					k.settings.before.push(Workers[i].name);
 					k.settings.before = unique(k.settings.before);
-//					debug(this.name,'Pushing '+k.name+' before '+Workers[i].name+' = '+k.settings.before);
+//					debug('Pushing '+k.name+' before '+Workers[i].name+' = '+k.settings.before);
 				}
 			}
 		}
@@ -10789,7 +10828,7 @@ Config.makePanel = function(worker) {
 	}
 	worker.id = 'golem_panel_'+worker.name.toLowerCase().replace(/[^0-9a-z]/g,'-');
 	show = findInArray(this.option.active, worker.id);
-	$head = $('<div id="' + worker.id + '" class="golem-panel' + (worker.settings.unsortable?'':' golem-panel-sortable') + (show?' golem-panel-show':'') + (worker.settings.advanced ? ' golem-advanced' : '') + '"' + ((worker.settings.advanced && !this.option.advanced) || (worker.settings.exploit && !this.option.exploit) ? ' style="display:none;"' : '') + ' name="' + worker.name + '"><h3 class="golem-panel-header "><img class="golem-icon">' + worker.name + '<img class="golem-lock"></h3></div>');
+	$head = $('<div id="' + worker.id + '" class="golem-panel' + (worker.settings.unsortable?'':' golem-panel-sortable') + (show?' golem-panel-show':'') + (worker.settings.advanced ? ' golem-advanced' : '') + '"' + ((worker.settings.advanced && !this.option.advanced) || (worker.settings.exploit && !this.option.exploit) ? ' style="display:none;"' : '') + ' name="' + worker.name + '"><h3 class="golem-panel-header "><img class="golem-icon" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%06PLTE%00%00%00%00%00%00%A5g%B9%CF%00%00%00%01tRNS%00%40%E6%D8f%00%00%00%0FIDATx%DAb%60%18%05%C8%00%20%C0%00%01%10%00%01%3BBBK%00%00%00%00IEND%AEB%60%82">' + worker.name + '<img class="golem-lock" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%06PLTE%00%00%00%00%00%00%A5g%B9%CF%00%00%00%01tRNS%00%40%E6%D8f%00%00%00%0FIDATx%DAb%60%18%05%C8%00%20%C0%00%01%10%00%01%3BBBK%00%00%00%00IEND%AEB%60%82"></h3></div>');
 	switch (typeof display) {
 		case 'array':
 		case 'object':
@@ -10941,7 +10980,7 @@ Config.set = function(key, value) {
 };
 
 Config.updateOptions = function() {
-//	debug(this.name,'Options changed');
+//	debug('Options changed');
 	// Get order of panels first
 	Queue.option.queue = this.getOrder();
 	// Now can we see the advanced stuff
@@ -10967,7 +11006,7 @@ Config.updateOptions = function() {
 			try {
 				WorkerByName(tmp[0]).set('option.'+tmp[1], val);
 			} catch(e) {
-				debug(this.name,e.name + ' in Config.updateOptions(): ' + $(el).attr('id') + '(' + JSON.stringify(tmp) + ') = ' + e.message);
+				debug(e.name + ' in Config.updateOptions(): ' + $(el).attr('id') + '(' + JSON.stringify(tmp) + ') = ' + e.message);
 			}
 		}
 	});
@@ -11086,18 +11125,18 @@ Dashboard.parse = function(change) {
 	$('#golem-dashboard').css('top', $('#app'+APPID+'_main_bn').offset().top+'px');
 };
 
-Dashboard.update = function(type) {
-	if (!this._loaded || (type && typeof type !== 'object')) {
+Dashboard.update = function(type, worker) {
+	if (!this._loaded || !worker) { // we only care about updating the dashboard when something we're *watching* changes (including ourselves)
 		return;
 	}
-	worker = type || WorkerByName(Dashboard.option.active.substr(16));
+	worker = WorkerByName(Dashboard.option.active.substr(16));
 	var id = 'golem-dashboard-'+worker.name;
 	if (this.option.active === id && this.option.display === 'block') {
 		try {
 			worker._unflush();
 			worker.dashboard();
 		}catch(e) {
-			log(this.name,e.name + ' in ' + worker.name + '.dashboard(): ' + e.message);
+			debug(e.name + ' in ' + worker.name + '.dashboard(): ' + e.message);
 		}
 	} else {
 		$('#'+id).empty();
@@ -11130,14 +11169,14 @@ Dashboard.status = function(worker, html) {
 var Page = new Worker('Page');
 
 Page.settings = {
-        system:true,
-        unsortable:true,
-        keep:true
+	system:true,
+	unsortable:true,
+	keep:true
 };
 
 Page.option = {
-        timeout: 15,
-        retry: 5
+	timeout: 15,
+	retry: 5
 };
 
 Page.page = '';
@@ -11150,230 +11189,234 @@ Page.node_trigger = null;
 Page.loading = false;
 
 Page.display = [
-        {
-                id:'timeout',
-                label:'Retry after',
-                select:[10, 15, 30, 60],
-                after:'seconds'
-        }
+	{
+		id:'timeout',
+		label:'Retry after',
+		select:[10, 15, 30, 60],
+		after:'seconds'
+	}
 ];
 
 Page.defaults = {
-        'castle_age':{
-                pageNames:{
-                        index:                                  {url:'index.php', selector:'#app'+APPID+'_indexNewFeaturesBox'},
-                        quests_quest:                   {url:'quests.php', image:'tab_quest_on.gif'}, // If we ever get this then it means a new land...
-                        quests_quest1:                  {url:'quests.php?land=1', image:'land_fire_sel.gif'},
-                        quests_quest2:                  {url:'quests.php?land=2', image:'land_earth_sel.gif'},
-                        quests_quest3:                  {url:'quests.php?land=3', image:'land_mist_sel.gif'},
-                        quests_quest4:                  {url:'quests.php?land=4', image:'land_water_sel.gif'},
-                        quests_quest5:                  {url:'quests.php?land=5', image:'land_demon_realm_sel.gif'},
-                        quests_quest6:                  {url:'quests.php?land=6', image:'land_undead_realm_sel.gif'},
-                        quests_quest7:                  {url:'quests.php?land=7', image:'tab_underworld_big.gif'},
-                        quests_demiquests:              {url:'symbolquests.php', image:'demi_quest_on.gif'},
-                        quests_atlantis:                {url:'monster_quests.php', image:'tab_atlantis_on.gif'},
-                        battle_battle:                  {url:'battle.php', image:'battle_on.gif'},
-                        battle_training:                {url:'battle_train.php', image:'training_grounds_on_new.gif'},
-                        battle_rank:                    {url:'battlerank.php', image:'tab_battle_rank_on.gif'},
-                        battle_raid:                    {url:'raid.php', image:'tab_raid_on.gif'},
-                        battle_arena:                   {url:'arena.php', image:'tab_arena_on.gif'},
-                        heroes_heroes:                  {url:'mercenary.php', image:'tab_heroes_on.gif'},
-                        heroes_generals:                {url:'generals.php', image:'tab_generals_on.gif'},
-                        town_soldiers:                  {url:'soldiers.php', image:'tab_soldiers_on.gif'},
-                        town_blacksmith:                {url:'item.php', image:'tab_black_smith_on.gif'},
-                        town_magic:                             {url:'magic.php', image:'tab_magic_on.gif'},
-                        town_land:                              {url:'land.php', image:'tab_land_on.gif'},
-                        oracle_oracle:                  {url:'oracle.php', image:'oracle_on.gif'},
-                        oracle_demipower:               {url:'symbols.php', image:'demi_on.gif'},
-                        oracle_treasurealpha:   {url:'treasure_chest.php', image:'tab_treasure_alpha_on.gif'},
-                        oracle_treasurevanguard:{url:'treasure_chest.php?treasure_set=alpha', image:'tab_treasure_vanguard_on.gif'},
-                        oracle_treasureonslaught:{url:'treasure_chest.php?treasure_set=onslaught', image:'tab_treasure_onslaught_on.gif'},
-                        keep_stats:                             {url:'keep.php?user='+userID, image:'tab_stats_on.gif'},
-                        keep_eliteguard:                {url:'party.php?user='+userID, image:'tab_elite_guard_on.gif'},
-                        keep_achievements:              {url:'achievements.php', image:'tab_achievements_on.gif'},
-                        keep_alchemy:                   {url:'alchemy.php', image:'tab_alchemy_on.gif'},
-                        keep_monster:                   {url:'battle_monster.php', image:'tab_monster_on.jpg'},
-                        keep_monster_active2:   {url:'battle_monster.php', selector:'div[style*="nm_monster_list_button.gif"]'},
-                        keep_monster_active:    {url:'raid.php', image:'dragon_view_more.gif'},
-                        army_invite:                    {url:'army.php', image:'invite_on.gif'},
-                        army_gifts:                             {url:'gift.php', selector:'#app'+APPID+'_giftContainer'},
-                        army_viewarmy:                  {url:'army_member.php', image:'view_army_on.gif'},
-                        army_sentinvites:               {url:'army_reqs.php', image:'sent_invites_on.gif'},
+	'castle_age':{
+		pageNames:{
+			index:					{url:'index.php', selector:'#app'+APPID+'_indexNewFeaturesBox'},
+			quests_quest:			{url:'quests.php', image:'tab_quest_on.gif'}, // If we ever get this then it means a new land...
+			quests_quest1:			{url:'quests.php?land=1', image:'land_fire_sel.gif'},
+			quests_quest2:			{url:'quests.php?land=2', image:'land_earth_sel.gif'},
+			quests_quest3:			{url:'quests.php?land=3', image:'land_mist_sel.gif'},
+			quests_quest4:			{url:'quests.php?land=4', image:'land_water_sel.gif'},
+			quests_quest5:			{url:'quests.php?land=5', image:'land_demon_realm_sel.gif'},
+			quests_quest6:			{url:'quests.php?land=6', image:'land_undead_realm_sel.gif'},
+			quests_quest7:			{url:'quests.php?land=7', image:'tab_underworld_big.gif'},
+			quests_quest8:			{url:'quests.php?land=8', image:'tab_heaven_big2.gif'},
+			quests_demiquests:		{url:'symbolquests.php', image:'demi_quest_on.gif'},
+			quests_atlantis:		{url:'monster_quests.php', image:'tab_atlantis_on.gif'},
+			battle_battle:			{url:'battle.php', image:'battle_on.gif'},
+			battle_training:		{url:'battle_train.php', image:'training_grounds_on_new.gif'},
+			battle_rank:			{url:'battlerank.php', image:'tab_battle_rank_on.gif'},
+			battle_raid:			{url:'raid.php', image:'tab_raid_on.gif'},
+			battle_arena:			{url:'arena.php', image:'tab_arena_on.gif'},
+			heroes_heroes:			{url:'mercenary.php', image:'tab_heroes_on.gif'},
+			heroes_generals:		{url:'generals.php', image:'tab_generals_on.gif'},
+			town_soldiers:			{url:'soldiers.php', image:'tab_soldiers_on.gif'},
+			town_blacksmith:		{url:'item.php', image:'tab_black_smith_on.gif'},
+			town_magic:				{url:'magic.php', image:'tab_magic_on.gif'},
+			town_land:				{url:'land.php', image:'tab_land_on.gif'},
+			oracle_oracle:			{url:'oracle.php', image:'oracle_on.gif'},
+			oracle_demipower:		{url:'symbols.php', image:'demi_on.gif'},
+			oracle_treasurealpha:	{url:'treasure_chest.php', image:'tab_treasure_alpha_on.gif'},
+			oracle_treasurevanguard:{url:'treasure_chest.php?treasure_set=alpha', image:'tab_treasure_vanguard_on.gif'},
+			oracle_treasureonslaught:{url:'treasure_chest.php?treasure_set=onslaught', image:'tab_treasure_onslaught_on.gif'},
+			keep_stats:				{url:'keep.php?user='+userID, image:'tab_stats_on.gif'},
+			keep_eliteguard:		{url:'party.php?user='+userID, image:'tab_elite_guard_on.gif'},
+			keep_achievements:		{url:'achievements.php', image:'tab_achievements_on.gif'},
+			keep_alchemy:			{url:'alchemy.php', image:'tab_alchemy_on.gif'},
+			keep_monster:			{url:'battle_monster.php', image:'tab_monster_on.jpg'},
+			keep_monster_active2:	{url:'battle_monster.php', selector:'div[style*="nm_monster_list_button.gif"]'},
+			keep_monster_active:	{url:'raid.php', image:'dragon_view_more.gif'},
+			army_invite:			{url:'army.php', image:'invite_on.gif'},
+			army_gifts:				{url:'gift.php', selector:'#app'+APPID+'_giftContainer'},
+			army_viewarmy:			{url:'army_member.php', image:'view_army_on.gif'},
+			army_sentinvites:		{url:'army_reqs.php', image:'sent_invites_on.gif'},
 			army_newsfeed:			{url:'army_news_feed.php', selector:'#app'+APPID+'_army_feed_header'},
-                        apprentice_collect:             {url:'apprentice.php?collect=true', image:'ma_view_progress2.gif'}
-                }
-        }
+			apprentice_collect:		{url:'apprentice.php?collect=true', image:'ma_view_progress2.gif'}
+		}
+	}
 };
 
 Page.init = function() {
-        // Only perform the check on the two id's referenced in get_cached_ajax()
-        // Give a short delay due to multiple children being added at once, 0.1 sec should be more than enough
-        $('body').bind('DOMNodeInserted', function(event){
-                if (!Page.node_trigger && ($(event.target).attr('id') === 'app'+APPID+'_app_body_container' || $(event.target).attr('id') === 'app'+APPID+'_globalContainer')) {
-                        Page.node_trigger = window.setTimeout(function(){Page.node_trigger=null;Page.parse_all();},100);
-                }
-        });
+	// Only perform the check on the two id's referenced in get_cached_ajax()
+	// Give a short delay due to multiple children being added at once, 0.1 sec should be more than enough
+	$('body').bind('DOMNodeInserted', function(event){
+		if (!Page.node_trigger && ($(event.target).attr('id') === 'app'+APPID+'_app_body_container' || $(event.target).attr('id') === 'app'+APPID+'_globalContainer')) {
+			Page.node_trigger = window.setTimeout(function(){Page.node_trigger=null;Page.parse_all();},100);
+		}
+	});
 };
 
 Page.parse_all = function() {
-        Page.identify();
-        var i, list = [];
-        for (i=0; i<Workers.length; i++) {
-                if (Workers[i].parse && Workers[i].pages && (Workers[i].pages.indexOf('*')>=0 || (Page.page && Workers[i].pages.indexOf(Page.page)>=0))) {
-                        Workers[i]._unflush();
-                        if (Workers[i]._parse(false)) {
-                                list.push(Workers[i]);
-                        }
-                }
-        }
-        for (i in list) {
-                list[i]._parse(true);
-        }
-        for (i=0; i<Workers.length; i++) {
-                Workers[i]._flush();
-        }
-}
-
+	WorkerStack.push(this);
+	Page.identify();
+	var i, list = [];
+	for (i=0; i<Workers.length; i++) {
+		if (Workers[i].parse && Workers[i].pages && (Workers[i].pages.indexOf('*')>=0 || (Page.page !== '' && Workers[i].pages.indexOf(Page.page) >= 0))) {
+			Workers[i]._unflush();
+			if (Workers[i]._parse(false)) {
+				list.push(Workers[i]);
+			}
+		}
+	}
+	for (i in list) {
+		list[i]._parse(true);
+	}
+	for (i=0; i<Workers.length; i++) {
+		Workers[i]._flush();
+	}
+	WorkerStack.pop();
+};
 
 Page.work = function(state) {
-        if (!this.checking) {
-                return false;
-        }
-        var i, l, list, found = null;
-        for (i=0; i<Workers.length && !found; i++) {
-                if (Workers[i].pages) {
-                        list = Workers[i].pages.split(' ');
-                        for (l=0; l<list.length; l++) {
-                                if (list[l] !== '*' && this.pageNames[list[l]] && !this.data[list[l]] && list[l].indexOf('_active') === -1) {
-                                        found = list[l];
-                                        break;
-                                }
-                        }
-                }
-        }
-        if (!state) {
-                if (found) {
-                        return true;
-                }
-                this.checking = false;
-                return false;
-        }
-        if (found && !this.to(found)) {
-                this.data[found] = Date.now(); // Even if it's broken, we need to think we've been there!
-                return true;
-        }
-        return false;
+	if (!this.checking) {
+		return false;
+	}
+	var i, l, list, found = null;
+	for (i=0; i<Workers.length && !found; i++) {
+		if (Workers[i].pages) {
+			list = Workers[i].pages.split(' ');
+			for (l=0; l<list.length; l++) {
+				if (list[l] !== '*' && this.pageNames[list[l]] && !this.data[list[l]] && list[l].indexOf('_active') === -1) {
+					found = list[l];
+					break;
+				}
+			}
+		}
+	}
+	if (!state) {
+		if (found) {
+			return true;
+		}
+		this.checking = false;
+		return false;
+	}
+	if (found && !this.to(found)) {
+		this.data[found] = Date.now(); // Even if it's broken, we need to think we've been there!
+		return true;
+	}
+	return false;
 };
 
 Page.identify = function() {
-        this.page = '';
-        if (!$('#app_content_'+APPID).length) {
-                this.reload();
-                return null;
-        }
-        var app_body = $('#app'+APPID+'_app_body'), p;
-        $('img', app_body).each(function(i,el){
-                var filename = $(el).attr('src').filepart();
-                for (p in Page.pageNames) {
-                        if (Page.pageNames[p].image && filename === Page.pageNames[p].image) {
-                                Page.page = p;
-                                return;
-                        }
-                }
-        });
-        if (!this.page) {
-                for (p in Page.pageNames) {
-                        if (Page.pageNames[p].selector && $(Page.pageNames[p].selector).length) {
-                                Page.page = p;
-                        }
-                }
-        }
-        if (this.page !== '') {
-                this.data[this.page] = Date.now();
-        }
-	//debug(this.name,'this.identify("'+Page.page+'")');
-        return this.page;
+	this.page = '';
+	if (!$('#app_content_'+APPID).length) {
+		this.reload();
+		return null;
+	}
+	var app_body = $('#app'+APPID+'_app_body'), p;
+	$('img', app_body).each(function(i,el){
+		var filename = $(el).attr('src').filepart();
+		for (p in Page.pageNames) {
+			if (Page.pageNames[p].image && filename === Page.pageNames[p].image) {
+				Page.page = p;
+				return;
+			}
+		}
+	});
+	if (!this.page) {
+		for (p in Page.pageNames) {
+			if (Page.pageNames[p].selector && $(Page.pageNames[p].selector).length) {
+				Page.page = p;
+			}
+		}
+	}
+	if (this.page !== '') {
+		this.data[this.page] = Date.now();
+	}
+	//debug('this.identify("'+Page.page+'")');
+	return this.page;
 };
 
 Page.to = function(page, args, force) {
 	if (Queue.option.pause) {
-		debug(this.name,'Trying to load page when paused...');
-                return true;
-        }
-        if (page === this.page && (force || typeof args === 'undefined')) {
-                return true;
-        }
-        if (!args) {
-                args = '';
-        }
-        if (page && this.pageNames[page] && this.pageNames[page].url) {
-                this.clear();
-                this.last = this.pageNames[page].url;
-                this.when = Date.now();
-                if (args.indexOf('?') === 0 && this.last.indexOf('?') > 0) {
-                        this.last = this.last.substr(0, this.last.indexOf('?')) + args;
-                } else {
-                        this.last = this.last + args;
-                }
-		debug(this.name,'Navigating to ' + page + ' (' + (force ? 'FORCE: ' : '') + this.last + ')');
-                if (force) {
-//                      this.loading=true;
-                        window.location.href = this.last;
-                } else {
-                        this.ajaxload();
-                }
-        }
-        return false;
+		debug('Trying to load page when paused...');
+		return true;
+	}
+	if (page === this.page && (force || typeof args === 'undefined')) {
+		return true;
+	}
+//	WorkerStack.push(this);
+	if (!args) {
+		args = '';
+	}
+	if (page && this.pageNames[page] && this.pageNames[page].url) {
+		this.clear();
+		this.last = this.pageNames[page].url;
+		this.when = Date.now();
+		if (args.indexOf('?') === 0 && this.last.indexOf('?') > 0) {
+			this.last = this.last.substr(0, this.last.indexOf('?')) + args;
+		} else {
+			this.last = this.last + args;
+		}
+		debug('Navigating to ' + page + ' (' + (force ? 'FORCE: ' : '') + this.last + ')');
+		if (force) {
+//			this.loading=true;
+			window.location.href = this.last;
+		} else {
+			this.ajaxload();
+		}               
+	}
+//	WorkerStack.pop();
+	return false;
 };
 
 Page.ajaxload = function() {
-        $.ajax({
-                cache:false,
-                dataType:'text',
-                timeout:this.option.timeout * 1000,
-                url:'http://apps.facebook.com/castle_age/'+this.last,
-                error:function() {
-                        debug('Page not loaded correctly, reloading.');
-                        Page.ajaxload();
-                },
-                success:function(data){
+	$.ajax({
+		cache:false,
+		dataType:'text',
+		timeout:this.option.timeout * 1000,
+		url:'http://apps.facebook.com/castle_age/'+this.last,
+		error:function() {
+			debug('Page not loaded correctly, reloading.');
+			Page.ajaxload();
+		},
+		success:function(data){
 		if (data.indexOf('app'+APPID+'_results_container') !== -1 && data.indexOf('</html>') !== -1 && data.indexOf('single_popup') !== -1 && data.indexOf('app'+APPID+'_index') !== -1) { // Last things in source if loaded correctly...
-                                Page.loading = false;
-                                data = data.substring(data.indexOf('<div id="app'+APPID+'_globalContainer"'), data.indexOf('<div class="UIStandardFrame_SidebarAds"'));
-                                $('#app'+APPID+'_AjaxLoadIcon').css('display', 'none');
-                                $('#app'+APPID+'_globalContainer').empty().append(data);
-                        } else {
-                                debug('Page not loaded correctly, reloading.');
-                                Page.ajaxload();
-                        }
-                }
-        });
-        this.loading = true;
-        setTimeout(function() { if (Page.loading) {$('#app'+APPID+'_AjaxLoadIcon').css('display', 'block');} }, 1500);
+				Page.loading = false;
+				data = data.substring(data.indexOf('<div id="app'+APPID+'_globalContainer"'), data.indexOf('<div class="UIStandardFrame_SidebarAds"'));
+				$('#app'+APPID+'_AjaxLoadIcon').css('display', 'none');
+				$('#app'+APPID+'_globalContainer').empty().append(data);
+			} else {
+				debug('Page not loaded correctly, reloading.');
+				Page.ajaxload();
+			}
+		}
+	});
+	this.loading = true;
+	setTimeout(function() { if (Page.loading) {$('#app'+APPID+'_AjaxLoadIcon').css('display', 'block');} }, 1500);
 };
 
 Page.reload = function() {
-	debug(this.name,'Page.reload()');
-        window.location.href = window.location.href;
+	debug('Page.reload()');
+	window.location.href = window.location.href;
 };
 
 Page.click = function(el) {
-        if (!$(el).length) {
-		log(this.name,'Page.click: Unable to find element - '+el);
-                return false;
-        }
-        var e = document.createEvent("MouseEvents");
-        e.initEvent("click", true, true);
-        $(el).get(0).wrappedJSObject.dispatchEvent(e);
-        this.clear();
-        this.lastclick = el;
-        this.when = Date.now();
-        return true;
+	if (!$(el).length) {
+		log('Page.click: Unable to find element - '+el);
+		return false;
+	}
+	var e = document.createEvent("MouseEvents");
+	e.initEvent("click", true, true);
+	isGreasemonkey ? $(el).get(0).wrappedJSObject.dispatchEvent(e) : $(el).get(0).dispatchEvent(e);
+	this.clear();
+	this.lastclick = el;
+	this.when = Date.now();
+	return true;
 };
 
 Page.clear = function() {
-        this.last = this.lastclick = this.when = null;
-        this.retry = 0;
+	this.last = this.lastclick = this.when = null;
+	this.retry = 0;
 };
 
 /********** Worker.Queue() **********
@@ -11381,6 +11424,12 @@ Page.clear = function() {
 */
 var Queue = new Worker('Queue', '*');
 Queue.data = null;
+
+// worker.work() return values for stateful - ie, only let other things interrupt when it's "safe"
+var QUEUE_FINISH	= 0;// Finished everything, let something else work
+var QUEUE_CONTINUE	= 1;// Not finished at all, don't interrupt
+var QUEUE_RELEASE	= 2;// Not quite finished, but safe to interrupt 
+// worker.work() can also return true/false for "continue"/"finish" - which means they can be interrupted at any time
 
 Queue.settings = {
 	system:true,
@@ -11400,7 +11449,8 @@ Queue.option = {
 	start_stamina: 0,
 	stamina: 0,
 	start_energy: 0,
-	energy: 0
+	energy: 0,
+	pause: false
 };
 
 Queue.display = [
@@ -11459,7 +11509,7 @@ Queue.init = function() {
 	this.option.queue = unique(this.option.queue);
 	for (i in Workers) {// Add any new workers that have a display (ie, sortable)
 		if (Workers[i].work && Workers[i].display && !findInArray(this.option.queue, Workers[i].name)) {
-			log(this.name,'Adding '+Workers[i].name+' to Queue');
+			log('Adding '+Workers[i].name+' to Queue');
 			if (Workers[i].settings.unsortable) {
 				this.option.queue.unshift(Workers[i].name);
 			} else {
@@ -11471,7 +11521,7 @@ Queue.init = function() {
 		worker = WorkerByName(this.option.queue[i]);
 		if (worker && worker.id) {
 			if (this.runtime.current && worker.name === this.runtime.current) {
-				debug(this.name,'Trigger '+worker.name+' (continue after load)');
+				debug('Trigger '+worker.name+' (continue after load)');
 				$('#'+worker.id+' > h3').css('font-weight', 'bold');
 			}
 			$('#golem_config').append($('#'+worker.id));
@@ -11482,7 +11532,7 @@ Queue.init = function() {
 	Queue.lastpause = this.option.pause;
 	$btn = $('<img class="golem-button' + (this.option.pause?' red':'') + '" id="golem_pause" src="' + (this.option.pause?play:pause) + '">').click(function() {
 		Queue.option.pause ^= true;
-		debug('Queue','State: '+((Queue.option.pause)?"paused":"running"));
+		debug('State: '+((Queue.option.pause)?"paused":"running"));
 		$(this).toggleClass('red').attr('src', (Queue.option.pause?play:pause));
 		Page.clear();
 		Config.updateOptions();
@@ -11507,14 +11557,15 @@ Queue.update = function(type) {
 };
 
 Queue.run = function() {
-	var i, worker, found = false, result, now = Date.now();
+	var i, worker, current, result, now = Date.now(), next = null, release = false;
 	if (this.option.pause || now - this.lastclick < this.option.clickdelay * 1000) {
 		return;
 	}
 	if (Page.loading) {
 		return; // We want to wait xx seconds after the page has loaded
 	}
-//	debug(this.name,'Start Queue');
+	WorkerStack.push(this);
+//	debug('Start Queue');
 	this.burn.stamina = this.burn.energy = 0;
 	if (this.option.burn_stamina || Player.get('stamina') >= this.option.start_stamina) {
 		this.burn.stamina = Math.max(0, Player.get('stamina') - this.option.stamina);
@@ -11527,15 +11578,15 @@ Queue.run = function() {
 	// We don't want to stay at max any longer than we have to because it is wasteful.  Burn a bit to start the countdown timer.
 /*	if (Player.get('energy') >= Player.get('maxenergy')){
 		this.burn.stamina = 0;	// Focus on burning energy
-		debug(this.name,'At max energy, burning energy first.');
+		debug('At max energy, burning energy first.');
 	} else if (Player.get('stamina') >= Player.get('maxstamina')){
 		this.burn.energy = 0;	// Focus on burning stamina
-		debug(this.name,'At max stamina, burning stamina first.');
+		debug('At max stamina, burning stamina first.');
 	}
 */	
 	for (i=0; i<Workers.length; i++) { // Run any workers that don't have a display, can never get focus!!
 		if (Workers[i].work && !Workers[i].display) {
-//			debug(this.name,Workers[i].name + '.work(false);');
+//			debug(Workers[i].name + '.work(false);');
 			Workers[i]._unflush();
 			Workers[i]._work(false);
 		}
@@ -11545,43 +11596,43 @@ Queue.run = function() {
 		if (!worker || !worker.work || !worker.display) {
 			continue;
 		}
-//		debug(this.name,worker.name + '.work(' + (this.runtime.current === worker.name) + ');');
+//		debug(worker.name + '.work(' + (this.runtime.current === worker.name) + ');');
 		if (this.runtime.current === worker.name) {
 			worker._unflush();
 			result = worker._work(true);
+			if (typeof result !== 'boolean') {// QUEUE_* are all numbers
+				worker.settings.stateful = true;
+			}
+			if (result === QUEUE_RELEASE) {
+				release = true;
+			} else if (!result) {// false or QUEUE_FINISH
+				this.runtime.current = null;
+				worker.id && $('#'+worker.id+' > h3').css('font-weight', 'normal');
+				debug('End '+worker.name);
+			}
 		} else {
 			result = worker._work(false);
 		}
-		if (!result && this.runtime.current === worker.name) {
-			this.runtime.current = null;
-			if (worker.id) {
-				$('#'+worker.id+' > h3').css('font-weight', 'normal');
-			}
-			debug(this.name,'End '+worker.name);
+		if (!next && result) {
+			next = worker; // the worker who wants to take over
 		}
-		if (!result || found) { // We will work(false) everything, but only one gets work(true) at a time
-			continue;
-		}
-		found = true;
-		if (this.runtime.current === worker.name) {
-			continue;
-		}
-		if (this.runtime.current) {
-			debug(this.name,'Interrupt '+this.runtime.current);
-			if (WorkerByName(this.runtime.current).id) {
-				$('#'+WorkerByName(this.runtime.current).id+' > h3').css('font-weight', 'normal');
-			}
-		}
-		this.runtime.current = worker.name;
-		if (worker.id) {
-			$('#'+worker.id+' > h3').css('font-weight', 'bold');
-		}
-		debug(this.name,'Trigger ' + worker.name);
 	}
-//	debug(this.name,'End Queue');
+	current = this.runtime.current ? WorkerByName(this.runtime.current) : null;
+	if (next !== current && (!current || !current.settings.stateful || next.settings.important || release)) {// Something wants to interrupt...
+		if (current) {
+			debug('Interrupt ' + current.name + ' with ' + next.name);
+			current.id && $('#'+current.id+' > h3').css('font-weight', 'normal');
+		} else {
+			debug('Trigger ' + next.name);
+		}
+		this.runtime.current = next.name;
+		next.id && $('#'+next.id+' > h3').css('font-weight', 'bold');
+	}
+//	debug('End Queue');
 	for (i=0; i<Workers.length; i++) {
 		Workers[i]._flush();
 	}
+	WorkerStack.pop();
 };
 
 /********** Worker.Settings **********
@@ -11644,11 +11695,11 @@ Settings.update = function(type) {
 			case 'None':
 				break;
 			case 'Load':
-				debug(this.name,'Loading ' + this.option.which);
+				debug('Loading ' + this.option.which);
 				this.get(this.option.which);
 				break;
 			case 'Save':
-				debug(this.name,'Saving ' + this.option.name);
+				debug('Saving ' + this.option.name);
 				this.set(this.option.name);
 				this.option.which = this.option.name;
 				break;
@@ -11755,14 +11806,14 @@ Update.work = function(state) {
 	if (!this.runtime.found && Date.now() - this.runtime.lastcheck > 21600000) {// 6+ hours since last check (60x60x6x1000ms)
 		this.runtime.lastcheck = Date.now();
 		/*
-		debug(this.name,'Checking trunk revisions');
+		debug('Checking trunk revisions');
 		GM_xmlhttpRequest({ // Cross-site ajax, only via GreaseMonkey currently...
 			method: "GET",
 			url: 'http://code.google.com/p/game-golem/source/browse/#svn/trunk',
 			onload: function(evt) {
 				if (evt.readyState === 4 && evt.status === 200) {
 					var release = evt.responseText.regex(/"_release.user.js":\["[^"]*","([0-9]+)"/i), beta = evt.responseText.regex(/"_normal.user.js":\["[^"]*","([0-9]+)"/i);
-					debug(this.name,'Version: '+release+', Beta: '+beta);
+					debug('Version: '+release+', Beta: '+beta);
 				}
 			}
 		});
@@ -11783,7 +11834,7 @@ Update.work = function(state) {
 							$('#golem_config').after('<div id="golem_request" title="Castle Age Golem"><p>There is a new version of Castle Age Golem available.</p><p>Current&nbsp;version:&nbsp;'+VERSION+', New&nbsp;version:&nbsp;'+remoteVersion+'</p></div>');
 							$('#golem_request').dialog({ modal:true, buttons:{"Install":function(){$(this).dialog("close");window.location.href='http://game-golem.googlecode.com/svn/trunk/_release.user.js';}, "Skip":function(){$(this).dialog("close");}} });
 						}
-						log(this.name,'New version available: '+remoteVersion);
+						log('New version available: '+remoteVersion);
 					} else if (Update.get('runtime.force')) {
 						$('#golem_config').after('<div id="golem_request" title="Castle Age Golem"><p>There are no new versions available.</p></div>');
 						$('#golem_request').dialog({ modal:true, buttons:{"Ok":function(){$(this).dialog("close");}} });
@@ -11839,7 +11890,6 @@ Alchemy.display = [
 ];
 
 Alchemy.parse = function(change) {
-	//gm.log('Alchemy Parse');
 	var ingredients = this.data.ingredients = {}, recipe = this.data.recipe = {};
 	$('div.ingredientUnit').each(function(i,el){
 		var name = $('img', el).attr('src').filepart();
@@ -11891,18 +11941,17 @@ Alchemy.update = function() {
 };
 
 Alchemy.work = function(state) {
-	//gm.log('Alchemy Work');
 	if (!this.option.perform || !this.runtime.best) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('keep_alchemy')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
-	debug(this.name,'Perform - ' + this.runtime.best);
+	debug('Perform - ' + this.runtime.best);
 	if (!Page.click($('input[type="image"]', $('div.recipeTitle:contains("' + this.runtime.best + '")').next()))) {
 		Page.reload(); // Can't find the recipe we just parsed when coming here...
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 /********** Worker.Bank **********
@@ -11948,15 +11997,14 @@ Bank.display = [
 
 Bank.work = function(state) {
 	if (iscaap() && this.option.above === '') {
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (Player.get('cash') <= 10 || (Player.get('cash') < this.option.above && (!Queue.get('runtime.current') || WorkerByName(Queue.get('runtime.current')).settings.bank))) {
-		return false;
+	if (Player.get('cash') <= 10 || Player.get('cash') <= this.option.above) {
+		return QUEUE_FINISH;
+	} else if (!state || this.stash(Player.get('cash') - this.option.hand)) {
+		return QUEUE_CONTINUE;
 	}
-	if (!state || !this.stash(Player.get('cash') - Math.min(this.option.above, this.option.hand))) {
-		return true;
-	}
-	return false;
+	return QUEUE_RELEASE;
 };
 
 Bank.stash = function(amount) {
@@ -11972,7 +12020,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
+	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...
@@ -12146,6 +12194,7 @@ Battle.parse = function(change) {
 				data[uid].hide = (data[uid].hide || 0) + 1;
 				data[uid].dead = Date.now();
 			} else if ($('img[src*="battle_victory"]').length) {
+				this.data.bp = $('span.result_body:contains("Battle Points.")').text().replace(/,/g, '').regex(/total of ([0-9]+) Battle Points/i);
 				data[uid].win = (data[uid].win || 0) + 1;
 				History.add('battle+win',1);
 			} else if ($('img[src*="battle_defeat"]').length) {
@@ -12199,7 +12248,7 @@ Battle.parse = function(change) {
 Battle.update = function(type) {
 	var i, j, data = this.data.user, list = [], points = false, status = [], army = Player.get('army'), level = Player.get('level'), rank = Player.get('rank'), count = 0;
 
-	status.push('Rank ' + Player.get('rank') + ' ' + this.data.rank[Player.get('rank')].name + ' with ' + addCommas(this.data.bp || 0) + ' Battle Points, Targets: ' + length(data) + ' / ' + this.option.cache);
+	status.push('Rank ' + Player.get('rank') + ' ' + (Player.get('rank') && this.data.rank[Player.get('rank')].name) + ' with ' + addCommas(this.data.bp || 0) + ' Battle Points, Targets: ' + length(data) + ' / ' + this.option.cache);
 	status.push('Demi Points Earned Today: '
 	+ '<img src="' + this.symbol[1] +'" alt=" " title="'+this.demi[1]+'" style="width:11px;height:11px;"> ' + (this.data.points[0] || 0) + '/10 '
 	+ '<img src="' + this.symbol[2] +'" alt=" " title="'+this.demi[2]+'" style="width:11px;height:11px;"> ' + (this.data.points[1] || 0) + '/10 '
@@ -12213,8 +12262,8 @@ Battle.update = function(type) {
 			delete data[i];
 		}
 	}
-	if (length(this.data.user) > this.option.cache) { // Need to prune our target cache
-//		debug(this.name,'Pruning target cache');
+	if (length(data) > this.option.cache) { // Need to prune our target cache
+//		debug('Pruning target cache');
 		list = [];
 		for (i in data) {
 			list.push(i);
@@ -12307,22 +12356,22 @@ Battle.update = function(type) {
 */
 Battle.work = function(state) {
 	if (!this.runtime.attacking || Player.get('health') < 13 || Queue.burn.stamina < 1) {
-//		debug(this.name,'Not attacking because: ' + (this.runtime.attacking ? '' : 'No Target, ') + 'Health: ' + Player.get('health') + ' (must be >=10), Burn Stamina: ' + Queue.burn.stamina + ' (must be >=1)');
-		return false;
+//		debug('Not attacking because: ' + (this.runtime.attacking ? '' : 'No Target, ') + 'Health: ' + Player.get('health') + ' (must be >=10), Burn Stamina: ' + Queue.burn.stamina + ' (must be >=1)');
+		return QUEUE_FINISH;
 	}
 	if (!state || (this.option.general && !Generals.to(Generals.best(this.option.type))) || !Page.to('battle_battle')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	var $form = $('form input[alt="'+this.option.type+'"]').first().parents('form');
 	if (!$form.length) {
-		debug(this.name,'Unable to find attack buttons, forcing reload');
+		debug('Unable to find attack buttons, forcing reload');
 		Page.to('index');
 	} else {
-		log(this.name,'Battle: Attacking ' + this.data.user[this.runtime.attacking].name + ' (' + this.runtime.attacking + ')');
+		log('Battle: Attacking ' + this.data.user[this.runtime.attacking].name + ' (' + this.runtime.attacking + ')');
 		$('input[name="target_id"]', $form).attr('value', this.runtime.attacking);
 		Page.click($('input[type="image"]', $form));
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 Battle.rank = function(name) {
@@ -12480,13 +12529,13 @@ Blessing.update = function(){
 
 Blessing.work = function(state) {
 	if (!this.option.which || this.option.which === 'None' || Date.now() <= this.runtime.when) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('oracle_demipower')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	Page.click('#app'+APPID+'_symbols_form_'+this.which.indexOf(this.option.which)+' input.imgButton');
-	return true;
+	return QUEUE_RELEASE;
 };
 
 /********** Worker.Elite() **********
@@ -12560,7 +12609,7 @@ Elite.parse = function(change) {
 				Elite.data[Elite.runtime.nextarena].arena = Date.now() + 3600000; // 1 hour
 			} else if ($(el).text().match(/YOUR Arena Guard is FULL/i)) {
 				Elite.runtime.waitarena = Date.now();
-				debug(this.name,this + 'Arena guard full, wait '+Elite.option.every+' hours');
+				debug(this + 'Arena guard full, wait '+Elite.option.every+' hours');
 			}
 		}
 		if ($(el).text().match(/Elite Guard, and they have joined/i)) {
@@ -12569,7 +12618,7 @@ Elite.parse = function(change) {
 			Elite.data[$('img', el).attr('uid')].elite = Date.now() + 3600000; // 1 hour
 		} else if ($(el).text().match(/YOUR Elite Guard is FULL!/i)) {
 			Elite.runtime.waitelite = Date.now();
-			debug(this.name,'Elite guard full, wait '+Elite.option.every+' hours');
+			debug('Elite guard full, wait '+Elite.option.every+' hours');
 		}
 	});
 	if (Page.page === 'army_viewarmy') {
@@ -12629,7 +12678,7 @@ Elite.work = function(state) {
 	var i, j, found = null;
 	if (Math.ceil((Player.get('armymax') - this.runtime.armyextra - 1) / this.option.armyperpage) > this.runtime.armylastpage) {
 		if (state) {
-			debug(this.name,'Filling army list');
+			debug('Filling army list');
 			this.runtime.armylastpage = Math.max(this.runtime.armylastpage + 1, Math.ceil((length(this.data) + 1) / this.option.armyperpage));
 			Page.to('army_viewarmy', '?page=' + this.runtime.armylastpage);
 		}
@@ -12645,13 +12694,13 @@ Elite.work = function(state) {
 		return true;
 	}
 	if ((this.runtime.waitelite + (this.option.every * 3600000)) <= Date.now()) {
-		debug(this.name,'Add Elite Guard member '+this.runtime.nextelite);
+		debug('Add Elite Guard member '+this.runtime.nextelite);
 		if (!Page.to('keep_eliteguard', '?twt=jneg&jneg=true&user=' + this.runtime.nextelite)) {
 			return true;
 		}
 	}
 	if ((this.runtime.waitarena + (this.option.every * 3600000)) <= Date.now()) {
-		debug(this.name,'Add Arena Guard member '+this.runtime.nextarena);
+		debug('Add Arena Guard member '+this.runtime.nextarena);
 		if (!Page.to('battle_arena', '?user=' + this.runtime.nextarena + '&lka=' + this.runtime.nextarena + '&agtw=1&ref=nf')) {
 			return true;
 		}
@@ -12694,7 +12743,7 @@ Generals.parse = function(change) {
 	if (Page.page === 'heroes_generals') {
 		var $elements = $('.generalSmallContainer2'), data = this.data;
 		if ($elements.length < length(data)) {
-			debug(this.name,'Different number of generals, have '+$elements.length+', want '+length(data));
+			debug('Different number of generals, have '+$elements.length+', want '+length(data));
 	//		Page.to('heroes_generals', ''); // Force reload
 			return false;
 		}
@@ -12722,7 +12771,7 @@ Generals.parse = function(change) {
 	return false;
 };
 
-Generals.update = function(type) {
+Generals.update = function(type, worker) {
 	var data = this.data, i, priority_list = [], list = [], invade = Town.get('runtime.invade'), duel = Town.get('runtime.duel'), attack, attack_bonus, defend, defense_bonus, army, gen_att, gen_def, attack_potential, defense_potential, att_when_att_potential, def_when_att_potential, att_when_att = 0, def_when_att = 0, monster_att = 0, iatt = 0, idef = 0, datt = 0, ddef = 0, listpush = function(list,i){list.push(i);};
 	if (!type || type === 'data') {
 		for (i in Generals.data) {
@@ -12746,15 +12795,15 @@ Generals.update = function(type) {
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
 	
-	if ((type === 'data' || type === Town) && invade && duel) {
+	if ((type === 'data' || worker === Town) && invade && duel) {
 		for (i in data) {
-			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
+			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
 			defense_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Defense|Increase Player Defense by ([0-9]+)/i))	+ ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Defense for every Hero Owned/i) || 0) * (length(data)-1)));
 			attack = Player.get('attack') + attack_bonus;
 			defend = Player.get('defense') + defense_bonus;
 			attack_potential = Player.get('attack') + (attack_bonus * 4) / data[i].level;	// Approximation
 			defense_potential = Player.get('defense') + (defense_bonus * 4) / data[i].level;	// Approximation
-			army = (data[i].skills.regex(/Increases? Army Limit to ([0-9]+)/i) || 501);
+			army = Math.min(Player.get('armymax'),(data[i].skills.regex(/Increases? Army Limit to ([0-9]+)/i) || 501));
 			gen_att = getAttDef(data, listpush, 'att', Math.floor(army / 5));
 			gen_def = getAttDef(data, listpush, 'def', Math.floor(army / 5));
 			att_when_att = (data[i].skills.regex(/Increase Player Attack when Defending by ([-+]?[0-9]+)/i) || 0);
@@ -12806,13 +12855,13 @@ Generals.to = function(name) {
 		return true;
 	}
 	if (!name || !this.data[name]) {
-		log(this.name,'General "'+name+'" requested but not found!');
+		log('General "'+name+'" requested but not found!');
 		return true; // Not found, so fake it
 	}
 	if (!Page.to('heroes_generals')) {
 		return false;
 	}
-	debug(this.name,'Changing to General '+name);
+	debug('Changing to General '+name);
 	Page.click('input[src$="' + this.data[name].img + '"]');
 	this.data[name].used = (this.data[name].used || 0) + 1;
 	return false;
@@ -12944,7 +12993,7 @@ Generals.best = function(type) {
 		}
 	}
 //	if (best) {
-//		debug(this.name,'Best general found: '+best);
+//		debug('Best general found: '+best);
 //	}
 	return (best || 'any');
 };
@@ -13028,7 +13077,7 @@ Generals.dashboard = function(sort, rev) {
 			}
 		}
 		if (gdown && gup) {
-			debug(this.name,'Priority: Swapping '+gup+' with '+gdown);
+			debug('Priority: Swapping '+gup+' with '+gdown);
 			Generals.data[gdown].priority++;
 			Generals.data[gup].priority--;
 		}
@@ -13047,7 +13096,7 @@ Generals.dashboard = function(sort, rev) {
 			}
 		}
 		if (gdown && gup) {
-			debug(this.name,'Priority: Swapping '+gup+' with '+gdown);
+			debug('Priority: Swapping '+gup+' with '+gdown);
 			Generals.data[gdown].priority++;
 			Generals.data[gup].priority--;
 		}
@@ -13073,7 +13122,7 @@ Gift.settings = {
 
 Gift.defaults = {
 	castle_age:{
-		pages:'index army_invite army_gifts'
+		pages:'* index army_invite army_gifts'
 	}
 };
 
@@ -13140,27 +13189,27 @@ Gift.parse = function(change) {
 	//alert('Gift.parse running');
 	if (Page.page === 'index') {
 		// We need to get the image of the gift from the index page.
-//		debug(this.name,'Checking for a waiting gift and getting the id of the gift.');
+//		debug('Checking for a waiting gift and getting the id of the gift.');
 		if ($('span.result_body').text().indexOf('has sent you a gift') >= 0) {
 			this.runtime.gift.sender_ca_name = $('span.result_body').text().regex(/[\t\n]*(.+) has sent you a gift/i);
 			this.runtime.gift.name = $('span.result_body').text().regex(/has sent you a gift:\s+(.+)!/i);
 			this.runtime.gift.id = $('span.result_body img').attr('src').filepart();
-			debug(this.name,this.runtime.gift.sender_ca_name + ' has a ' + this.runtime.gift.name + ' waiting for you. (' + this.runtime.gift.id + ')');
+			debug(this.runtime.gift.sender_ca_name + ' has a ' + this.runtime.gift.name + ' waiting for you. (' + this.runtime.gift.id + ')');
 			this.runtime.gift_waiting = true;
 			return true
 		} else if ($('span.result_body').text().indexOf('warrior wants to join your Army') >= 0) {
 			this.runtime.gift.sender_ca_name = 'A Warrior';
 			this.runtime.gift.name = 'Random Soldier';
 			this.runtime.gift.id = 'random_soldier';
-			debug(this.name,this.runtime.gift.sender_ca_name + ' has a ' + this.runtime.gift.name + ' waiting for you.');
+			debug(this.runtime.gift.sender_ca_name + ' has a ' + this.runtime.gift.name + ' waiting for you.');
 			this.runtime.gift_waiting = true;
 			return true
 		}
 	} else if (Page.page === 'army_invite') {
 		// Check for sent
-//		debug(this.name,'Checking for sent gifts.');
+//		debug('Checking for sent gifts.');
 		if (this.runtime.sent_id && $('div.result').text().indexOf('request sent') >= 0) {
-			debug(this.name,gifts[this.runtime.sent_id].name+' sent.');
+			debug(gifts[this.runtime.sent_id].name+' sent.');
 			for (j=0; j < Math.min(todo[this.runtime.sent_id].length, 30); j++) {	// Remove the IDs from the list because we have sent them
 				todo[this.runtime.sent_id].shift();
 			}
@@ -13174,46 +13223,53 @@ Gift.parse = function(change) {
 		}
 		
 		// Accepted gift first
-//		debug(this.name,'Checking for accepted gift.');
+//		debug('Checking for accepted gift.');
 		if (this.runtime.gift.sender_id) { // if we have already determined the ID of the sender
-			if ($('div.result').text().indexOf('accepted the gift') >= 0 || $('div.result').text().indexOf('have been awarded the gift') >= 0) { // and we have just accepted a gift
-				debug(this.name,'Accepted ' + this.runtime.gift.name + ' from ' + this.runtime.gift.sender_ca_name + '(id:' + this.runtime.gift.sender_id + ')');
+			if ($('div.game').text().indexOf('accepted the gift') >= 0 || $('div.game').text().indexOf('have been awarded the gift') >= 0) { // and we have just accepted a gift
+				debug('Accepted ' + this.runtime.gift.name + ' from ' + this.runtime.gift.sender_ca_name + '(id:' + this.runtime.gift.sender_id + ')');
 				received.push(this.runtime.gift); // add the gift to our list of received gifts.  We will use this to clear facebook notifications and possibly return gifts
 				this.runtime.work = true;	// We need to clear our facebook notifications and/or return gifts
 				this.runtime.gift = {}; // reset our runtime gift tracker
 			}
 		}
 		// Check for gifts
-//		debug(this.name,'Checking for waiting gifts and getting the id of the sender if we already have the sender\'s name.');
+//		debug('Checking for waiting gifts and getting the id of the sender if we already have the sender\'s name.');
 		if ($('div.messages').text().indexOf('gift') >= 0) { // This will trigger if there are gifts waiting
 			this.runtime.gift_waiting = true;
 			if (!this.runtime.gift.id) { // We haven't gotten the info from the index page yet.
 				return false;	// let the work function send us to the index page to get the info.
 			}
-//			debug(this.name,'Sender Name: ' + $('div.messages img[title*="' + this.runtime.gift.sender_ca_name + '"]').first().attr('title'));
+//			debug('Sender Name: ' + $('div.messages img[title*="' + this.runtime.gift.sender_ca_name + '"]').first().attr('title'));
 			this.runtime.gift.sender_id = $('div.messages img[uid]').first().attr('uid'); // get the ID of the gift sender. (The sender listed on the index page should always be the first sender listed on the army page.)
 			if (this.runtime.gift.sender_id) {
 				this.runtime.gift.sender_fb_name = $('div.messages img[uid]').first().attr('title');
-//				debug(this.name,'Found ' + this.runtime.gift.sender_fb_name + "'s ID. (" + this.runtime.gift.sender_id + ')');
+//				debug('Found ' + this.runtime.gift.sender_fb_name + "'s ID. (" + this.runtime.gift.sender_id + ')');
 			} else {
-				log(this.name,"Can't find the gift sender's ID.");
+				log("Can't find the gift sender's ID.");
 			}
 		} else {
+//			debug('No more waiting gifts. Did we miss the gift accepted page?');
 			this.runtime.gift_waiting = false;
+			this.runtime.gift = {}; // reset our runtime gift tracker
 		}
 		
 	} else if (Page.page === 'army_gifts') { // Parse for the current available gifts
-//		debug(this.name,'Parsing gifts.');
-//		debug(this.name,'Found: '+$('#app'+APPID+'_giftContainer div[id^="app'+APPID+'_gift"]').length);
+//		debug('Parsing gifts.');
+//		debug('Found: '+$('#app'+APPID+'_giftContainer div[id^="app'+APPID+'_gift"]').length);
+		this.data.gifts = {};
+		gifts = this.data.gifts;
 		$('div[id*="_giftContainer"] div[id*="_gift"]').each(function(i,el){
 			var id = $('img', el).attr('src').filepart(), name = $(el).text().trim().replace('!',''), slot = $(el).attr('id').regex(/_gift([0-9]+)/);
-//			debug(this.name,'Adding: '+name+'('+id+') to slot '+slot);
-			if (!gifts[id]) {
-				gifts[id] = {};
-			}
+//			debug('Adding: '+name+'('+id+') to slot '+slot);
+			gifts[id] = {};
 			gifts[id].name = name;
 			gifts[id].slot = slot;
 		});
+	} else {
+		if ($('div.result').text().indexOf('have exceed') !== -1){
+			debug('We have run out of gifts to send.  Waiting one hour to retry.');
+			this.runtime.gift_delay = Date.now() + 3600000;	// Wait an hour and try to send again.
+		}
 	}
 	return false;
 };
@@ -13246,7 +13302,7 @@ Gift.work = function(state) {
 		if (!Page.to('army_invite')) {
 			return true;
 		}
-//		debug(this.name,'Accepting ' + this.runtime.gift.name + ' from ' + this.runtime.gift.sender_ca_name + '(id:' + this.runtime.gift.sender_id + ')');
+//		debug('Accepting ' + this.runtime.gift.name + ' from ' + this.runtime.gift.sender_ca_name + '(id:' + this.runtime.gift.sender_id + ')');
 		if (!Page.to('army_invite', '?act=acpt&rqtp=gift&uid=' + this.runtime.gift.sender_id) || this.runtime.gift.sender_id.length > 0) {	// Shortcut to accept gifts without going through Facebook's confirmation page
 			return true;
 		}
@@ -13267,7 +13323,7 @@ Gift.work = function(state) {
 		for (i in received){
 			var temptype = this.option.type;
 			if (typeof this.data.gifts[received[i].id] === 'undefined' && this.option.type != 'None') {
-				debug(this.name,received[i].id+' was not found in our sendable gift list.');
+				debug(received[i].id+' was not found in our sendable gift list.');
 				temptype = 'Random';
 			}
 			switch(temptype) {
@@ -13278,7 +13334,7 @@ Gift.work = function(state) {
 							gift_ids.push(j);
 						}
 						random_gift_id = Math.floor(Math.random() * gift_ids.length);
-						debug(this.name,'Will randomly send a ' + this.data.gifts[gift_ids[random_gift_id]].name + ' to ' + received[i].sender_ca_name);
+						debug('Will randomly send a ' + this.data.gifts[gift_ids[random_gift_id]].name + ' to ' + received[i].sender_ca_name);
 						if (!todo[gift_ids[random_gift_id]]) {
 							todo[gift_ids[random_gift_id]] = [];
 						}
@@ -13287,7 +13343,7 @@ Gift.work = function(state) {
 					this.runtime.work = true;
 					break;
 				case 'Same as Received':
-					debug(this.name,'Will return a ' + received[i].name + ' to ' + received[i].sender_ca_name);
+					debug('Will return a ' + received[i].name + ' to ' + received[i].sender_ca_name);
 					if (!todo[received[i].id]) {
 						todo[received[i].id] = [];
 					}
@@ -13312,14 +13368,14 @@ Gift.work = function(state) {
 	}
 	
 	if (this.runtime.gift_sent > Date.now()) {	// We have sent gift(s) and are waiting for the fb popup
-//		debug(this.name,'Waiting for FB popup.');
+//		debug('Waiting for FB popup.');
 		if ($('div.dialog_buttons input[name="sendit"]').length){
 			this.runtime.gift_sent = null;
 			Page.click('div.dialog_buttons input[name="sendit"]');
 		} else if ($('span:contains("Out of requests")')) {
-			debug(this.name,'We have run out of gifts to send.  Waiting one hour to retry.');
+			debug('We have run out of gifts to send.  Waiting one hour to retry.');
 			this.runtime.gift_delay = Date.now() + 3600000;	// Wait an hour and try to send again.
-			Page.click('div.dialog_buttons input[value="Okay"]');
+			Page.click('div.dialog_buttons input[name="ok"]');
 		}
 		return true;
 	} else if (this.runtime.gift_sent) {
@@ -13332,15 +13388,31 @@ Gift.work = function(state) {
 			if (!Page.to('army_gifts')){
 				return true;
 			}
+			if (typeof this.data.gifts[i] === 'undefined') {  // Unknown gift in todo list
+				gift_ids = [];
+				for (j in this.data.gifts) {
+					gift_ids.push(j);
+				}
+				random_gift_id = Math.floor(Math.random() * gift_ids.length);
+				debug('Unavaliable gift ('+i+') found in todo list. Will randomly send a ' + this.data.gifts[gift_ids[random_gift_id]].name + ' instead.');
+				if (!todo[gift_ids[random_gift_id]]) {
+					todo[gift_ids[random_gift_id]] = [];
+				}
+				for (j in todo[i]) {
+					todo[gift_ids[random_gift_id]].push(todo[i][j]);
+				}
+				delete todo[i];
+				return true;
+			}
 			if ($('div[style*="giftpage_select"] div a[href*="giftSelection='+this.data.gifts[i].slot+'"]').length){
 				if ($('img[src*="gift_invite_castle_on"]').length){
 					if ($('div.unselected_list').children().length) {
-						debug(this.name,'Sending out ' + this.data.gifts[i].name);
+						debug('Sending out ' + this.data.gifts[i].name);
 						k = 0;
 						for (j in todo[i]) {
 							if (k< 30) {	// Need to limit to 30 at a time
 								if (!$('div.unselected_list input[value=\'' + todo[i][j] + '\']').length){
-//									debug(this.name,'User '+todo[i][j]+' wasn\'t in the CA friend list.');
+//									debug('User '+todo[i][j]+' wasn\'t in the CA friend list.');
 									continue;
 								}
 								Page.click('div.unselected_list input[value="' + todo[i][j] + '"]');
@@ -13408,23 +13480,23 @@ Heal.display = [
 
 Heal.work = function(state) {
 	if (Player.get('health') >= Player.get('maxhealth') || Player.get('stamina') < Heal.option.stamina || Player.get('health') >= Heal.option.health) {
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (!state) {
-		return true;
+	if (!state || this.me()) {
+		return QUEUE_CONTINUE;
 	}
-	return this.me();
+	return QUEUE_RELEASE;
 };
 
 Heal.me = function() {
 	if (!Page.to('keep_stats')) {
 		return true;
 	}
-	debug(this.name,'Healing...');
+	debug('Healing...');
 	if ($('input[value="Heal Wounds"]').length) {
 		Page.click('input[value="Heal Wounds"]');
 	} else {
-		log(this.name,'Danger Danger Will Robinson... Unable to heal!');
+		log('Danger Danger Will Robinson... Unable to heal!');
 	}
 	return false;
 };
@@ -13472,7 +13544,7 @@ History.dashboard = function() {
 	list.push(this.makeGraph('exp', 'Experience', false, {'Next Level':Player.get('maxexp')}));
 	list.push(this.makeGraph('exp.change', 'Exp Gain', false, {'Average':this.get('exp.average.change'), 'Standard Deviation':this.get('exp.stddev.change'), 'Ignore entries above':(this.get('exp.mean.change') + (2 * this.get('exp.stddev.change')))} )); // , 'Harmonic Average':this.get('exp.harmonic.change') ,'Median Average':this.get('exp.median.change') ,'Mean Average':this.get('exp.mean.change')
 	list.push('</tbody></table>');
-	$('#golem-`-History').html(list.join(''));
+	$('#golem-dashboard-History').html(list.join(''));
 }
 
 
@@ -13604,7 +13676,7 @@ History.get = function(what) {
 		return data;
 	}
 	for (i in data) {
-		if (data[i][x[0]] && typeof data[i][x[0]] === 'number') {
+		if (typeof data[i][x[0]] === 'number') {
 			exact = true;
 			break;
 		}
@@ -13638,7 +13710,7 @@ History.get = function(what) {
 		if (data[i]) {
 			value = null;
 			if (exact) {
-				if (data[i][x[0]]) {
+				if (typeof data[i][x[0]] === 'number') {
 					value = data[i][x[0]];
 				}
 			} else {
@@ -13704,7 +13776,7 @@ History.makeGraph = function(type, title, iscash, goal) {
 			for (j in type) {
 				value[i][j] = this.get(i + '.' + type[j]);
 			}
-			min = Math.min(min, sum(value[i]));
+			if (sum(value[i])) {min = Math.min(min, sum(value[i]));}
 			max = Math.max(max, sum(value[i]));
 		}
 	}
@@ -13761,6 +13833,9 @@ var Idle = new Worker('Idle');
 Idle.defaults = {
 	castle_age:{}
 };
+Idle.settings ={
+    after:['LevelUp']
+};
 
 Idle.data = null;
 Idle.option = {
@@ -13809,9 +13884,9 @@ Idle.display = [
 		label:'Monsters',
 		select:Idle.when
 	},{
-                id:'collect',
-                label:'Apprentice Reward',
-                select:Idle.when
+		id:'collect',
+		label:'Apprentice Reward',
+		select:Idle.when
 	}
 ];
 
@@ -13822,7 +13897,7 @@ Idle.work = function(state) {
 	var i, p, time, pages = {
 		index:['index'],
 		alchemy:['keep_alchemy'],
-		quests:['quests_quest1', 'quests_quest2', 'quests_quest3', 'quests_quest4', 'quests_quest5', 'quests_quest6', 'quests_demiquests', 'quests_atlantis'],
+		quests:['quests_quest1', 'quests_quest2', 'quests_quest3', 'quests_quest4', 'quests_quest5', 'quests_quest6', 'quests_quest7', 'quests_quest8', 'quests_demiquests', 'quests_atlantis'],
 		town:['town_soldiers', 'town_blacksmith', 'town_magic', 'town_land'],
 		battle:['battle_battle'], //, 'battle_arena'
 		monsters:['keep_monster', 'battle_raid'],
@@ -13855,6 +13930,10 @@ Idle.work = function(state) {
 var Income = new Worker('Income');
 Income.data = null;
 
+Income.settings = {
+	important:true
+};
+
 Income.defaults = {
 	castle_age:{}
 };
@@ -13885,23 +13964,20 @@ Income.display = [
 
 Income.work = function(state) {
 	if (!Income.option.margin) {
-		return false;
+		return QUEUE_FINISH;
 	}
-//	debug(this.name,when + ', Margin: ' + Income.option.margin);
+//	debug(when + ', Margin: ' + Income.option.margin);
 	if (Player.get('cash_timer') > this.option.margin) {
 		if (state && this.option.bank) {
 			return Bank.work(true);
 		}
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (!state) {
-		return true;
+	if (!state || (this.option.general && !Generals.to('income'))) {
+		return QUEUE_CONTINUE;
 	}
-	if (this.option.general && !Generals.to(Generals.best('income'))) {
-		return true;
-	}
-	debug(this.name,'Waiting for Income... (' + Player.get('cash_timer') + ' seconds)');
-	return true;
+	debug('Waiting for Income... (' + Player.get('cash_timer') + ' seconds)');
+	return QUEUE_CONTINUE;
 };
 
 /********** Worker.Land **********
@@ -14051,14 +14127,14 @@ Land.work = function(state) {
 	if (!this.option.enabled || !this.runtime.best || !this.runtime.buy || !Bank.worth(this.runtime.cost)) {
 		if (!this.runtime.best && this.runtime.lastlevel < Player.get('level')) {
 			if (!state || !Page.to('town_land')) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 			this.runtime.lastlevel = Player.get('level');
 		}
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Bank.retrieve(this.runtime.cost) || !Page.to('town_land')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 //	var el = $('tr.land_buy_row:contains("'+this.runtime.best+'"),tr.land_buy_row_unique:contains("'+this.runtime.best+'")');
 	$('tr.land_buy_row,tr.land_buy_row_unique').each(function(i,el){
@@ -14072,7 +14148,7 @@ Land.work = function(state) {
 			Page.click($('.land_buy_costs input[name="' + (Land.runtime.buy > 0 ? 'Buy' : 'Sell') + '"]', el));
 		}
 	});
-	return true;
+	return QUEUE_RELEASE;
 };
 
 /********** Worker.LevelUp **********
@@ -14087,7 +14163,7 @@ var LevelUp = new Worker('LevelUp');
 LevelUp.data = null;
 
 LevelUp.settings = {
-	before:['Battle','Monster','Quest']
+	before:['Idle','Battle','Monster','Quest']
 };
 
 LevelUp.defaults = {
@@ -14100,7 +14176,7 @@ LevelUp.option = {
 	enabled:false,
 	income:true,
 	general:'any',
-        order:'stamina',
+	order:'stamina',
 	algorithm:'Per Action'
 };
 
@@ -14140,11 +14216,11 @@ LevelUp.display = [
 		select:['any', 'Energy', 'Stamina'],
 		help:'Select which type of general to use when leveling up.'
 	},{
-                id:'order',
-                label:'Spend first ',
-                select:['Energy','Stamina'],
-                help:'Select which resource you want to spend first when leveling up.'
-        },{
+		id:'order',
+		label:'Spend first ',
+		select:['Energy','Stamina'],
+		help:'Select which resource you want to spend first when leveling up.'
+	},{
 		id:'algorithm',
 		label:'Estimation Method',
 		select:['Per Action', 'Per Hour'],
@@ -14183,9 +14259,24 @@ LevelUp.parse = function(change) {
 	return true;
 }
 
-LevelUp.update = function(type) {
-	var d, i, j, k, quests, energy = Player.get('energy'), stamina = Player.get('stamina'), exp = Player.get('exp'), runtime = this.runtime, quest_data = Quest.get();
-	if (type === Quest) { // Now work out the quickest quests to level up
+LevelUp.update = function(type,worker) {
+	var d, i, j, k, quests, energy = Player.get('energy'), stamina = Player.get('stamina'), exp = Player.get('exp'), runtime = this.runtime, quest_data;
+	if (worker === Player || !length(runtime.quests)) {
+		if (exp !== runtime.exp) { // Experience has changed...
+			if (runtime.stamina > stamina) {
+				runtime.exp_per_stamina = ((runtime.exp_per_stamina * Math.min(runtime.stamina_samples, 49)) + ((exp - runtime.exp) / (runtime.stamina - stamina))) / Math.min(runtime.stamina_samples + 1, 50); // .round(3)
+				runtime.stamina_samples = Math.min(runtime.stamina_samples + 1, 50); // More samples for the more variable stamina
+			} else if (runtime.energy > energy) {
+				runtime.exp_per_energy = ((runtime.exp_per_energy * Math.min(runtime.energy_samples, 9)) + ((exp - runtime.exp) / (runtime.energy - energy))) / Math.min(runtime.energy_samples + 1, 10); // .round(3)
+				runtime.energy_samples = Math.min(runtime.energy_samples + 1, 10); // fewer samples for the more consistent energy
+			}
+		}
+		runtime.energy = energy;
+		runtime.stamina = stamina;
+		runtime.exp = exp;
+	}
+	if (worker === Quest || !length(runtime.quests)) { // Now work out the quickest quests to level up
+		quest_data = Quest.get();
 		runtime.quests = quests = [[0]];// quests[energy] = [experience, [quest1, quest2, quest3]]
 		for (i in quest_data) { // Fill out with the best exp for every energy cost
 			if (!quests[quest_data[i].energy] || quest_data[i].exp > quests[quest_data[i].energy][0]) {
@@ -14205,26 +14296,14 @@ LevelUp.update = function(type) {
 		while (quests.length > 1 && quests[quests.length-1][0] === quests[quests.length-2][0]) { // Delete entries at the end that match (no need to go beyond our best ratio quest)
 			quests.pop();
 		}
-		for (i=1; i<quests.length; i++) { // Merge lower value quests to use up all the energy
-			if (quest_data[quests[i][1][0]].energy < i) {
-				quests[i][0] += quests[i - quest_data[quests[i][1][0]].energy][0];
-				quests[i][1] = quests[i][1].concat(quests[i - quest_data[quests[i][1][0]].energy][1])
-			}
-		}
-//		debug(this.name,'Quickest '+quests.length+' Quests: '+JSON.stringify(quests));
-	} else if (type === Player) {
-		if (exp !== runtime.exp) { // Experience has changed...
-			if (runtime.stamina > stamina) {
-				runtime.exp_per_stamina = ((runtime.exp_per_stamina * Math.min(runtime.stamina_samples, 49)) + ((exp - runtime.exp) / (runtime.stamina - stamina))) / Math.min(runtime.stamina_samples + 1, 50); // .round(3)
-				runtime.stamina_samples = Math.min(runtime.stamina_samples + 1, 50); // More samples for the more variable stamina
-			} else if (runtime.energy > energy) {
-				runtime.exp_per_energy = ((runtime.exp_per_energy * Math.min(runtime.energy_samples, 9)) + ((exp - runtime.exp) / (runtime.energy - energy))) / Math.min(runtime.energy_samples + 1, 10); // .round(3)
-				runtime.energy_samples = Math.min(runtime.energy_samples + 1, 10); // fewer samples for the more consistent energy
-			}
-		}
-		runtime.energy = energy;
-		runtime.stamina = stamina;
-		runtime.exp = exp;
+// No need to merge quests as we're only interested in the first one...
+//		for (i=1; i<quests.length; i++) { // Merge lower value quests to use up all the energy
+//			if (quest_data[quests[i][1][0]].energy < i) {
+//				quests[i][0] += quests[i - quest_data[quests[i][1][0]].energy][0];
+//				quests[i][1] = quests[i][1].concat(quests[i - quest_data[quests[i][1][0]].energy][1])
+//			}
+//		}
+//		debug('Quickest '+quests.length+' Quests: '+JSON.stringify(quests));
 	}
 	if (!this.runtime.quests.length) { // No known quests yet...
 		runtime.exp_possible = 1;
@@ -14276,14 +14355,14 @@ LevelUp.work = function(state) {
 			Queue.burn.energy = Math.max(0, energy - Queue.get('option.energy'));
 			Battle.set('option.monster', runtime.battle_monster);
 			runtime.running = false;
-//			debug(this.name,'running '+runtime.running);
+//			debug('running '+runtime.running);
 		} else if (runtime.running && runtime.level == Player.get('level')) { //We've gotten less exp per stamina than we hoped and can't reach the next level.
 			Generals.set('runtime.disabled', false);
 			Queue.burn.stamina = Math.max(0, stamina - Queue.get('option.stamina'));
 			Queue.burn.energy = Math.max(0, energy - Queue.get('option.energy'));
 			Battle.set('option.monster', runtime.battle_monster);
 			runtime.running = false;
-//			debug(this.name,'Running '+runtime.running);
+//			debug('Running '+runtime.running);
 		}
 		return false;
 	}
@@ -14297,14 +14376,14 @@ LevelUp.work = function(state) {
 		runtime.level = Player.get('level');
 		runtime.battle_monster = Battle.get('option.monster');
 		runtime.running = true;
-//		debug(this.name,'Running '+runtime.running);
+//		debug('Running '+runtime.running);
 		Battle.set('option.monster', false);
 	}
 	general = Generals.best(this.option.general); // Get our level up general
-	if (general && general !== 'any' && Player.get('exp_needed') < 25) { // If we want to change...
+	if (general && general !== 'any' && Player.get('exp_needed') < 100) { // If we want to change...
 		Generals.set('runtime.disabled', false);	// make sure changing Generals is not disabled
 		if (general === Player.get('general') || Generals.to(general)) { // ...then change if needed
-//			debug(this.name,'Disabling Generals because we are within 25 XP from leveling.');
+//			debug('Disabling Generals because we are within 25 XP from leveling.');
 			Generals.set('runtime.disabled', true);	// and lock the General se we can level up.
 		} else {
 			return true;	// Try to change generals again
@@ -14312,7 +14391,7 @@ LevelUp.work = function(state) {
 	}
 	// We don't have focus, but we do want to level up quicker
     if (this.option.order !== 'Stamina' || !stamina || (stamina < 5 && Battle.option.monster && !Battle.option.points)){
-        debug(this.name,'Running Energy Burn');
+        debug('Running Energy Burn');
 	if (Player.get('energy')) { // Only way to burn energy is to do quests - energy first as it won't cost us anything
 		runtime.old_quest = Quest.runtime.best;
 		runtime.old_quest_energy = Quest.runtime.energy;
@@ -14323,7 +14402,7 @@ LevelUp.work = function(state) {
 		return false;
 	}}
         else
-            {debug(this.name,'Running Stamina Burn');}
+            {debug('Running Stamina Burn');}
     
 	Quest._update('data'); // Force Quest to decide it's best quest again...
 	// Got to have stamina left to get here, so burn it all
@@ -14364,7 +14443,9 @@ Monster.defaults = {
 };
 
 Monster.option = {
-    fortify: 80,
+    fortify: 30,
+    //	quest_over: 90,
+    min_to_attack: 0,
     //	dispel: 50,
     fortify_active:false,
     choice: 'Any',
@@ -14402,10 +14483,22 @@ Monster.display = [
     title:'Fortification'
 },{
     id:'fortify',
-    label:'Fortify Below',
-    select:[10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    label:'Fortify Below (AB)',
+    text:30,
+    help:'Fortify if ATT BONUS is under this value. Range of -50% to +50%.',
     after:'%'
 },{
+    /*	id:'quest_over',
+	label:'Quest if Over',
+	text:90,
+	after:'%'
+},{*/
+    id:'min_to_attack',
+    label:'Attack Over (AB)',
+	text:1,
+    help:'Attack if ATT BONUS is over this value. Range of -50% to +50%.',
+    after:'%'
+},{	
     id:'fortify_active',
     label:'Fortify Active',
     checkbox:true,
@@ -14463,7 +14556,7 @@ Monster.display = [
     advanced:true,
     id:'avoid_hours',
     label:'Upside-Down Hours',
-    select:[0,1,5,10,15,25,50],
+    text:true,
     help:'# of Hours Monster must be behind before preventing attacks.'
 },{
     advanced:true,
@@ -14674,7 +14767,7 @@ Monster.types = {
         image:'seamonster_purple.jpg',
         dead:'seamonster_dead.jpg',
         title:'seamonster_title_amethyst.jpg',
-        achievement:100000,
+        achievement:250000,
         timer:259200, // 72 hours
         mpool:2,
         atk_btn:'input[name="Attack Dragon"]',
@@ -14688,7 +14781,7 @@ Monster.types = {
         image:'seamonster_red.jpg',
         dead:'seamonster_dead.jpg',
         title:'seamonster_title_ancient.jpg',
-        achievement:100000,
+        achievement:250000,
         timer:259200, // 72 hours
         mpool:2,
         atk_btn:'input[name="Attack Dragon"]',
@@ -14702,7 +14795,7 @@ Monster.types = {
         image:'seamonster_green.jpg',
         dead:'seamonster_dead.jpg',
         title:'seamonster_title_emerald.jpg', //Guesswork. Needs verify.
-        achievement:100000,
+        achievement:250000,
         timer:259200, // 72 hours
         mpool:2,
         atk_btn:'input[name="Attack Dragon"]',
@@ -14716,7 +14809,7 @@ Monster.types = {
         image:'seamonster_blue.jpg',
         dead:'seamonster_dead.jpg',
         title:'seamonster_title_sapphire.jpg',
-        achievement:100000,
+        achievement:250000,
         timer:259200, // 72 hours
         mpool:2,
         atk_btn:'input[name="Attack Dragon"]',
@@ -14734,7 +14827,7 @@ Monster.types = {
         timer:604800, // 168 hours
         mpool:3,
         atk_btn:'input[name="Attack Dragon"]',
-        attacks:[1,5]
+        attacks:[1,5,10,20,50]
     },
     legion: {
         name:'Battle of the Dark Legion',
@@ -14744,10 +14837,10 @@ Monster.types = {
         achievement:1000,
         timer:604800, // 168 hours
         mpool:3,
-        atk_btn:'input[name="Attack Dragon"][src*="attack_monster_button2"]',
-        attacks:[5],
-        def_btn:'input[name="Attack Dragon"][src*="attack_monster_button3"]',
-        defends:[10],
+        atk_btn:'input[name="Attack Dragon"][src*="attack"]',
+        attacks:[1,5,10,20,50],
+        def_btn:'input[name="Attack Dragon"][src*="fortify"]',
+        defends:[10,20,40,100],
         orcs:true
     },
     genesis: {
@@ -14794,9 +14887,22 @@ Monster.types = {
         list:'nm_volcanic_list_2.jpg',
         image:'nm_volcanic_large_2.jpg',
         dead:'nm_volcanic_dead_2.jpg', //Guesswork
-        achievement:1000000, // Guesswork
+        achievement:2000000, // Guesswork
         timer:604800, // 168 hours
         mpool:3,
+        atk_btn:'input[name="Attack Dragon"][src*="stab"],input[name="Attack Dragon"][src*="bolt"],input[name="Attack Dragon"][src*="smite"],input[name="Attack Dragon"][src*="bash"]',
+        attacks:[5,10,20,50],
+        def_btn:'input[name="Attack Dragon"][src*="cripple"],input[name="Attack Dragon"][src*="deflect"],input[name="Attack Dragon"][src*="heal"],input[name="Attack Dragon"][src*="strengthen"]',
+        defends:[10,20,40,100]
+    },
+    azriel: {
+        name:'Azriel, the Angel of Wrath',
+        list:'nm_azriel_list.jpg',
+        image:'nm_azriel_large2.jpg',
+        dead:'nm_azriel_dead.jpg', //Guesswork
+        achievement:2000000, // Guesswork
+        timer:604800, // 168 hours
+        mpool:1,
         atk_btn:'input[name="Attack Dragon"][src*="stab"],input[name="Attack Dragon"][src*="bolt"],input[name="Attack Dragon"][src*="smite"],input[name="Attack Dragon"][src*="bash"]',
         attacks:[5,10,20,50],
         def_btn:'input[name="Attack Dragon"][src*="cripple"],input[name="Attack Dragon"][src*="deflect"],input[name="Attack Dragon"][src*="heal"],input[name="Attack Dragon"][src*="strengthen"]',
@@ -14804,13 +14910,13 @@ Monster.types = {
     }
 };
 
-Monster.secondary = ['input[src$="nm_secondary_cripple.jpg"]', 'input[src$="nm_secondary_deflect.jpg"]'];
 Monster.health_img = ['img[src$="nm_red.jpg"]', 'img[src$="monster_health_background.jpg"]'];
 Monster.shield_img = ['img[src$="bar_dispel.gif"]'];
 Monster.defense_img = ['img[src$="nm_green.jpg"]', 'img[src$="seamonster_ship_health.jpg"]'];
 Monster.secondary_img = ['img[src$="nm_stun_bar.gif"]'];
-Monster.class_img = ['img[src$="nm_class_warrior.jpg"]', 'img[src$="nm_class_cleric.jpg"]', 'img[src$="nm_class_rogue.jpg"]', 'img[src$="nm_class_mage.jpg"]'];
+Monster.class_img = ['div[style*="nm_bottom"] img[src$="nm_class_warrior.jpg"]', 'div[style*="nm_bottom"] img[src$="nm_class_cleric.jpg"]', 'div[style*="nm_bottom"] img[src$="nm_class_rogue.jpg"]', 'div[style*="nm_bottom"] img[src$="nm_class_mage.jpg"]'];
 Monster.class_name = ['Warrior', 'Cleric', 'Rogue', 'Mage'];
+Monster.class_off = ['', '', 'img[src$="nm_s_off_cripple.gif"]', 'img[src$="nm_s_off_deflect.gif"]'];
 
 Monster.init = function() {
     var i, j;
@@ -14844,27 +14950,27 @@ Monster.parse = function(change) {
         uid = $('img[linked][size="square"]').attr('uid');
         for (i in types) {
             if (types[i].dead && $('img[src$="'+types[i].dead+'"]').length  && !types[i].title) {
-                //debug(this.name,'Found a dead '+i);
+                //debug('Found a dead '+i);
                 type = i;
                 timer = types[i].timer;
                 dead = true;
             } else if (types[i].dead && $('img[src$="'+types[i].dead+'"]').length && types[i].title && $('div[style*="'+types[i].title+'"]').length){
-                //debug(this.name,'Found a dead '+i);
+                //debug('Found a dead '+i);
                 type = i;
                 timer = types[i].timer;
                 dead = true;
             } else if (types[i].image && ($('img[src$="'+types[i].image+'"]').length || $('div[style*="'+types[i].image+'"]').length)) {
-                //debug(this.name,'Parsing '+i);
+                //debug('Parsing '+i);
                 type = i;
                 timer = types[i].timer;
             } else if (types[i].image2 && ($('img[src$="'+types[i].image2+'"]').length || $('div[style*="'+types[i].image2+'"]').length)) {
-                //debug(this.name,'Parsing second stage '+i);
+                //debug('Parsing second stage '+i);
                 type = i;
                 timer = types[i].timer2 || types[i].timer;
             }
         }
         if (!uid || !type) {
-            debug(this.name,'Unknown monster (probably dead)');
+            debug('Unknown monster (probably dead)');
             return false;
         }
         data[uid] = data[uid] || {};
@@ -14888,7 +14994,7 @@ Monster.parse = function(change) {
             }
             if ($('img[src$="battle_victory.gif"],img[src$="battle_defeat.gif"],span["result_body"] a:contains("Attack Again")').length)	{ //	img[src$="icon_weapon.gif"],
                 monster.battle_count = (monster.battle_count || 0) + 1;
-            //debug(this.name,'Setting battle count to ' + monster.battle_count);
+            //debug('Setting battle count to ' + monster.battle_count);
             }
             if ($('img[src$="battle_victory"]').length){
                 History.add('raid+win',1);
@@ -14905,15 +15011,24 @@ Monster.parse = function(change) {
             for (i in Monster['class_img']){
                 if ($(Monster['class_img'][i]).length){
                     monster.mclass = i;
+                //debug('Monster class : '+Monster['class_name'][i]);
                 }
             }
             if (monster.mclass > 1){	// If we are a Rogue or Mage
-                for (i in Monster['secondary_img']){
-                    if ($(Monster['secondary_img'][i]).length){
+                // Attempt to check if we are in the wrong phase
+                if ($(Monster['class_off'][monster.mclass]).length === 0){
+                    for(i in Monster['secondary_img']) {
                         $secondary = $(Monster['secondary_img'][i]);
-                        monster.secondary = $secondary.length ? (100 * $secondary.width() / $secondary.parent().width()) : 0;
+                        if ($secondary.length) {
+                            monster.secondary = (100 * $secondary.width() / $secondary.parent().width());
+                            //debug(Monster['class_name'][monster.mclass]+" phase. Bar at "+monster.secondary+"%");
+                            break;
+                        }
                     }
                 }
+                else {
+            //debug("We aren't in "+Monster['class_name'][monster.mclass]+" phase. Skip fortify.");
+            }
             }
             for (i in Monster['health_img']){
                 if ($(Monster['health_img'][i]).length){
@@ -14926,7 +15041,7 @@ Monster.parse = function(change) {
                 if ($(Monster['shield_img'][i]).length){
                     $dispel = $(Monster['shield_img'][i]).parent();
                     monster.defense = 100 * (1 - ($dispel.width() / ($dispel.next().length ? $dispel.width() + $dispel.next().width() : $dispel.parent().width())));
-                    monster.totaldefense = monster.defense * (isNumber(monster.strength) ? (monster.strength/100) : 1);
+                    monster.attackbonus = (monster.defense * (isNumber(monster.strength) ? (monster.strength/100) : 1)) - 50;
                     break;
                 }
             }
@@ -14936,8 +15051,10 @@ Monster.parse = function(change) {
                     monster.defense = ($defense.width() / ($defense.next().length ? $defense.width() + $defense.next().width() : $defense.parent().width()) * 100);
                     if ($defense.parent().width() < $defense.parent().parent().width()){
                         monster.strength = 100 * $defense.parent().width() / $defense.parent().parent().width();
+                    } else {
+                        monster.strength = 100;
                     }
-                    monster.totaldefense = monster.defense * (isNumber(monster.strength) ? (monster.strength/100) : 1);
+                    monster.attackbonus = (monster.defense * (isNumber(monster.strength) ? (monster.strength/100) : 1)) - 50;
                     break;
                 }
             }
@@ -15072,14 +15189,14 @@ Monster.update = function(what) {
     for (i in this.data) { // Flush unknown monsters
         for (j in this.data[i]) {
             if (!this.data[i][j].state || this.data[i][j].state === null) {
-                log(this.name,'Found Invalid Monster State=(' + this.data[i][j].state + ')');
+                log('Found Invalid Monster State=(' + this.data[i][j].state + ')');
                 delete this.data[i][j];
             } else if (this.data[i][j].state === 'engage') {
                 this.runtime.count++;
             }
         }
         if (!length(this.data[i])) { // Delete uid's without an active monster
-            log(this.name,'Found Invalid Monster ID=(' + this.data[i] + ')');
+            log('Found Invalid Monster ID=(' + this.data[i] + ')');
             delete this.data[i];
         }
     }
@@ -15142,17 +15259,18 @@ Monster.update = function(what) {
                 this.runtime.check = true; // Do we need to parse info from a blank monster?
                 break;
             }
-            req_stamina = (this.types[j].raid && this.option.raid.search('x5') == -1) ? 1 : (this.types[j].raid) ? 5 : (this.option.minstamina < this.types[j].attacks[0] || this.option.maxstamina < this.types[j].attacks[0]) ? this.types[j].attacks[0] : (this.option.minstamina > this.option.maxstamina) ? this.option.maxstamina : this.option.minstamina;
+            req_stamina = (this.types[j].raid && this.option.raid.search('x5') == -1) ? 1 : (this.types[j].raid) ? 5 : (this.option.minstamina < Math.min.apply( Math, this.types[j].attacks) || this.option.maxstamina < Math.min.apply( Math, this.types[j].attacks)) ? Math.min.apply( Math, this.types[j].attacks): (this.option.minstamina > Math.max.apply( Math, this.types[j].attacks)) ? Math.max.apply( Math, this.types[j].attacks) : (this.option.minstamina > this.option.maxstamina) ? this.option.maxstamina : this.option.minstamina;
+            req_energy = this.types[j].def_btn ? this.option.minenergy : null;
             req_health = this.types[j].raid ? 13 : 10; // Don't want to die when attacking a raid
-            if ((typeof this.data[i][j].ignore === 'undefined' || !this.data[i][j].ignore) && this.data[i][j].state === 'engage' && this.data[i][j].finish > Date.now() && (this.option.ignore_stats || (Player.get('health') >= req_health && Queue.burn.stamina >= req_stamina ))) {
+            if ((typeof this.data[i][j].ignore === 'undefined' || !this.data[i][j].ignore) && this.data[i][j].state === 'engage' && this.data[i][j].finish > Date.now() && (this.option.ignore_stats || Player.get('health') >= req_health) && ((Queue.burn.energy >= req_energy) || ((this.option.ignore_stats || Queue.burn.stamina >= req_stamina) && (typeof this.data[i][j].attackbonus === 'undefined' || this.data[i][j].attackbonus >= this.option.min_to_attack)))) {
                 if (!this.data[i][j].battle_count){
                     this.data[i][j].battle_count = 0;
                 }
-                if (this.data[i][j].name === 'You' && this.option.own){                    
+                if (this.data[i][j].name === 'You' && this.option.own){
                     list.push([i, j, this.data[i][j].health, this.data[i][j].eta, this.data[i][j].battle_count,((sum(this.data[i][j].damage[userID]) || 0) / this.data[i][j].damage_total * 100).round(4),this.data[i][j].finish,(this.data[i][j].eta - this.data[i][j].finish)/3600000]);
                     break;
                 } else if (this.option.behind_override && (this.data[i][j].eta >= this.data[i][j].finish) && sum(this.data[i][j].damage[userID]) > this.types[j].achievement){
-                    //debug(this.name,'Adding behind monster. ' + this.data[i][j].name + '\'s ' + this.types[j].name);
+                    //debug('Adding behind monster. ' + this.data[i][j].name + '\'s ' + this.types[j].name);
                     list.push([i, j, this.data[i][j].health, this.data[i][j].eta, this.data[i][j].battle_count,((sum(this.data[i][j].damage[userID]) || 0) / this.data[i][j].damage_total * 100).round(4),this.data[i][j].finish,(this.data[i][j].eta - this.data[i][j].finish)/3600000]);
                     break;
                 } else {
@@ -15177,48 +15295,48 @@ Monster.update = function(what) {
             }
         }
     }
-    list.sort( function(a,b){       
-        switch(Monster.option.choice) {
-            case 'Any':
-                return (Math.random()-0.5);
-                break;
-            case 'Strongest':
-                return b[2] - a[2];
-                break;
-            case 'Weakest':
-                return a[2] - b[2];
-                break;
-            case 'Shortest ETD':
-                return a[3] - b[3];
-                break;
-            case 'Longest ETD':
-                return b[3] - a[3];
-                break;
-            case 'Spread':
-                return a[4] - b[4];
-                break;
-            case 'Max Damage':
-                return b[5] - a[5];
-                break;
-            case 'Min Damage':
-                return a[5] - b[5];
-                break;
-            case 'ETD Maintain':
-                if (a[7] < b[7]){                    
-                    return 1;
-                } else if (a[7] > b[7]){                    
-                    return -1;
-                } else {                    
-                    return 0;
-                }
-                break;
-        }
-    });
     if (list.length){
+        list.sort( function(a,b){
+            switch(Monster.option.choice) {
+                case 'Any':
+                    return (Math.random()-0.5);
+                    break;
+                case 'Strongest':
+                    return b[2] - a[2];
+                    break;
+                case 'Weakest':
+                    return a[2] - b[2];
+                    break;
+                case 'Shortest ETD':
+                    return a[3] - b[3];
+                    break;
+                case 'Longest ETD':
+                    return b[3] - a[3];
+                    break;
+                case 'Spread':
+                    return a[4] - b[4];
+                    break;
+                case 'Max Damage':
+                    return b[5] - a[5];
+                    break;
+                case 'Min Damage':
+                    return a[5] - b[5];
+                    break;
+                case 'ETD Maintain':
+                    if (a[7] < b[7]){
+                        return 1;
+                    } else if (a[7] > b[7]){
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                    break;
+            }
+        });    
         if (!this.option.avoid_behind){
             best = list[0];
         } else {
-            for (i=0; i <= list.length; i++){
+            for (i=0; i <= list.length - 1; i++){
                 if (((list[i][3]/3600000) - (list[i][6]/3600000)).round(0) <= this.option.avoid_hours ){
                     best = list[i];
                     break;
@@ -15234,11 +15352,11 @@ Monster.update = function(what) {
 
     this.runtime.uid = uid;
     this.runtime.type = type;
-    if (uid && type) {
-        this.runtime.stamina = (this.types[type].raid && this.option.raid.search('x5') == -1) ? 1 : (this.types[type].raid) ? 5 : (this.option.minstamina < this.types[type].attacks[0] || this.option.maxstamina < this.types[type].attacks[0]) ? this.types[type].attacks[0] : (this.option.minstamina > this.option.maxstamina) ? this.option.maxstamina : this.option.minstamina;
+    if (uid && type) {        
+        this.runtime.stamina = (this.types[type].raid && this.option.raid.search('x5') == -1) ? 1 : (this.types[type].raid) ? 5 : (this.option.minstamina < Math.min.apply( Math, this.types[type].attacks) || this.option.maxstamina < Math.min.apply( Math, this.types[type].attacks)) ? Math.min.apply( Math, this.types[type].attacks): (this.option.minstamina > Math.max.apply( Math, this.types[type].attacks)) ? Math.max.apply( Math, this.types[type].attacks) : (this.option.minstamina > this.option.maxstamina) ? this.option.maxstamina : this.option.minstamina;
         this.runtime.health = this.types[type].raid ? 13 : 10; // Don't want to die when attacking a raid        
-        this.runtime.energy = (!this.types[type].defends) ? 10 : (this.option.minenergy < this.types[type].defends[0] || this.option.maxenergy < this.types[type].defends[0]) ? this.types[type].defends[0] : (this.option.minenergy > this.option.maxenergy) ? this.option.maxenergy : this.option.minenergy;
-        if(this.option.fortify_active && (typeof this.data[uid][type].mclass === 'undefined' || this.data[uid][type].mclass < 2) && ((typeof this.data[uid][type].totaldefense !== 'undefined' && this.data[uid][type].totaldefense < this.option.fortify && this.data[uid][type].defense < 100))) {
+        this.runtime.energy = (!this.types[type].defends) ? 10 : (this.option.minenergy < Math.min.apply( Math, this.types[type].defends) || this.option.maxenergy < Math.min.apply( Math, this.types[type].defends)) ? Math.min.apply( Math, this.types[type].defends) : (this.option.minenergy > Math.max.apply( Math, this.types[type].defends)) ? Math.max.apply( Math, this.types[type].defends) : (this.option.minenergy > this.option.maxenergy) ? this.option.maxenergy : this.option.minenergy;
+        if(this.option.fortify_active && (typeof this.data[uid][type].mclass === 'undefined' || this.data[uid][type].mclass < 2) && ((typeof this.data[uid][type].attackbonus !== 'undefined' && this.data[uid][type].attackbonus < this.option.fortify && this.data[uid][type].defense < 100))) {
             this.runtime.fortify = true;
         } else if (this.option.fortify_active && typeof this.data[uid][type].mclass !== 'undefined' && this.data[uid][type].mclass > 1 && typeof this.data[uid][type].secondary !== 'undefined' && this.data[uid][type].secondary < 100){
             this.runtime.fortify = true;
@@ -15249,12 +15367,12 @@ Monster.update = function(what) {
             this.runtime.fortify = false;
         }
         this.runtime.attack = true;        
-        if (Player.get('health') > this.runtime.health && (this.runtime.fortify && Queue.burn.energy > this.runtime.energy ) || (Queue.burn.stamina > this.runtime.stamina)){
+        if ((Player.get('health') > this.runtime.health) && ((Queue.burn.stamina > this.runtime.stamina) || (this.runtime.fortify && Queue.burn.energy > this.runtime.energy ))){
             Dashboard.status(this, (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
         } else if (this.runtime.fortify && Queue.burn.energy < this.runtime.energy ){
-            Dashboard.status(this,'Waiting for ' + (this.runtime.energy - Queue.burn.energy) + ' energy to ' + (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
+            Dashboard.status(this,'Waiting for ' + ((LevelUp.runtime.running && LevelUp.option.enabled) ? (this.runtime.energy - Queue.burn.energy) : Math.max((this.runtime.energy - Queue.burn.energy),(this.runtime.energy + Queue.option.energy - Player.get('energy')),(Queue.option.start_energy - Player.get('energy')))) + ' energy to ' + (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
         } else if (Queue.burn.stamina < this.runtime.stamina){
-            Dashboard.status(this,'Waiting for ' + (this.runtime.stamina - Queue.burn.stamina) + ' stamina to ' + (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
+            Dashboard.status(this,'Waiting for ' + ((LevelUp.runtime.running && LevelUp.option.enabled) ? (this.runtime.stamina - Queue.burn.stamina) : Math.max((this.runtime.stamina - Queue.burn.stamina),(this.runtime.stamina + Queue.option.stamina - Player.get('stamina')),(Queue.option.start_stamina - Player.get('stamina')))) + ' stamina to ' + (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
         } else if (Player.get('health') < this.runtime.health){
             Dashboard.status(this,'Waiting for ' + (this.runtime.health - Player.get('health')) + ' health to ' + (this.runtime.fortify ? 'Fortify' : 'Attack') + ' ' + this.data[uid][type].name + '\'s ' + this.types[type].name + ' (Min Stamina = ' + this.runtime.stamina + ' & Min Energy = ' + this.runtime.energy + ')');
         }
@@ -15269,29 +15387,28 @@ Monster.work = function(state) {
     var i, j, target_info = [], battle_list, list = [], uid = this.runtime.uid, type = this.runtime.type, btn = null, b, max;
 
     if (!this.runtime.check && ((!this.runtime.fortify || Queue.burn.energy < this.runtime.energy || Player.get('health') < 10) && (!this.runtime.attack || Queue.burn.stamina < this.runtime.stamina || Player.get('health') < this.runtime.health))) {
-        return false;
+        return QUEUE_FINISH;
     }
     if (!state) {
-        return true;
+        return QUEUE_CONTINUE;
     }
     if (this.runtime.check) { // Parse pages of monsters we've not got the info for
-        
         for (i in this.data) {
             for (j in this.data[i]) {
                 if (((!this.data[i][j].health && this.data[i][j].state === 'engage') || typeof this.data[i][j].last === 'undefined' || this.data[i][j].last < Date.now() - this.option.check_interval) && (typeof this.data[i][j].ignore === 'undefined' || !this.data[i][j].ignore)) {
-                    debug(this.name, 'Reviewing ' + this.data[i][j].name + '\'s ' + this.types[j].name)
+                    debug( 'Reviewing ' + this.data[i][j].name + '\'s ' + this.types[j].name)
                     Page.to(this.types[j].raid ? 'battle_raid' : 'keep_monster', '?user=' + i + (this.types[j].mpool ? '&mpool='+this.types[j].mpool : ''));
-                    return true;
+                    return QUEUE_CONTINUE;
                 }
             }
         }
         this.runtime.check = false;
-        debug(this.name, 'Finished Monster / Raid review')
-        return true;
+        debug( 'Finished Monster / Raid review')
+        return QUEUE_RELEASE;
     }
     if (this.types[type].raid) { // Raid has different buttons and generals
-        if (!Generals.to(Generals.best((this.option.raid.search('Invade') == -1) ? 'raid-duel' : 'raid-invade'))) {
-            return true;
+        if (!Generals.to((this.option.raid.search('Invade') == -1) ? 'raid-duel' : 'raid-invade')) {
+            return QUEUE_CONTINUE;
         }       
         switch(this.option.raid) {
             case 'Invade':
@@ -15311,11 +15428,10 @@ Monster.work = function(state) {
         if (this.data[uid][type].button_fail <= 10 || !this.data[uid][type].button_fail){
             //Primary method of finding button.
             j = (this.runtime.fortify && Queue.burn.energy >= this.runtime.energy) ? 'fortify' : 'attack';
-           
-            if (!Generals.to(Generals.best(j))) {
-                return true;
+            if (!Generals.to(j)) {
+                return QUEUE_CONTINUE;
             }
-            debug(this.name,'Try to ' + j + ' [UID=' + uid + ']' + this.data[uid][type].name + '\'s ' + this.types[type].name);
+            debug('Try to ' + j + ' [UID=' + uid + ']' + this.data[uid][type].name + '\'s ' + this.types[type].name);
             switch(j){
                 case 'fortify':
                     if (!btn && this.option.maxenergy < this.types[type].defends[0]){
@@ -15323,26 +15439,25 @@ Monster.work = function(state) {
                     } else {
                         b = $(this.types[type].def_btn).length - 1;
                         for (i=b; i >= 0; i--){                            
-                            //debug(this.name,'Burn Energy is ' + Queue.burn.energy);
+                            //debug('Burn Energy is ' + Queue.burn.energy);
                             if (this.types[type].defends[i] <= this.option.maxenergy && Queue.burn.energy >= this.types[type].defends[i] ){
-                                //debug(this.name,'Button cost is ' + this.types[type].defends[i]);
+                                //debug('Button cost is ' + this.types[type].defends[i]);
                                 btn = $(this.types[type].def_btn).eq(i);
                                 break;
                             }
                         }
                     }
                     break;
-                                      
-                case 'attack':
-                    if (!btn && this.option.maxstamina < this.types[type].attacks[0]){                        
+				case 'attack':
+                    if (!btn && this.option.maxstamina < Math.min.apply( Math, this.types[type].attacks)){
                         btn = $(this.types[type].atk_btn).eq(0).name;
                     } else {                        
                         b = $(this.types[type].atk_btn).length - 1;
-                        //debug(this.name,'B = ' + b);
+                        //debug('B = ' + b);
                         for (i=b; i >= 0; i--){                           
-                            //debug(this.name,'Burn Stamina is ' + Queue.burn.stamina);
+                            //debug('Burn Stamina is ' + Queue.burn.stamina);
                             if (this.types[type].attacks[i] <= this.option.maxstamina && Queue.burn.stamina >= this.types[type].attacks[i]){
-                                //debug(this.name,'Button cost is ' + this.types[type].attacks[i]);
+                                //debug('Button cost is ' + this.types[type].attacks[i]);
                                 btn = $(this.types[type].atk_btn).eq(i);
                                 break;
                             }
@@ -15350,31 +15465,31 @@ Monster.work = function(state) {
                     }
                     break;
                 default:
+					break;
             }
         }
         if (!btn || !btn.length){
             this.data[uid][type].button_fail = this.data[uid][type].button_fail + 1;
         }
         if (this.data[uid][type].button_fail > 10){
-            log(this.name,'Ignoring Monster ' + this.data[uid][type].name + '\'s ' + this.types[type].name + this.data[uid][type] + ': Unable to locate ' + j + ' button ' + this.data[uid][type].button_fail + ' times!');
+            log('Ignoring Monster ' + this.data[uid][type].name + '\'s ' + this.types[type].name + this.data[uid][type] + ': Unable to locate ' + j + ' button ' + this.data[uid][type].button_fail + ' times!');
             this.data[uid][type].ignore = true;
             this.data[uid][type].button_fail = 0
         }
     }
     if (!btn || !btn.length || (Page.page !== 'keep_monster_active' && Page.page !== 'keep_monster_active2') || ($('div[style*="dragon_title_owner"] img[linked]').attr('uid') != uid && $('div[style*="nm_top"] img[linked]').attr('uid') != uid)) {
-        //debug(this.name,'Reloading page. Button = ' + btn.attr('name'));
-        //debug(this.name,'Reloading page. Page.page = '+ Page.page);
-        //debug(this.name,'Reloading page. Monster Owner UID is ' + $('div[style*="dragon_title_owner"] img[linked]').attr('uid') + ' Expecting UID : ' + uid);
-        Page.to('keep_monster');
+        //debug('Reloading page. Button = ' + btn.attr('name'));
+        //debug('Reloading page. Page.page = '+ Page.page);
+        //debug('Reloading page. Monster Owner UID is ' + $('div[style*="dragon_title_owner"] img[linked]').attr('uid') + ' Expecting UID : ' + uid);
         Page.to(this.types[type].raid ? 'battle_raid' : 'keep_monster', '?user=' + uid + (this.types[type].mpool ? '&mpool='+this.types[type].mpool : ''));
-        return true; // Reload if we can't find the button or we're on the wrong page
+        return QUEUE_CONTINUE; // Reload if we can't find the button or we're on the wrong page
     }
     if (this.option.assist && typeof $('input[name*="help with"]') !== 'undefined' && (typeof this.data[uid][type].phase === 'undefined' || $('input[name*="help with"]').attr('title').regex(/ (.*)/i) !== this.data[uid][type].phase)){
-        debug(this.name,'Current Siege Phase is: '+ this.data[uid][type].phase);
+        debug('Current Siege Phase is: '+ this.data[uid][type].phase);
         this.data[uid][type].phase = $('input[name*="help with"]').attr('title').regex(/ (.*)/i);
-        debug(this.name,'Found a new siege phase ('+this.data[uid][type].phase+'), assisting now.');
+        debug('Found a new siege phase ('+this.data[uid][type].phase+'), assisting now.');
         Page.to(this.types[type].raid ? 'battle_raid' : 'keep_monster', '?user=' + uid + '&action=doObjective' + (this.types[type].mpool ? '&mpool=' + this.types[type].mpool : '') + '&lka=' + i + '&ref=nf');
-        return true;
+        return QUEUE_RELEASE;
     }
     if (this.types[type].raid) {
         battle_list = Battle.get('user')
@@ -15386,16 +15501,16 @@ Monster.work = function(state) {
         }
         target_info = $('div[id*="raid_atk_lst0"] div div').text().regex(/Lvl\s*([0-9]+).*Army: ([0-9]+)/);
         if ((this.option.armyratio !== 'Any' && ((target_info[1]/Player.get('army')) > this.option.armyratio)) || (this.option.levelratio !== 'Any' && ((target_info[0]/Player.get('level')) > this.option.levelratio))){ // Check our target (first player in Raid list) against our criteria - always get this target even with +1
-            log(this.name,'No valid Raid target!');
+            log('No valid Raid target!');
             Page.to('battle_raid', ''); // Force a page reload to change the targets
-            return true;
+            return QUEUE_CONTINUE;
         }
     }
     this.runtime.uid = this.runtime.type = null; // Force us to choose a new target...
-    //debug(this.name,'Clicking Button ' + btn.attr('name'));
+    //debug('Clicking Button ' + btn.attr('name'));
     Page.click(btn);
     this.data[uid][type].button_fail = 0;
-    return true;
+    return QUEUE_RELEASE;
 };
 
 Monster.order = null;
@@ -15483,10 +15598,10 @@ Monster.dashboard = function(sort, rev) {
         }
         td(output, '<a href="http://apps.facebook.com/castle_age/' + (Monster.types[j].raid ? 'raid.php' : 'battle_monster.php') + url + '"><img src="' + imagepath + Monster.types[j].list + '" style="width:72px;height:20px; position: relative; left: -8px; opacity:.7;" alt="' + j + '"><strong class="overlay">' + monster.state + '</strong></a>', 'title="' + Monster.types[j].name + '"');
         var image_url = imagepath + Monster.types[j].list;
-        //debug(this.name,image_url);
+        //debug(image_url);
         th(output, '<a class="golem-monster-ignore" name="'+i+'+'+j+'" title="Toggle Active/Inactive"'+(Monster.data[i][j].ignore ? ' style="text-decoration: line-through;"' : '')+'>'+Monster.data[i][j].name+'</a>');
         td(output, blank ? '' : monster.health === 100 ? '100%' : addCommas(monster.total - monster.damage_total) + ' (' + monster.health.round(1) + '%)');
-        td(output, blank ? '' : isNumber(monster.totaldefense) ? ((monster.totaldefense-50).round(1))+'%' : '', (isNumber(monster.strength) ? 'title="Max: '+((monster.strength-50).round(1))+'%"' : ''));
+        td(output, blank ? '' : isNumber(monster.attackbonus) ? (monster.attackbonus.round(1))+'%' : '', (isNumber(monster.strength) ? 'title="Max: '+((monster.strength-50).round(1))+'%"' : ''));
         td(output, blank ? '' : monster.state !== 'engage' ? '' : (typeof monster.damage[userID] === 'undefined') ? '' : addCommas(monster.damage[userID][0] || 0) + ' (' + ((monster.damage[userID][0] || 0) / monster.total * 100).round(2) + '%)', blank ? '' : 'title="In ' + (monster.battle_count || 'an unknown number of') + ' attacks"');
         td(output, blank ? '' : monster.timer ? '<span class="golem-timer">' + makeTimer((monster.finish - Date.now()) / 1000) + '</span>' : '?');
         td(output, blank ? '' : '<span class="golem-timer">' + (monster.health === 100 ? makeTimer((monster.finish - Date.now()) / 1000) : makeTimer((monster.eta - Date.now()) / 1000)) + '</span>');
@@ -15568,7 +15683,7 @@ News.parse = function(change) {
 					result = 'loss';
 				}
 				if (time > last_time) {
-//					debug(this.name,'Add to History (+battle): exp = '+my_xp+', bp = '+my_bp+', income = '+my_cash);
+//					debug('Add to History (+battle): exp = '+my_xp+', bp = '+my_bp+', income = '+my_cash);
 					time = Math.floor(time / 3600000);
 					History.add([time, 'exp+battle'], my_xp);
 					History.add([time, 'bp+battle'], my_bp);
@@ -15748,6 +15863,7 @@ Player.get = function(what) {
 		case 'stamina':			return (this.data.stamina = $('#app'+APPID+'_stamina_current_value').parent().text().regex(/([0-9]+)\s*\/\s*[0-9]+/));
 		case 'stamina_timer':	return $('#app'+APPID+'_stamina_time_value').text().parseTimer();
 		case 'exp_needed':		return data.maxexp - data.exp;
+		case 'pause':			return (Queue.get('option.pause') ? '(Paused) ' : '');
 		default: return this._get(what);
 	}
 };
@@ -15819,19 +15935,19 @@ Potions.update = function(type) {
 
 Potions.work = function(state) {
 	if (!this.runtime.drink) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('keep_stats')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	for(var i in this.data) {
 		if (typeof this.option[i.toLowerCase()] === 'number' && this.data[i] > this.option[i.toLowerCase()]) {
-			debug(this.name,'Wanting to drink a ' + i + ' potion');
+			debug('Wanting to drink a ' + i + ' potion');
 			Page.click('.statUnit:contains("' + i + '") form .imgButton input');
 			break;
 		}
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 /********** Worker.Quest **********
@@ -15842,7 +15958,7 @@ var Quest = new Worker('Quest');
 
 Quest.defaults = {
 	castle_age:{
-		pages:'quests_quest1 quests_quest2 quests_quest3 quests_quest4 quests_quest5 quests_quest6 quests_quest7 quests_demiquests quests_atlantis'
+		pages:'quests_quest1 quests_quest2 quests_quest3 quests_quest4 quests_quest5 quests_quest6 quests_quest7 quests_quest8 quests_demiquests quests_atlantis'
 	}
 };
 
@@ -15859,7 +15975,7 @@ Quest.runtime = {
 	energy:0
 };
 
-Quest.land = ['Land of Fire', 'Land of Earth', 'Land of Mist', 'Land of Water', 'Demon Realm', 'Undead Realm', 'Underworld'];
+Quest.land = ['Land of Fire', 'Land of Earth', 'Land of Mist', 'Land of Water', 'Demon Realm', 'Undead Realm', 'Underworld', 'Kingdom of Heaven'];
 Quest.area = {quest:'Quests', demiquest:'Demi Quests', atlantis:'Atlantis'};
 Quest.current = null;
 Quest.display = [
@@ -15909,7 +16025,7 @@ Quest.parse = function(change) {
 	}
 	for (i in quest) {
 		if (quest[i].area === area && (area !== 'quest' || quest[i].land === land)) {
-//			debug(this.name,'Deleting ' + i + '(' + (Quest.land[quest[i].land] || quest[i].area) + ')');
+//			debug('Deleting ' + i + '(' + (Quest.land[quest[i].land] || quest[i].area) + ')');
 			delete quest[i];
 		}
 	}
@@ -15981,82 +16097,93 @@ Quest.parse = function(change) {
 	return false;
 };
 
-Quest.update = function(type) {
+Quest.update = function(type,worker) {
+	if (worker === Town && type !== 'data') {
+		return; // Missing quest requirements
+	}
 	// First let's update the Quest dropdown list(s)...
-	var i, j, best = null, best_land = 0, list = [];
+	var i, unit, own, need, best = null, best_advancement = null, best_influence = null, best_experience = null, best_land = 0, list = [], quests = this.data;
 	if (!type || type === 'data') {
-		for (i in this.data) {
-			if (this.data[i].item && !this.data[i].unique) {
-				list.push(this.data[i].item);
+		for (i in quests) {
+			if (quests[i].item && !quests[i].unique) {
+				list.push(quests[i].item);
 			}
 		}
 		Config.set('quest_reward', ['Nothing', 'Influence', 'Advancement', 'Experience', 'Cash'].concat(unique(list).sort()));
 	}
 	// Now choose the next quest...
-	if (this.option.unique && Alchemy._changed > this.lastunique) {
-		for (i in this.data) {
-			if (this.data[i].unique && !Alchemy.get(['ingredients', this.data[i].itemimg]) && (!best || this.data[i].energy < this.data[best].energy)) {
-				best = i;
+	if (this.option.unique && Alchemy._changed > this.lastunique) {// Only checking for unique if the Alchemy data has changed - saves CPU
+		for (i in quests) {
+			if (quests[i].unique) {
+				if (!Alchemy.get(['ingredients', quests[i].itemimg]) && (!best || quests[i].energy < quests[best].energy)) {
+					best = i;
+				}
 			}
 		}
 		this.lastunique = Date.now();
 	}
 	if (!best && this.option.what !== 'Nothing') {
-//		debug(this.name,'option = ' + this.option.what);
-//		best = (this.runtime.best && this.data[this.runtime.best] && (this.data[this.runtime.best].influence < 100) ? this.runtime.best : null);
-		for (i in this.data) {
-			switch(this.option.what) {
-				case 'Influence': // Find the cheapest energy cost quest with influence under 100%
-					if (typeof this.data[i].influence !== 'undefined' && this.data[i].influence < 100 && (!best || this.data[i].energy < this.data[best].energy)) {
-						best = i;
+//		debug('option = ' + this.option.what);
+//		best = (this.runtime.best && quests[this.runtime.best] && (quests[this.runtime.best].influence < 100) ? this.runtime.best : null);
+		for (i in quests) {
+			if (quests[i].units && (typeof quests[i].own === 'undefined' || (quests[i].own === false && worker === Town))) {// Only check for requirements if we don't already know about them
+				own = 0, need = 0;
+				for (unit in quests[i].units) {
+					own += Town.get([unit, 'own']) || 0;
+					need += quests[i].units[unit];
+				}
+				quests[i].own = (own >= need);
+				if (!quests[i].own) { // Can't do a quest because we don't have all the items...
+//					debug('Can\'t do "'+i+'" because we don\'t have the items...');
+					this._watch(Town); // Watch Town for updates...
+					continue;
+				}
+			}
+			switch(this.option.what) { // Automatically fallback on type - but without changing option
+				case 'Advancement': // Complete all required main / boss quests in an area to unlock the next one (type === 2 means subquest)
+					if (quests[i].type !== 2 && typeof quests[i].land === 'number' && quests[i].land >= best_land && (quests[i].influence < 100 || (quests[i].unique && !Alchemy.get(['ingredients', quests[i].itemimg]))) && (!best_advancement || quests[i].land > (quests[best_advancement].land || 0) || (quests[i].land === quests[best_advancement].land && (quests[i].unique && !length(Player.data[quests[i].item]))))) {
+						best_land = Math.max(best_land, quests[i].land);
+						best_advancement = i;
 					}
-					break;
+				case 'Influence': // Find the cheapest energy cost quest with influence under 100%
+					if (typeof quests[i].influence !== 'undefined' && quests[i].influence < 100 && (!best_influence || quests[i].energy < quests[best_influence].energy)) {
+						best_influence = i;
+					}
 				case 'Experience': // Find the best exp per energy quest
-					if (!best || (this.data[i].energy / this.data[i].exp) < (this.data[best].energy / this.data[best].exp)) {
-						best = i;
+					if (!best_experience || (quests[i].energy / quests[i].exp) < (quests[best_experience].energy / quests[best_experience].exp)) {
+						best_experience = i;
 					}
 					break;
 				case 'Cash': // Find the best (average) cash per energy quest
-					if (!best || (this.data[i].energy / this.data[i].reward) < (this.data[best].energy / this.data[best].reward)) {
-						best = i;
-					}
-					break;
-				case 'Advancement': // Complete all required main / boss quests in an area to unlock the next one (type === 2 means subquest)
-					if (this.data[i].type !== 2 && typeof this.data[i].land === 'number' && this.data[i].land >= best_land && (this.data[i].influence < 100 || (this.data[i].unique && !Alchemy.get(['ingredients', this.data[i].itemimg]))) && (!best || this.data[i].land > (this.data[best].land || 0) || (this.data[i].land === this.data[best].land && (this.data[i].unique && !length(Player.data[this.data[i].item]))))) {
-						best_land = Math.max(best_land, this.data[i].land);
+					if (!best || (quests[i].energy / quests[i].reward) < (quests[best].energy / quests[best].reward)) {
 						best = i;
 					}
 					break;
 				default: // For everything else, there's (cheap energy) items...
-					if (this.data[i].item === this.option.what && (!best || this.data[i].energy < this.data[best].energy)) {
+					if (quests[i].item === this.option.what && (!best || quests[i].energy < quests[best].energy)) {
 						best = i;
 					}
 					break;
 			}
 		}
+		switch(this.option.what) { // Automatically fallback on type - but without changing option
+			case 'Advancement':	best = best_advancement || best_influence || best_experience;break;
+			case 'Influence':	best = best_influence || best_experience;break;
+			case 'Experience':	best = best_experience;break;
+			default:break;
+		}
 	}
 	if (best !== this.runtime.best) {
 		this.runtime.best = best;
 		if (best) {
-			this.runtime.energy = this.data[best].energy;
-			debug(this.name,'Wanting to perform - ' + best + ' in ' + (typeof this.data[best].land === 'number' ? this.land[this.data[best].land] : this.area[this.data[best].area]) + ' (energy: ' + this.data[best].energy + ', experience: ' + this.data[best].exp + ', reward: $' + addCommas(this.data[best].reward) + ')');
+			this.runtime.energy = quests[best].energy;
+			debug('Wanting to perform - ' + best + ' in ' + (typeof quests[best].land === 'number' ? this.land[quests[best].land] : this.area[quests[best].area]) + ' (energy: ' + quests[best].energy + ', experience: ' + quests[best].exp + ', reward: $' + addCommas(quests[best].reward) + ')');
 		}
 	}
 	if (best) {
-		Dashboard.status(this, (typeof this.data[best].land === 'number' ? this.land[this.data[best].land] : this.area[this.data[best].area]) + ': ' + best + ' (energy: ' + this.data[best].energy + ', experience: ' + this.data[best].exp + ', reward: $' + addCommas(this.data[best].reward) + (typeof this.data[best].influence !== 'undefined' ? (', influence: ' + this.data[best].influence + '%)') : ''));
+		Dashboard.status(this, (typeof quests[best].land === 'number' ? this.land[quests[best].land] : this.area[quests[best].area]) + ': ' + best + ' (energy: ' + quests[best].energy + ', experience: ' + quests[best].exp + ', reward: $' + addCommas(quests[best].reward) + (typeof quests[best].influence !== 'undefined' ? (', influence: ' + quests[best].influence + '%)') : ''));
 	} else {
-		// If we change the "what" then it will happen when saving data - options are saved afterwards which will re-run this to find a valid quest
-		if (this.option.what === 'Influence') { // All quests at 100% influnce, let's change to Experience
-			this.option.what = 'Experience';
-			$('select:golem(quest,what)').val('Experience');
-			Dashboard.status(this, 'No quests found, switching to Experience');
-		} else if (this.option.what === 'Advancement') { // Main quests at 100%, let's change to Influence
-			this.option.what = 'Influence';
-			$('select:golem(quest,what)').val('Influence');
-			Dashboard.status(this, 'No unfinished lands found, switching to Influence');
-		} else {
-			Dashboard.status(this);
-		}
+		Dashboard.status(this);
 	}
 };
 
@@ -16066,28 +16193,28 @@ Quest.work = function(state) {
 		if (state && this.option.bank) {
 			return Bank.work(true);
 		}
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (this.option.monster && Monster.data) {
 		for (i in Monster.data) {
 			for (j in Monster.data[i]) {
 				if (Monster.data[i][j].state === 'engage' && typeof Monster.data[i][j].defense === 'number' && Monster.data[i][j].defense < Monster.option.fortify) {
-					return false;
+					return QUEUE_FINISH;
 				}
 				if (Monster.data[i][j].state === 'engage' && typeof Monster.data[i][j].dispel === 'number' && Monster.data[i][j].dispel > Monster.option.dispel) {
-					return false;
+					return QUEUE_FINISH;
 				}
 			}
 		}
 	}
 	if (!state) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	if (this.option.general) {
 		if (this.data[best].general && typeof this.data[best].influence === 'number' && this.data[best].influence < 100) {
 			if (!Generals.to(this.data[best].general)) 
 			{
-				return true;
+				return QUEUE_CONTINUE;
 			}
 		} else {
 			switch(this.option.what) {
@@ -16107,33 +16234,33 @@ Quest.work = function(state) {
 					break;
 			}
 			if (!Generals.to(general)) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 		}
 	}
 	switch(this.data[best].area) {
 		case 'quest':
 			if (!Page.to('quests_quest' + (this.data[best].land + 1))) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 			break;
 		case 'demiquest':
 			if (!Page.to('quests_demiquests')) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 			break;
 		case 'atlantis':
 			if (!Page.to('quests_atlantis')) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 			break;
 		default:
-			log(this.name,'Can\'t get to quest area!');
-			return false;
+			log('Can\'t get to quest area!');
+			return QUEUE_FINISH;
 	}
-	debug(this.name,'Performing - ' + best + ' (energy: ' + this.data[best].energy + ')');
-	if (!Page.click('div.action[title^="' + best + ':"] input[type="image"]')) { // Can't find the quest, so either a bad page load, or bad data - delete the quest and reload, which should force it to update ok...
-		debug(this.name,'Can\'t find button for ' + best + ', so deleting and re-visiting page...');
+	debug('Performing - ' + best + ' (energy: ' + this.data[best].energy + ')');
+	if (!Page.click('div.action[title^="' + best + ':"] input[type="image"], div.action[title^="' + best + ' :"] input[type="image"]')) { // Can't find the quest, so either a bad page load, or bad data - delete the quest and reload, which should force it to update ok...
+		debug('Can\'t find button for ' + best + ', so deleting and re-visiting page...');
 		delete this.data[best];
 		Page.reload();
 	}
@@ -16145,7 +16272,7 @@ Quest.work = function(state) {
 			Page.to('quests_quest' + (this.data[best].land + 2));
 		}
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 Quest.order = [];
@@ -16252,7 +16379,7 @@ Title.display = [
 		size:24
 	},{
 		title:'Useful Values',
-		info:'{energy} / {maxenergy}<br>{health} / {maxhealth}<br>{stamina} / {maxstamina}<br>{level}<br>{LevelUp:time} - Next level time<br>{Queue:runtime.current} - Activity'
+		info:'{energy} / {maxenergy}<br>{health} / {maxhealth}<br>{stamina} / {maxstamina}<br>{level}<br>{pause} - "(Paused) " when paused<br>{LevelUp:time} - Next level time<br>{Queue:runtime.current} - Activity'
 	}
 ];
 
@@ -16286,7 +16413,7 @@ Title.update = function(type) {
 					output += typeof value === 'number' ? addCommas(value) : typeof value === 'string' ? value : '';
 					this._watch(worker); // Doesn't matter how often we add, it's only there once...
 				} else {
-					debug(this.name,'Bad worker specified = "' + tmp[1] + '"');
+					debug('Bad worker specified = "' + tmp[1] + '"');
 				}
 			}
 		}
@@ -16458,7 +16585,7 @@ Town.update = function(type) {
 				for (u in quests[i].units) {
 					if (data[u] && data[u].cost && data[u].own < quests[i].units[u]) {
 						best = u;
-						buy = quests[i].units[u];
+						buy = quests[i].units[u] - data[u].own;
 					}
 				}
 			}
@@ -16487,30 +16614,29 @@ Town.update = function(type) {
 Town.work = function(state) {
 	var qty;
 	if (!this.runtime.best || !this.runtime.buy || !Bank.worth(this.runtime.cost)) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !this.buy(this.runtime.best, this.runtime.buy)) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
-	return false;
+	return QUEUE_RELEASE;
 };
 
 Town.buy = function(item, number) { // number is absolute including already owned
 	this._unflush();
-	if (!this.data[item] || !this.data[item].buy || this.data[item].own >= number || !this.data[item].cost || !Bank.worth(this.data[item].cost * (number - this.data[item].own))) {
+	if (!this.data[item] || !this.data[item].buy || !Bank.worth(this.runtime.cost)) {
 		return true; // We (pretend?) we own them
 	}
 	if (!Generals.to(this.option.general ? 'cost' : 'any') || !Bank.retrieve(this.runtime.cost) || (this.data[item].page === 'soldiers' && !Generals.to('cost')) || !Page.to('town_'+this.data[item].page)) {
 		return false;
 	}
-	number -= this.data[item].own;
 	var i, qty = 0;
 	for (i=0; i<this.data[item].buy.length && this.data[item].buy[i] <= number; i++) {
 		qty = this.data[item].buy[i];
 	}
 	$('tr.eq_buy_row,tr.eq_buy_row2').each(function(i,el){
 		if ($('div.eq_buy_txt strong:first', el).text().trim() === item) {
-			debug(this.name,'Buying ' + qty + ' x ' + item + ' for $' + addCommas(qty * Town.data[item].cost));
+			debug('Buying ' + qty + ' x ' + item + ' for $' + addCommas(qty * Town.data[item].cost));
 			$('div.eq_buy_costs select[name="amount"]:eq(0)', el).val(qty);
 			Page.click($('div.eq_buy_costs input[name="Buy"]', el));
 		}
@@ -16638,10 +16764,10 @@ Upgrade.work = function(state) {
 		this.runtime.run = 0;
 	}
 	if (!this.option.order.length || !points || (this.option.order[this.runtime.run]==='Stamina' && points<2)) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('keep_stats')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	switch (this.option.order[this.runtime.run]) {
 		case 'Energy':	btn = 'a[href$="?upgrade=energy_max"]';	break;
@@ -16656,7 +16782,7 @@ Upgrade.work = function(state) {
 	} else {
 		Page.reload(); // Only get here if we can't click!
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 /********** Worker.Caap() **********

@@ -151,6 +151,7 @@ Battle.parse = function(change) {
 				data[uid].hide = (data[uid].hide || 0) + 1;
 				data[uid].dead = Date.now();
 			} else if ($('img[src*="battle_victory"]').length) {
+				this.data.bp = $('span.result_body:contains("Battle Points.")').text().replace(/,/g, '').regex(/total of ([0-9]+) Battle Points/i);
 				data[uid].win = (data[uid].win || 0) + 1;
 				History.add('battle+win',1);
 			} else if ($('img[src*="battle_defeat"]').length) {
@@ -204,7 +205,7 @@ Battle.parse = function(change) {
 Battle.update = function(type) {
 	var i, j, data = this.data.user, list = [], points = false, status = [], army = Player.get('army'), level = Player.get('level'), rank = Player.get('rank'), count = 0;
 
-	status.push('Rank ' + Player.get('rank') + ' ' + this.data.rank[Player.get('rank')].name + ' with ' + addCommas(this.data.bp || 0) + ' Battle Points, Targets: ' + length(data) + ' / ' + this.option.cache);
+	status.push('Rank ' + Player.get('rank') + ' ' + (Player.get('rank') && this.data.rank[Player.get('rank')].name) + ' with ' + addCommas(this.data.bp || 0) + ' Battle Points, Targets: ' + length(data) + ' / ' + this.option.cache);
 	status.push('Demi Points Earned Today: '
 	+ '<img src="' + this.symbol[1] +'" alt=" " title="'+this.demi[1]+'" style="width:11px;height:11px;"> ' + (this.data.points[0] || 0) + '/10 '
 	+ '<img src="' + this.symbol[2] +'" alt=" " title="'+this.demi[2]+'" style="width:11px;height:11px;"> ' + (this.data.points[1] || 0) + '/10 '
@@ -218,8 +219,8 @@ Battle.update = function(type) {
 			delete data[i];
 		}
 	}
-	if (length(this.data.user) > this.option.cache) { // Need to prune our target cache
-//		debug(this.name,'Pruning target cache');
+	if (length(data) > this.option.cache) { // Need to prune our target cache
+//		debug('Pruning target cache');
 		list = [];
 		for (i in data) {
 			list.push(i);
@@ -312,22 +313,22 @@ Battle.update = function(type) {
 */
 Battle.work = function(state) {
 	if (!this.runtime.attacking || Player.get('health') < 13 || Queue.burn.stamina < 1) {
-//		debug(this.name,'Not attacking because: ' + (this.runtime.attacking ? '' : 'No Target, ') + 'Health: ' + Player.get('health') + ' (must be >=10), Burn Stamina: ' + Queue.burn.stamina + ' (must be >=1)');
-		return false;
+//		debug('Not attacking because: ' + (this.runtime.attacking ? '' : 'No Target, ') + 'Health: ' + Player.get('health') + ' (must be >=10), Burn Stamina: ' + Queue.burn.stamina + ' (must be >=1)');
+		return QUEUE_FINISH;
 	}
 	if (!state || (this.option.general && !Generals.to(Generals.best(this.option.type))) || !Page.to('battle_battle')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	var $form = $('form input[alt="'+this.option.type+'"]').first().parents('form');
 	if (!$form.length) {
-		debug(this.name,'Unable to find attack buttons, forcing reload');
+		debug('Unable to find attack buttons, forcing reload');
 		Page.to('index');
 	} else {
-		log(this.name,'Battle: Attacking ' + this.data.user[this.runtime.attacking].name + ' (' + this.runtime.attacking + ')');
+		log('Battle: Attacking ' + this.data.user[this.runtime.attacking].name + ' (' + this.runtime.attacking + ')');
 		$('input[name="target_id"]', $form).attr('value', this.runtime.attacking);
 		Page.click($('input[type="image"]', $form));
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 
 Battle.rank = function(name) {

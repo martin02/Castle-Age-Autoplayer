@@ -41,7 +41,7 @@ History.dashboard = function() {
 	list.push(this.makeGraph('exp', 'Experience', false, {'Next Level':Player.get('maxexp')}));
 	list.push(this.makeGraph('exp.change', 'Exp Gain', false, {'Average':this.get('exp.average.change'), 'Standard Deviation':this.get('exp.stddev.change'), 'Ignore entries above':(this.get('exp.mean.change') + (2 * this.get('exp.stddev.change')))} )); // , 'Harmonic Average':this.get('exp.harmonic.change') ,'Median Average':this.get('exp.median.change') ,'Mean Average':this.get('exp.mean.change')
 	list.push('</tbody></table>');
-	$('#golem-`-History').html(list.join(''));
+	$('#golem-dashboard-History').html(list.join(''));
 }
 
 
@@ -173,7 +173,7 @@ History.get = function(what) {
 		return data;
 	}
 	for (i in data) {
-		if (data[i][x[0]] && typeof data[i][x[0]] === 'number') {
+		if (typeof data[i][x[0]] === 'number') {
 			exact = true;
 			break;
 		}
@@ -207,7 +207,7 @@ History.get = function(what) {
 		if (data[i]) {
 			value = null;
 			if (exact) {
-				if (data[i][x[0]]) {
+				if (typeof data[i][x[0]] === 'number') {
 					value = data[i][x[0]];
 				}
 			} else {
@@ -273,7 +273,7 @@ History.makeGraph = function(type, title, iscash, goal) {
 			for (j in type) {
 				value[i][j] = this.get(i + '.' + type[j]);
 			}
-			min = Math.min(min, sum(value[i]));
+			if (sum(value[i])) {min = Math.min(min, sum(value[i]));}
 			max = Math.max(max, sum(value[i]));
 		}
 	}

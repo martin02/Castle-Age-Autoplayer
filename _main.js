@@ -19,6 +19,7 @@ var script_started = Date.now();
 // Automatically filled
 var userID = 0;
 var imagepath = '';
+var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
 
 // Decide which facebook app we're in...
 var applications = {
@@ -42,7 +43,7 @@ var log = console.log;
 
 if (show_debug) {
 	var debug = function(txt) {
-		console.log('[' + (new Date()).format('G:i:s') + '] ' + txt);
+				console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
 	};
 } else {
 	var debug = function(){};

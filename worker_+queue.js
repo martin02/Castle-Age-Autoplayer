@@ -4,6 +4,12 @@
 var Queue = new Worker('Queue', '*');
 Queue.data = null;
 
+// worker.work() return values for stateful - ie, only let other things interrupt when it's "safe"
+var QUEUE_FINISH	= 0;// Finished everything, let something else work
+var QUEUE_CONTINUE	= 1;// Not finished at all, don't interrupt
+var QUEUE_RELEASE	= 2;// Not quite finished, but safe to interrupt 
+// worker.work() can also return true/false for "continue"/"finish" - which means they can be interrupted at any time
+
 Queue.settings = {
 	system:true,
 	unsortable:true,
@@ -22,7 +28,8 @@ Queue.option = {
 	start_stamina: 0,
 	stamina: 0,
 	start_energy: 0,
-	energy: 0
+	energy: 0,
+	pause: false
 };
 
 Queue.display = [
@@ -81,7 +88,7 @@ Queue.init = function() {
 	this.option.queue = unique(this.option.queue);
 	for (i in Workers) {// Add any new workers that have a display (ie, sortable)
 		if (Workers[i].work && Workers[i].display && !findInArray(this.option.queue, Workers[i].name)) {
-			log(this.name,'Adding '+Workers[i].name+' to Queue');
+			log('Adding '+Workers[i].name+' to Queue');
 			if (Workers[i].settings.unsortable) {
 				this.option.queue.unshift(Workers[i].name);
 			} else {
@@ -93,7 +100,7 @@ Queue.init = function() {
 		worker = WorkerByName(this.option.queue[i]);
 		if (worker && worker.id) {
 			if (this.runtime.current && worker.name === this.runtime.current) {
-				debug(this.name,'Trigger '+worker.name+' (continue after load)');
+				debug('Trigger '+worker.name+' (continue after load)');
 				$('#'+worker.id+' > h3').css('font-weight', 'bold');
 			}
 			$('#golem_config').append($('#'+worker.id));
@@ -104,7 +111,7 @@ Queue.init = function() {
 	Queue.lastpause = this.option.pause;
 	$btn = $('<img class="golem-button' + (this.option.pause?' red':'') + '" id="golem_pause" src="' + (this.option.pause?play:pause) + '">').click(function() {
 		Queue.option.pause ^= true;
-		debug('Queue','State: '+((Queue.option.pause)?"paused":"running"));
+		debug('State: '+((Queue.option.pause)?"paused":"running"));
 		$(this).toggleClass('red').attr('src', (Queue.option.pause?play:pause));
 		Page.clear();
 		Config.updateOptions();
@@ -129,14 +136,15 @@ Queue.update = function(type) {
 };
 
 Queue.run = function() {
-	var i, worker, found = false, result, now = Date.now();
+	var i, worker, current, result, now = Date.now(), next = null, release = false;
 	if (this.option.pause || now - this.lastclick < this.option.clickdelay * 1000) {
 		return;
 	}
 	if (Page.loading) {
 		return; // We want to wait xx seconds after the page has loaded
 	}
-//	debug(this.name,'Start Queue');
+	WorkerStack.push(this);
+//	debug('Start Queue');
 	this.burn.stamina = this.burn.energy = 0;
 	if (this.option.burn_stamina || Player.get('stamina') >= this.option.start_stamina) {
 		this.burn.stamina = Math.max(0, Player.get('stamina') - this.option.stamina);
@@ -149,15 +157,15 @@ Queue.run = function() {
 	// We don't want to stay at max any longer than we have to because it is wasteful.  Burn a bit to start the countdown timer.
 /*	if (Player.get('energy') >= Player.get('maxenergy')){
 		this.burn.stamina = 0;	// Focus on burning energy
-		debug(this.name,'At max energy, burning energy first.');
+		debug('At max energy, burning energy first.');
 	} else if (Player.get('stamina') >= Player.get('maxstamina')){
 		this.burn.energy = 0;	// Focus on burning stamina
-		debug(this.name,'At max stamina, burning stamina first.');
+		debug('At max stamina, burning stamina first.');
 	}
 */	
 	for (i=0; i<Workers.length; i++) { // Run any workers that don't have a display, can never get focus!!
 		if (Workers[i].work && !Workers[i].display) {
-//			debug(this.name,Workers[i].name + '.work(false);');
+//			debug(Workers[i].name + '.work(false);');
 			Workers[i]._unflush();
 			Workers[i]._work(false);
 		}
@@ -167,42 +175,42 @@ Queue.run = function() {
 		if (!worker || !worker.work || !worker.display) {
 			continue;
 		}
-//		debug(this.name,worker.name + '.work(' + (this.runtime.current === worker.name) + ');');
+//		debug(worker.name + '.work(' + (this.runtime.current === worker.name) + ');');
 		if (this.runtime.current === worker.name) {
 			worker._unflush();
 			result = worker._work(true);
+			if (typeof result !== 'boolean') {// QUEUE_* are all numbers
+				worker.settings.stateful = true;
+			}
+			if (result === QUEUE_RELEASE) {
+				release = true;
+			} else if (!result) {// false or QUEUE_FINISH
+				this.runtime.current = null;
+				worker.id && $('#'+worker.id+' > h3').css('font-weight', 'normal');
+				debug('End '+worker.name);
+			}
 		} else {
 			result = worker._work(false);
 		}
-		if (!result && this.runtime.current === worker.name) {
-			this.runtime.current = null;
-			if (worker.id) {
-				$('#'+worker.id+' > h3').css('font-weight', 'normal');
-			}
-			debug(this.name,'End '+worker.name);
+		if (!next && result) {
+			next = worker; // the worker who wants to take over
 		}
-		if (!result || found) { // We will work(false) everything, but only one gets work(true) at a time
-			continue;
-		}
-		found = true;
-		if (this.runtime.current === worker.name) {
-			continue;
-		}
-		if (this.runtime.current) {
-			debug(this.name,'Interrupt '+this.runtime.current);
-			if (WorkerByName(this.runtime.current).id) {
-				$('#'+WorkerByName(this.runtime.current).id+' > h3').css('font-weight', 'normal');
-			}
-		}
-		this.runtime.current = worker.name;
-		if (worker.id) {
-			$('#'+worker.id+' > h3').css('font-weight', 'bold');
-		}
-		debug(this.name,'Trigger ' + worker.name);
 	}
-//	debug(this.name,'End Queue');
+	current = this.runtime.current ? WorkerByName(this.runtime.current) : null;
+	if (next !== current && (!current || !current.settings.stateful || next.settings.important || release)) {// Something wants to interrupt...
+		if (current) {
+			debug('Interrupt ' + current.name + ' with ' + next.name);
+			current.id && $('#'+current.id+' > h3').css('font-weight', 'normal');
+		} else {
+			debug('Trigger ' + next.name);
+		}
+		this.runtime.current = next.name;
+		next.id && $('#'+next.id+' > h3').css('font-weight', 'bold');
+	}
+//	debug('End Queue');
 	for (i=0; i<Workers.length; i++) {
 		Workers[i]._flush();
 	}
+	WorkerStack.pop();
 };
 

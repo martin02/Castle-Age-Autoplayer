@@ -41,15 +41,14 @@ Bank.display = [
 
 Bank.work = function(state) {
 	if (iscaap() && this.option.above === '') {
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (Player.get('cash') <= 10 || (Player.get('cash') < this.option.above && (!Queue.get('runtime.current') || WorkerByName(Queue.get('runtime.current')).settings.bank))) {
-		return false;
+	if (Player.get('cash') <= 10 || Player.get('cash') <= this.option.above) {
+		return QUEUE_FINISH;
+	} else if (!state || this.stash(Player.get('cash') - this.option.hand)) {
+		return QUEUE_CONTINUE;
 	}
-	if (!state || !this.stash(Player.get('cash') - Math.min(this.option.above, this.option.hand))) {
-		return true;
-	}
-	return false;
+	return QUEUE_RELEASE;
 };
 
 Bank.stash = function(amount) {
@@ -65,7 +64,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
+	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...

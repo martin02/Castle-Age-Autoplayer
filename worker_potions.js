@@ -65,18 +65,18 @@ Potions.update = function(type) {
 
 Potions.work = function(state) {
 	if (!this.runtime.drink) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Page.to('keep_stats')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 	for(var i in this.data) {
 		if (typeof this.option[i.toLowerCase()] === 'number' && this.data[i] > this.option[i.toLowerCase()]) {
-			debug(this.name,'Wanting to drink a ' + i + ' potion');
+			debug('Wanting to drink a ' + i + ' potion');
 			Page.click('.statUnit:contains("' + i + '") form .imgButton input');
 			break;
 		}
 	}
-	return true;
+	return QUEUE_RELEASE;
 };
 

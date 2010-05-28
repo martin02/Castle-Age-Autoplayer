@@ -156,7 +156,7 @@ Town.update = function(type) {
 				for (u in quests[i].units) {
 					if (data[u] && data[u].cost && data[u].own < quests[i].units[u]) {
 						best = u;
-						buy = quests[i].units[u];
+						buy = quests[i].units[u] - data[u].own;
 					}
 				}
 			}
@@ -185,30 +185,29 @@ Town.update = function(type) {
 Town.work = function(state) {
 	var qty;
 	if (!this.runtime.best || !this.runtime.buy || !Bank.worth(this.runtime.cost)) {
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !this.buy(this.runtime.best, this.runtime.buy)) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
-	return false;
+	return QUEUE_RELEASE;
 };
 
 Town.buy = function(item, number) { // number is absolute including already owned
 	this._unflush();
-	if (!this.data[item] || !this.data[item].buy || this.data[item].own >= number || !this.data[item].cost || !Bank.worth(this.data[item].cost * (number - this.data[item].own))) {
+	if (!this.data[item] || !this.data[item].buy || !Bank.worth(this.runtime.cost)) {
 		return true; // We (pretend?) we own them
 	}
 	if (!Generals.to(this.option.general ? 'cost' : 'any') || !Bank.retrieve(this.runtime.cost) || (this.data[item].page === 'soldiers' && !Generals.to('cost')) || !Page.to('town_'+this.data[item].page)) {
 		return false;
 	}
-	number -= this.data[item].own;
 	var i, qty = 0;
 	for (i=0; i<this.data[item].buy.length && this.data[item].buy[i] <= number; i++) {
 		qty = this.data[item].buy[i];
 	}
 	$('tr.eq_buy_row,tr.eq_buy_row2').each(function(i,el){
 		if ($('div.eq_buy_txt strong:first', el).text().trim() === item) {
-			debug(this.name,'Buying ' + qty + ' x ' + item + ' for $' + addCommas(qty * Town.data[item].cost));
+			debug('Buying ' + qty + ' x ' + item + ' for $' + addCommas(qty * Town.data[item].cost));
 			$('div.eq_buy_costs select[name="amount"]:eq(0)', el).val(qty);
 			Page.click($('div.eq_buy_costs input[name="Buy"]', el));
 		}

@@ -145,14 +145,14 @@ Land.work = function(state) {
 	if (!this.option.enabled || !this.runtime.best || !this.runtime.buy || !Bank.worth(this.runtime.cost)) {
 		if (!this.runtime.best && this.runtime.lastlevel < Player.get('level')) {
 			if (!state || !Page.to('town_land')) {
-				return true;
+				return QUEUE_CONTINUE;
 			}
 			this.runtime.lastlevel = Player.get('level');
 		}
-		return false;
+		return QUEUE_FINISH;
 	}
 	if (!state || !Bank.retrieve(this.runtime.cost) || !Page.to('town_land')) {
-		return true;
+		return QUEUE_CONTINUE;
 	}
 //	var el = $('tr.land_buy_row:contains("'+this.runtime.best+'"),tr.land_buy_row_unique:contains("'+this.runtime.best+'")');
 	$('tr.land_buy_row,tr.land_buy_row_unique').each(function(i,el){
@@ -166,6 +166,6 @@ Land.work = function(state) {
 			Page.click($('.land_buy_costs input[name="' + (Land.runtime.buy > 0 ? 'Buy' : 'Sell') + '"]', el));
 		}
 	});
-	return true;
+	return QUEUE_RELEASE;
 };
 

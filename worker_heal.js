@@ -30,23 +30,23 @@ Heal.display = [
 
 Heal.work = function(state) {
 	if (Player.get('health') >= Player.get('maxhealth') || Player.get('stamina') < Heal.option.stamina || Player.get('health') >= Heal.option.health) {
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (!state) {
-		return true;
+	if (!state || this.me()) {
+		return QUEUE_CONTINUE;
 	}
-	return this.me();
+	return QUEUE_RELEASE;
 };
 
 Heal.me = function() {
 	if (!Page.to('keep_stats')) {
 		return true;
 	}
-	debug(this.name,'Healing...');
+	debug('Healing...');
 	if ($('input[value="Heal Wounds"]').length) {
 		Page.click('input[value="Heal Wounds"]');
 	} else {
-		log(this.name,'Danger Danger Will Robinson... Unable to heal!');
+		log('Danger Danger Will Robinson... Unable to heal!');
 	}
 	return false;
 };

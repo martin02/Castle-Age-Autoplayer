@@ -5,6 +5,10 @@
 var Income = new Worker('Income');
 Income.data = null;
 
+Income.settings = {
+	important:true
+};
+
 Income.defaults = {
 	castle_age:{}
 };
@@ -35,22 +39,19 @@ Income.display = [
 
 Income.work = function(state) {
 	if (!Income.option.margin) {
-		return false;
+		return QUEUE_FINISH;
 	}
-//	debug(this.name,when + ', Margin: ' + Income.option.margin);
+//	debug(when + ', Margin: ' + Income.option.margin);
 	if (Player.get('cash_timer') > this.option.margin) {
 		if (state && this.option.bank) {
 			return Bank.work(true);
 		}
-		return false;
+		return QUEUE_FINISH;
 	}
-	if (!state) {
-		return true;
+	if (!state || (this.option.general && !Generals.to('income'))) {
+		return QUEUE_CONTINUE;
 	}
-	if (this.option.general && !Generals.to(Generals.best('income'))) {
-		return true;
-	}
-	debug(this.name,'Waiting for Income... (' + Player.get('cash_timer') + ' seconds)');
-	return true;
+	debug('Waiting for Income... (' + Player.get('cash_timer') + ' seconds)');
+	return QUEUE_CONTINUE;
 };
 

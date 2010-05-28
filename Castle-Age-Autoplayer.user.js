@@ -3800,20 +3800,10 @@ caap = {
                 gm.log("Cant find buy button");
                 return false;
             }
-<<<<<<< HEAD
-        } else if (general && general != Player.get('general')) {
-            if (gm.getValue('LevelUpGeneral', 'Use Current') != 'Use Current' &&
-                gm.getValue('QuestLevelUpGeneral', false) &&
-                this.stats.exp.dif &&
-                this.stats.exp.dif <= gm.getValue('LevelUpGeneralExp', 0)) {
-                if (this.SelectGeneral('LevelUpGeneral')) {
-=======
-
             button = this.CheckForImage('quick_buy_button.jpg');
             if (button) {
                 gm.setValue('storeRetrieve', 'general');
                 if (this.SelectGeneral('BuyGeneral')) {
->>>>>>> master
                     return true;
                 }
 

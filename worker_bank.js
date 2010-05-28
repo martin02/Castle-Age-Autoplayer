@@ -65,7 +65,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
+	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...

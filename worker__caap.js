@@ -54,3 +54,11 @@ Heal.caap_values = {
 	health: 	'MinToHeal'
 };
 
+Blessing.caap_values = {
+	which:		'AutoBless'
+};
+
+Blessing.caap_load = function() {
+	this.option.display = true;
+};
+

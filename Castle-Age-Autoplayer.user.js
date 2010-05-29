@@ -3347,14 +3347,6 @@ caap = {
                 }
             }
 
-            if (this.DisplayTimer('BlessingTimer')) {
-                if (this.CheckTimer('BlessingTimer')) {
-                    this.SetDivContent('demibless_mess', 'Demi Blessing = none');
-                } else {
-                    this.SetDivContent('demibless_mess', 'Next Demi Blessing: ' + this.DisplayTimer('BlessingTimer'));
-                }
-            }
-
             if (this.DisplayTimer('ArenaRankTimer')) {
                 if (this.CheckTimer('ArenaRankTimer')) {
                     this.SetDivContent('arena_mess', '');
@@ -4545,79 +4537,6 @@ caap = {
         div.style.background = '#B09060';
         div.style.right = "144px";
         click.parentNode.insertBefore(div, click);
-    },
-
-    /////////////////////////////////////////////////////////////////////
-    //                          AUTO BLESSING
-    /////////////////////////////////////////////////////////////////////
-
-    deityTable: {
-        'energy': 1,
-        'attack': 2,
-        'defense': 3,
-        'health': 4,
-        'stamina': 5
-    },
-
-    BlessingResults: function (resultsText) {
-        // Check time until next Oracle Blessing
-        if (resultsText.match(/Please come back in: /)) {
-            var hours = parseInt(resultsText.match(/ \d+ hour/), 10);
-            var minutes = parseInt(resultsText.match(/ \d+ minute/), 10);
-            this.SetTimer('BlessingTimer', (hours * 60 + minutes + 1) * 60);
-            gm.log('Recorded Blessing Time.  Scheduling next click!');
-        }
-
-        // Recieved Demi Blessing.  Wait 24 hours to try again.
-        if (resultsText.match(/You have paid tribute to/)) {
-            this.SetTimer('BlessingTimer', 24 * 60 * 60 + 60);
-            gm.log('Received blessing.  Scheduling next click!');
-        }
-
-        this.SetCheckResultsFunction('');
-    },
-
-    AutoBless: function () {
-        var autoBless = gm.getValue('AutoBless', 'none').toLowerCase();
-        if (autoBless == 'none') {
-            return false;
-        }
-
-        if (!this.CheckTimer('BlessingTimer')) {
-            return false;
-        }
-
-        if (this.NavigateTo('quests,demi_quest_off', 'demi_quest_bless')) {
-            return true;
-        }
-
-        var picSlice = nHtml.FindByAttrContains(document.body, 'img', 'src', 'deity_' + autoBless);
-        if (!picSlice) {
-            gm.log('No diety pics for deity_' + autoBless);
-            return false;
-        }
-
-        if (picSlice.style.height != '160px') {
-            return this.NavigateTo('deity_' + autoBless);
-        }
-
-        picSlice = nHtml.FindByAttrContains(document.body, 'form', 'id', '_symbols_form_' + this.deityTable[autoBless]);
-        if (!picSlice) {
-            gm.log('No form for deity blessing.');
-            return false;
-        }
-
-        picSlice = this.CheckForImage('demi_quest_bless', picSlice);
-        if (!picSlice) {
-            gm.log('No image for deity blessing.');
-            return false;
-        }
-
-        gm.log('Click deity blessing for ' + autoBless);
-        this.SetTimer('BlessingTimer', 60 * 60);
-        this.SetCheckResultsFunction('BlessingResults');
-        caap.Click(picSlice);
-        return true;
     },
 
     /////////////////////////////////////////////////////////////////////
@@ -9314,7 +9233,7 @@ caap = {
 //      'ArenaElite': 'Fill Arena Elite',
         'AutoPotions': 'Auto Potions',
         'Alchemy': 'Auto Alchemy',
-        'AutoBless': 'Auto Bless',
+        'Blessing': 'Auto Bless',
         'AutoGift': 'Auto Gifting',
         'MonsterFinder': 'Monster Finder',
         'DemiPoints': 'Demi Points First',
@@ -9355,7 +9274,7 @@ caap = {
         0x0C: 'PassiveGeneral',
         0x0D: 'Land',
         0x0E: 'Bank',
-        0x0F: 'AutoBless',
+        0x0F: 'Blessing',
         0x10: 'AutoStat',
         0x11: 'AutoGift',
         0x12: 'AutoPotions',
@@ -9480,7 +9399,7 @@ caap = {
                 "PassiveGeneral",
                 "Land",
                 "Bank",
-                "AutoBless",
+                "Blessing",
                 "AutoStat",
                 "AutoGift",
                 "AutoPotions",
@@ -12481,6 +12400,10 @@ Blessing.display = [
     }
 ];
 
+Blessing.init = function(){
+	iscaap() && Blessing.update();
+};
+
 Blessing.parse = function(change) {
 	var result = $('div.results'), time;
 	if (result.length) {
@@ -12522,8 +12445,10 @@ Blessing.update = function(){
                  break;
          }
          Dashboard.status(this, '<span title="Next Blessing">' + 'Next Blessing performed on ' + d.format('l g:i a') + ' to ' + demi + ' </span>');
+		iscaap() && caap.SetDivContent('demibless_mess', 'Next Demi Blessing: ' + d.format('l g:i a'));
      } else {
          Dashboard.status(this);
+		iscaap() && caap.SetDivContent('demibless_mess', 'Demi Blessing = none');
      }
 };
 
@@ -16839,5 +16764,13 @@ Queue.caap_load = function() {
 Heal.caap_values = {
 	stamina: 	'MinStamToHeal',
 	health: 	'MinToHeal'
+};
+
+Blessing.caap_values = {
+	which:		'AutoBless'
+};
+
+Blessing.caap_load = function() {
+	this.option.display = true;
 };
 

@@ -33,7 +33,7 @@ Blessing.display = [
 ];
 
 Blessing.init = function(){
-	iscaap() && Blessing.update();
+	iscaap() && this.update();
 };
 
 Blessing.parse = function(change) {

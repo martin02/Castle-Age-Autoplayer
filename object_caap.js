@@ -6619,6 +6619,8 @@ caap = {
             if (!attackMinStamina) {
                 attackMinStamina = 1;
             }
+
+            var when = gm.getValue('When' + battleOrBattle, '');
             if (when == 'Never') {
                 return false;
             }

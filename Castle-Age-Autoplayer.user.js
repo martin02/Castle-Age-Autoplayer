@@ -3865,7 +3865,7 @@ caap = {
                 if (this.SelectGeneral('SubQuestGeneral')) {
                     return true;
                 }
-            } else if ((general) && general != this.GetCurrentGeneral()) {
+            } else if ((general) && general != Player.get('general')) {
                 if (gm.getValue('LevelUpGeneral', 'Use Current') != 'Use Current' &&
                     gm.getValue('QuestLevelUpGeneral', false) && this.stats.exp.dif &&
                     this.stats.exp.dif <= gm.getValue('LevelUpGeneralExp', 0)) {

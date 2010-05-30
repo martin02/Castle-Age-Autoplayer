@@ -1737,6 +1737,8 @@ caap = {
             break;
         }
 
+        htmlCode += "<tr><td>Quest For</td><td style='text-align: right; width: 60%'>" + this.MakeDropDown('WhyQuest', this.questForList, '', "style='font-size: 10px; width: 100%'") + '</td></tr></table>';
+        htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
         htmlCode += this.MakeCheckTR("Switch Quest Area", 'switchQuestArea', false, '', 'Allows switching quest area after Advancement or Max Influence');
         htmlCode += this.MakeCheckTR("Use Only Subquest General", 'ForceSubGeneral', false, '', forceSubGen);
         htmlCode += this.MakeCheckTR("Quest For Orbs", 'GetOrbs', false, '', 'Perform the Boss quest in the selected land for orbs you do not have.') + "</table>";
@@ -4009,7 +4011,7 @@ caap = {
                 if (this.SelectGeneral('SubQuestGeneral')) {
                     return true;
                 }
-            } else if ((general) && general != this.GetCurrentGeneral()) {
+            } else if ((general) && general != Player.get('general')) {
                 if (gm.getValue('LevelUpGeneral', 'Use Current') != 'Use Current' &&
                     gm.getValue('QuestLevelUpGeneral', false) && this.stats.exp.dif &&
                     this.stats.exp.dif <= gm.getValue('LevelUpGeneralExp', 0)) {

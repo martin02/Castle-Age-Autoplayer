@@ -32,10 +32,6 @@ Blessing.display = [
     }
 ];
 
-Blessing.init = function(){
-	iscaap() && this.update();
-};
-
 Blessing.parse = function(change) {
 	var result = $('div.results'), time;
 	if (result.length) {
@@ -77,10 +73,8 @@ Blessing.update = function(){
                  break;
          }
          Dashboard.status(this, '<span title="Next Blessing">' + 'Next Blessing performed on ' + d.format('l g:i a') + ' to ' + demi + ' </span>');
-		iscaap() && caap.SetDivContent('demibless_mess', 'Next Demi Blessing: ' + d.format('l g:i a'));
      } else {
          Dashboard.status(this);
-		iscaap() && caap.SetDivContent('demibless_mess', 'Demi Blessing = none');
      }
 };
 

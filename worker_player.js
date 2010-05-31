@@ -67,7 +67,7 @@ Player.parse = function(change) {
 	if (Page.page==='keep_stats') {
 		keep = $('div.keep_attribute_section').first(); // Only when it's our own keep and not someone elses
 		if (keep.length) {
-			data.myname = $('div.keep_stat_title > span', keep).text().regex(/"(.*)"/);
+			data.myname = $('div.keep_stat_title_inc > span', keep).text().regex(/"(.*)"/);
 			data.rank = $('td.statsTMainback img[src*=rank_medals]').attr('src').filepart().regex(/([0-9]+)/);
 			stats = $('div.attribute_stat_container', keep);
 			data.maxenergy = $(stats).eq(0).text().regex(/([0-9]+)/);
@@ -105,6 +105,7 @@ Player.parse = function(change) {
 		window.clearTimeout(this.runtime.stamina_timeout);
 		this.runtime.stamina_timeout = window.setTimeout(function(){Player.get('stamina');}, $('#app'+APPID+'_stamina_time_value').text().parseTimer() * 1000);
 	}
+	$('strong#app'+APPID+'_gold_current_value').attr('title', 'Cash in Bank: $' + addCommas(data.bank));
 	return false;
 };
 

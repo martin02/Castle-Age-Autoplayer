@@ -679,6 +679,7 @@ Worker.prototype._unflush = function() {
 	WorkerStack.push(this);
 	!this._loaded && this._init();
 	!this.settings.keep && !this.data && this._load('data');
+	iscaap() && (typeof this.caap_load == 'function') && this.caap_load();
 	WorkerStack.pop();
 };
 
@@ -750,7 +751,7 @@ Config.init = function() {
 	}
 	$('head').append('<link rel="stylesheet" href="http://cloutman.com/css/base/jquery-ui.css" type="text/css" />');
 	var $btn, $golem_config, $newPanel, i, j, k;
-	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem v' + VERSION + (revision && revision !== '$WCREV$' ? 'r'+revision : '') + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
+	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
 	$('#golem_options').click(function(){
 		$(this).toggleClass('golem-button golem-button-active');
 		Config.option.display = Config.option.display==='block' ? 'none' : 'block';
@@ -1505,6 +1506,10 @@ Queue.option = {
 	pause: false
 };
 
+Queue.caap_load = function() {
+	this.option.pause = false;
+};
+
 Queue.display = [
 	{
 		label:'Drag the unlocked panels into the order you wish them run.'
@@ -2027,6 +2032,13 @@ Bank.option = {
 	keep: 10000
 };
 
+Bank.caap_load = function() {
+	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
+	for (i in valuesList) {
+		this.option[i] = gm.getValue(valuesList[i]);
+	}
+};
+
 Bank.display = [
 	{
 		id:'general',
@@ -2072,7 +2084,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
+	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...
@@ -2533,10 +2545,6 @@ Blessing.display = [
     }
 ];
 
-Blessing.init = function(){
-	iscaap() && this.update();
-};
-
 Blessing.parse = function(change) {
 	var result = $('div.results'), time;
 	if (result.length) {
@@ -2578,10 +2586,8 @@ Blessing.update = function(){
                  break;
          }
          Dashboard.status(this, '<span title="Next Blessing">' + 'Next Blessing performed on ' + d.format('l g:i a') + ' to ' + demi + ' </span>');
-		iscaap() && caap.SetDivContent('demibless_mess', 'Next Demi Blessing: ' + d.format('l g:i a'));
      } else {
          Dashboard.status(this);
-		iscaap() && caap.SetDivContent('demibless_mess', 'Demi Blessing = none');
      }
 };
 
@@ -2611,9 +2617,15 @@ Elite.defaults = {
 Elite.option = {
 	elite:true,
 	arena:false,
-	every:24,
+	every:12,
 	prefer:[],
 	armyperpage:25 // Read only, but if they change it and I don't notice...
+};
+
+Elite.caap_load = function() {
+	this.option.prefer = gm.getListFromText('EliteArmyList');
+	this.option.elite = gm.getValue('AutoElite', false);
+	this.option.every = 1;
 };
 
 Elite.runtime = {
@@ -2638,7 +2650,8 @@ Elite.display = [
 		id:'every',
 		label:'Every',
 		select:[1, 2, 3, 6, 12, 24],
-		after:'hours'
+		after:'hours',
+		help:'Although people can leave your Elite Guard after 24 hours, after 12 hours you can re-confirm them'
 	},{
 		advanced:true,
 		label:'Add UserIDs to prefer them over random army members. These <b>must</b> be in your army to be checked.',
@@ -2658,23 +2671,24 @@ Elite.init = function() { // Convert old elite guard list
 
 Elite.parse = function(change) {
 	$('span.result_body').each(function(i,el){
+		var txt = $(el).text();
 		if (Elite.runtime.nextarena) {
-			if ($(el).text().match(/has not joined in the Arena!/i)) {
+			if (txt.match(/has not joined in the Arena!/i)) {
 				Elite.data[Elite.runtime.nextarena].arena = -1;
-			} else if ($(el).text().match(/Arena Guard, and they have joined/i)) {
-				Elite.data[Elite.runtime.nextarena].arena = Date.now() + 86400000; // 24 hours
-			} else if ($(el).text().match(/'s Arena Guard is FULL/i)) {
-				Elite.data[Elite.runtime.nextarena].arena = Date.now() + 3600000; // 1 hour
-			} else if ($(el).text().match(/YOUR Arena Guard is FULL/i)) {
+			} else if (txt.match(/Arena Guard, and they have joined/i)) {
+				Elite.data[Elite.runtime.nextarena].arena = Date.now() + 43200000; // 12 hours
+			} else if (txt.match(/'s Arena Guard is FULL/i)) {
+				Elite.data[Elite.runtime.nextarena].arena = Date.now() + 1800000; // half hour
+			} else if (txt.match(/YOUR Arena Guard is FULL/i)) {
 				Elite.runtime.waitarena = Date.now();
 				debug(this + 'Arena guard full, wait '+Elite.option.every+' hours');
 			}
 		}
-		if ($(el).text().match(/Elite Guard, and they have joined/i)) {
-			Elite.data[$('img', el).attr('uid')].elite = Date.now() + 86400000; // 24 hours
-		} else if ($(el).text().match(/'s Elite Guard is FULL!/i)) {
-			Elite.data[$('img', el).attr('uid')].elite = Date.now() + 3600000; // 1 hour
-		} else if ($(el).text().match(/YOUR Elite Guard is FULL!/i)) {
+		if (txt.match(/Elite Guard, and they have joined/i)) {
+			Elite.data[$('img', el).attr('uid')].elite = Date.now() + 43200000; // 12 hours
+		} else if (txt.match(/'s Elite Guard is FULL!/i)) {
+			Elite.data[$('img', el).attr('uid')].elite = Date.now() + 1800000; // half hour
+		} else if (txt.match(/YOUR Elite Guard is FULL!/i)) {
 			Elite.runtime.waitelite = Date.now();
 			debug('Elite guard full, wait '+Elite.option.every+' hours');
 		}
@@ -2698,38 +2712,51 @@ Elite.parse = function(change) {
 Elite.update = function() {
 	var i, j, tmp = [], now = Date.now(), check;
 	this.runtime.nextelite = this.runtime.nextarena = 0;
-	for(j=0; j<this.option.prefer.length; j++) {
-		i = this.option.prefer[j];
-		if (!/[^0-9]/g.test(i) && this.data[i]) {
-			if (!this.runtime.nextelite && (typeof this.data[i].elite !== 'number' || this.data[i].elite < Date.now())) {
-				this.runtime.nextelite = i;
+	// Elite Guard
+	if (this.option.elite) {
+		for(j=0; j<this.option.prefer.length; j++) {
+			i = this.option.prefer[j];
+			if (!/[^0-9]/g.test(i) && this.data[i]) {
+				if (typeof this.data[i].elite !== 'number' || this.data[i].elite < now) {
+					this.runtime.nextelite = i;
+					break;
+				}
 			}
-			if (!this.runtime.nextarena && (typeof this.data[i].arena !== 'number' || (this.data[i].arena !== -1 && this.data[i].arena < Date.now()))) {
-				this.runtime.nextarena = i;
+		}
+		if (!this.runtime.nextelite) {
+			for(i in this.data) {
+				if ((typeof this.data[i].elite !== 'number' || this.data[i].elite < now)) {
+					this.runtime.nextelite = i;
+				}
 			}
 		}
+		check = (this.runtime.waitelite + (this.option.every * 3600000));
+		tmp.push('Elite Guard: Check' + (check < now ? 'ing now' : ' in <span class="golem-time" name="' + check + '">' + makeTimer((check - now) / 1000) + '</span>'));
 	}
-	for(i in this.data) {
-		if (!this.runtime.nextelite && (typeof this.data[i].elite !== 'number' || this.data[i].elite < Date.now())) {
-			this.runtime.nextelite = i;
+	// Arena Guard
+/* - Currently Disabled!
+	if (this.option.arena) {
+		for(j=0; j<this.option.prefer.length; j++) {
+			i = this.option.prefer[j];
+			if (!/[^0-9]/g.test(i) && this.data[i]) {
+				if (typeof this.data[i].arena !== 'number' || (this.data[i].arena !== -1 && this.data[i].arena < now)) {
+					this.runtime.nextarena = i;
+					break;
+				}
+			}
 		}
-		if (!this.runtime.nextarena && (typeof this.data[i].arena !== 'number' || (this.data[i].arena !== -1 && this.data[i].arena < Date.now()))) {
-			this.runtime.nextarena = i;
+		if (!this.runtime.nextarena) {
+			for(i in this.data) {
+				if (!this.runtime.nextarena && (typeof this.data[i].arena !== 'number' || (this.data[i].arena !== -1 && this.data[i].arena < Date.now()))) {
+					this.runtime.nextarena = i;
+				}
+			}
 		}
+		check = (this.runtime.waitarena + (this.option.every * 3600000));
+		tmp.push('Arena Guard: Check' + (check < now ? 'ing now' : ' in <span class="golem-time" name="' + check + '">' + makeTimer((check - now) / 1000) + '</span>'));
 	}
-	if (this.option.elite || this.option.arena) {
-		if (this.option.arena) {
-			check = (this.runtime.waitarena + (this.option.every * 3600000));
-			tmp.push('Arena Guard: Check' + (check < now ? 'ing now' : ' in <span class="golem-time" name="' + check + '">' + makeTimer((check - now) / 1000) + '</span>'));
-		}
-		if (this.option.elite) {
-			check = (this.runtime.waitelite + (this.option.every * 3600000));
-			tmp.push('Elite Guard: Check' + (check < now ? 'ing now' : ' in <span class="golem-time" name="' + check + '">' + makeTimer((check - now) / 1000) + '</span>'));
-		}
-		Dashboard.status(this, tmp.join(', '));
-	} else {
-		Dashboard.status(this);
-	}
+*/
+	Dashboard.status(this, tmp.join(', '));
 };
 
 Elite.work = function(state) {
@@ -4055,6 +4082,13 @@ Land.option = {
 	onlyten:false,
 	sell:false,
 	land_exp:false
+};
+
+Land.caap_load = function() {
+	valuesList = {'enabled':'autoBuyLand','sell':'SellLands'};
+	for (i in valuesList) {
+		this.option[i] = gm.getValue(valuesList[i]);
+	}
 };
 
 Land.runtime = {
@@ -5849,7 +5883,7 @@ Player.parse = function(change) {
 	if (Page.page==='keep_stats') {
 		keep = $('div.keep_attribute_section').first(); // Only when it's our own keep and not someone elses
 		if (keep.length) {
-			data.myname = $('div.keep_stat_title > span', keep).text().regex(/"(.*)"/);
+			data.myname = $('div.keep_stat_title_inc > span', keep).text().regex(/"(.*)"/);
 			data.rank = $('td.statsTMainback img[src*=rank_medals]').attr('src').filepart().regex(/([0-9]+)/);
 			stats = $('div.attribute_stat_container', keep);
 			data.maxenergy = $(stats).eq(0).text().regex(/([0-9]+)/);
@@ -5887,6 +5921,7 @@ Player.parse = function(change) {
 		window.clearTimeout(this.runtime.stamina_timeout);
 		this.runtime.stamina_timeout = window.setTimeout(function(){Player.get('stamina');}, $('#app'+APPID+'_stamina_time_value').text().parseTimer() * 1000);
 	}
+	$('strong#app'+APPID+'_gold_current_value').attr('title', 'Cash in Bank: $' + addCommas(data.bank));
 	return false;
 };
 
@@ -6437,7 +6472,7 @@ Title.display = [
 		size:24
 	},{
 		title:'Useful Values',
-		info:'{energy} / {maxenergy}<br>{health} / {maxhealth}<br>{stamina} / {maxstamina}<br>{level}<br>{pause} - "(Paused) " when paused<br>{LevelUp:time} - Next level time<br>{Queue:runtime.current} - Activity'
+		info:'{myname}<br>{energy} / {maxenergy}<br>{health} / {maxhealth}<br>{stamina} / {maxstamina}<br>{level}<br>{pause} - "(Paused) " when paused<br>{LevelUp:time} - Next level time<br>{Queue:runtime.current} - Activity'
 	}
 ];
 

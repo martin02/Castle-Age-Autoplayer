@@ -19,6 +19,13 @@ Bank.option = {
 	keep: 10000
 };
 
+Bank.caap_load = function() {
+	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
+	for (i in valuesList) {
+		this.option[i] = gm.getValue(valuesList[i]);
+	}
+};
+
 Bank.display = [
 	{
 		id:'general',
@@ -64,7 +71,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
+	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...

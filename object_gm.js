@@ -104,7 +104,7 @@ gm = {
 
 	// Takes a list of comma or return separated values, and returns a list with valid entries
     getListFromText: function (n) {
-        var getTheList = gm.getValue(n).split(/[\n,]/);
+        var getTheList = (gm.getValue(n) ? gm.getValue(n).split(/[\n,]/) : []);
         this.debug('GetList ' + n + ' value ' + getTheList);
         var ret = getTheList.filter(function (item) {
             return item.trim() || false;

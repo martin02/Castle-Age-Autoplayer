@@ -20,7 +20,7 @@ type object_caap.js >>_normal.user.js 2>nul
 type _main.js >>_normal.user.js 2>nul
 
 echo Cleaning EOL
-uddu dos2unix.exe _normal.user.js
+uddu\dos2unix.exe _normal.user.js
 
 rem ----------------------------------------------------------------------
 rem INSTALLED VERSION - Means you only need to hit F5 / refresh in Firefox

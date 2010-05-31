@@ -8,7 +8,7 @@ if (typeof GM_log !== 'function') {
     throw "Error: Your browser does not appear to support Greasemonkey scripts!";
 }
 
-gm.log("Starting");
+console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Starting");
 //////////   Start Golem _main.js
 
 var show_debug = true;
@@ -44,7 +44,7 @@ var log = console.log;
 
 if (show_debug) {
 	var debug = function(txt) {
-				console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
+		console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
 	};
 } else {
 	var debug = function(){};
@@ -75,13 +75,13 @@ if (global.is_chrome) {
             ConvertGMtoJSON();
         }
     } catch (e) {
-        gm.log("Error converting DB: " + e);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error converting DB: " + e);
     }
 
     try {
         CM_Listener();
     } catch (e) {
-        gm.log("Error loading CM_Listener" + e);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error loading CM_Listener" + e);
     }
 }
 
@@ -130,7 +130,7 @@ if (!global.is_chrome) {
                             gm.setValue('SUC_last_update', new Date().getTime() + '');
                             gm.setValue('SUC_target_script_name', script_name);
                             gm.setValue('SUC_remote_version', remote_version);
-                            gm.log('remote version ' + remote_version);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'remote version ' + remote_version);
                             if (remote_version > caapVersion) {
                                 global.newVersionAvailable = true;
                                 if (forced) {
@@ -157,7 +157,7 @@ if (!global.is_chrome) {
 
         updateCheck(false);
     } catch (err) {
-        gm.log("ERROR in GitHub updater: " + err);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GitHub updater: " + err);
     }
 }
 
@@ -206,7 +206,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
                 var attribute = gm.getValue("Attribute" + a, '');
                 if (attribute !== '') {
                     gm.setValue("Attribute" + a, attribute.ucFirst());
-                    gm.log("Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
                 }
             }
         }
@@ -244,7 +244,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 
         gm.setValue('LastVersion', caapVersion);
     } catch (err) {
-        gm.log("ERROR in Environment updater: " + err);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Environment updater: " + err);
     }
 }
 
@@ -253,10 +253,10 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 /////////////////////////////////////////////////////////////////////
 
 $(function () {
-    gm.log('Full page load completed');
+    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Full page load completed');
     // If unable to read in gm.values, then reload the page
     if (gm.getValue('caapPause', 'none') !== 'none' && gm.getValue('caapPause', 'none') !== 'block') {
-        gm.log('Refresh page because unable to load gm.values due to unsafewindow error');
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Refresh page because unable to load gm.values due to unsafewindow error');
         window.location.href = window.location.href;
     }
 
@@ -275,9 +275,9 @@ $(function () {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
 			}
-            
+
 			Page.identify();
-			gm.log('Workers: ' + Workers.length);
+			console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
 					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
 					Workers[ii]._setup();

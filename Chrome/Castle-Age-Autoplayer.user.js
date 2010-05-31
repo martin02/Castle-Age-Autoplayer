@@ -2870,7 +2870,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals'
+		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
 	}
 };
 
@@ -2930,7 +2930,7 @@ Generals.update = function(type, worker) {
 		}
 		Config.set('generals', ['any'].concat(list.sort()));
 	}
-	
+
 	// Take all existing priorities and change them to rank starting from 1 and keeping existing order.
 	for (i in data) {
 		if (data[i].level < 4) {
@@ -2945,7 +2945,7 @@ Generals.update = function(type, worker) {
 	}
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
-	
+
 	if ((type === 'data' || worker === Town) && invade && duel) {
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -3260,7 +3260,6 @@ Generals.dashboard = function(sort, rev) {
 		$('#golem-dashboard-Generals thead th:eq('+sort+')').attr('name',(rev ? 'reverse' : 'sort')).append('&nbsp;' + (rev ? '&uarr;' : '&darr;'));
 	}
 }
-
 /********** Worker.Gift() **********
 * Auto accept gifts and return if needed
 * *** Needs to talk to Alchemy to work out what's being made
@@ -6651,15 +6650,6 @@ Town.blacksmith = { // Shield must come after armor (currently)
 	Amulet:	/amulet|bauble|charm|crystal|eye|heart|insignia|jewel|lantern|memento|orb|shard|soul|talisman|trinket|Paladin's Oath|Poseidons Horn| Ring|Ring of|Ruby Ore|Thawing Star/i
 };
 
-Town.init = function() {
-	if (this.data.soldiers || this.data.blacksmith || this.data.magic) { // Need to reparse with new code...
-		this.data = {};
-		Page.set('town_soldiers', 0);
-		Page.set('town_blacksmith', 0);
-		Page.set('town_magic', 0);
-	}
-};
-
 Town.parse = function(change) {
 	if (!change) {
 		var unit = Town.data, page = Page.page.substr(5);
@@ -7057,7 +7047,7 @@ global = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in AddCSS: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCSS: " + err);
             return false;
         }
     },
@@ -7079,7 +7069,7 @@ global = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in alert: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in alert: " + err);
             return false;
         }
     },
@@ -7145,7 +7135,7 @@ gm = {
 
             return value == y && value.toString() == y.toString();
         } catch (err) {
-            gm.log("ERROR in gm.isInt: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.isInt: " + err);
             return false;
         }
     },
@@ -7165,7 +7155,7 @@ gm = {
             GM_setValue(global.gameName + "__" + n, v);
             return v;
         } catch (err) {
-            gm.log("ERROR in gm.setValue: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.setValue: " + err);
             return null;
         }
     },
@@ -7435,7 +7425,7 @@ nHtml = {
         var xp = ".//" + tag + "[" + className + "]";
         try {
             if (obj === null) {
-                gm.log('Trying to find xpath with null obj:' + xp);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Trying to find xpath with null obj:' + xp);
                 return null;
             }
 
@@ -7445,7 +7435,7 @@ nHtml = {
 
             q = subDocument.evaluate(xp, obj, null, this.xpath.first, null);
         } catch (err) {
-            gm.log("XPath Failed:" + xp + "," + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "XPath Failed:" + xp + "," + err);
         }
 
         if (q && q.singleNodeValue) {
@@ -7580,14 +7570,14 @@ nHtml = {
     ResetIFrame: function (key) {
         var iframe = document.getElementById(key);
         if (iframe) {
-            gm.log("Deleting iframe = " + key);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Deleting iframe = " + key);
             iframe.parentNode.removeChild(iframe);
         } else {
-            gm.log("Frame not found = " + key);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Frame not found = " + key);
         }
 
         if (document.getElementById(key)) {
-            gm.log("Found iframe");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found iframe");
         }
     },
 
@@ -7604,18 +7594,18 @@ nHtml = {
     },
 
     ScrollToBottom: function () {
-        //gm.log("Scroll Height: " + document.body.scrollHeight);
+        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll Height: " + document.body.scrollHeight);
         if (document.body.scrollHeight) {
             if (global.is_chrome) {
                 var dh = document.body.scrollHeight;
                 var ch = document.body.clientHeight;
                 if (dh > ch) {
                     var moveme = dh - ch;
-                    gm.log("Scrolling down by: " + moveme + "px");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling down by: " + moveme + "px");
                     window.scroll(0, moveme);
-                    gm.log("Scrolled ok");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
                 } else {
-                    gm.log("Not scrolling to bottom. Client height is greater than document height!");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not scrolling to bottom. Client height is greater than document height!");
                 }
             } else {
                 window.scrollBy(0, document.body.scrollHeight);
@@ -7625,9 +7615,9 @@ nHtml = {
 
     ScrollToTop: function () {
         if (global.is_chrome) {
-            gm.log("Scrolling to top");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling to top");
             window.scroll(0, 0);
-            gm.log("Scrolled ok");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
         } else {
             window.scrollByPages(-1000);
         }
@@ -7691,7 +7681,7 @@ caap = {
             this.CheckResults();
             return true;
         } catch (err) {
-            gm.log("ERROR in init: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in init: " + err);
             return false;
         }
     },
@@ -7707,7 +7697,7 @@ caap = {
             window.location.href = url;
             return true;
         } catch (err) {
-            gm.log("ERROR in VisitUrl: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in VisitUrl: " + err);
             return false;
         }
     },
@@ -7734,7 +7724,7 @@ caap = {
             */
             return !obj.dispatchEvent(evt);
         } catch (err) {
-            gm.log("ERROR in Click: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Click: " + err);
             return undefined;
         }
     },
@@ -7752,7 +7742,7 @@ caap = {
 
             return this.VisitUrl("javascript:void(a46755028429_ajaxLinkSend('globalContainer', '" + link + "'))", loadWaitTime);
         } catch (err) {
-            gm.log("ERROR in ClickAjax: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClickAjax: " + err);
             return false;
         }
     },
@@ -7765,7 +7755,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in ClickWait: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClickWait: " + err);
             return false;
         }
     },
@@ -7797,14 +7787,14 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in BuildGeneralLists: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in BuildGeneralLists: " + err);
             return false;
         }
     },
 
     ClearGeneral: function (whichGeneral) {
         try {
-            gm.log('Setting ' + whichGeneral + ' to "Use Current"');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting ' + whichGeneral + ' to "Use Current"');
             gm.setValue(whichGeneral, 'Use Current');
             this.BuildGeneralLists();
             for (var generalType in this.standardGeneralList) {
@@ -7819,7 +7809,7 @@ caap = {
             this.ChangeDropDownList('LevelUpGeneral', this.generalList, gm.getValue('LevelUpGeneral', 'Use Current'));
             return true;
         } catch (err) {
-            gm.log("ERROR in ClearGeneral: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClearGeneral: " + err);
             return false;
         }
     },
@@ -7842,7 +7832,7 @@ caap = {
             gm.setValue('reset' + funcName, false);
             return true;
         } catch (err) {
-            gm.log("ERROR in oneMinuteUpdate: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in oneMinuteUpdate: " + err);
             return false;
         }
     },
@@ -7851,7 +7841,7 @@ caap = {
         try {
             var content = document.getElementById('content');
             if (!content) {
-                gm.log('No content to Navigate to ' + imageOnPage + ' using ' + pathToPage);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No content to Navigate to ' + imageOnPage + ' using ' + pathToPage);
                 return false;
             }
 
@@ -7863,7 +7853,7 @@ caap = {
             for (var s = pathList.length - 1; s >= 0; s -= 1) {
                 var a = nHtml.FindByAttrXPath(content, 'a', "contains(@href,'/" + pathList[s] + ".php') and not(contains(@href,'" + pathList[s] + ".php?'))");
                 if (a) {
-                    gm.log('Go to ' + pathList[s]);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Go to ' + pathList[s]);
                     gm.setValue('clickUrl', 'http://apps.facebook.com/castle_age/' + pathList[s] + '.php');
                     this.Click(a);
                     return true;
@@ -7876,23 +7866,23 @@ caap = {
 
                 var input = nHtml.FindByAttrContains(document.body, "input", "src", imageTest);
                 if (input) {
-                    gm.log('Click on image ' + input.src.match(/[\w.]+$/));
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Click on image ' + input.src.match(/[\w.]+$/));
                     this.Click(input);
                     return true;
                 }
 
                 var img = nHtml.FindByAttrContains(document.body, "img", "src", imageTest);
                 if (img) {
-                    gm.log('Click on image ' + img.src.match(/[\w.]+$/));
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Click on image ' + img.src.match(/[\w.]+$/));
                     this.Click(img);
                     return true;
                 }
             }
 
-            gm.log('Unable to Navigate to ' + imageOnPage + ' using ' + pathToPage);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to Navigate to ' + imageOnPage + ' using ' + pathToPage);
             return false;
         } catch (err) {
-            gm.log("ERROR in NavigateTo: " + imageOnPage + ' using ' + pathToPage + ' : ' + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in NavigateTo: " + imageOnPage + ' using ' + pathToPage + ' : ' + err);
             return false;
         }
     },
@@ -7924,7 +7914,7 @@ caap = {
 
             return null;
         } catch (err) {
-            gm.log("ERROR in CheckForImage: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckForImage: " + err);
             return null;
         }
     },
@@ -7938,7 +7928,7 @@ caap = {
             var now = (new Date().getTime());
             return (parseInt(nameOrNumber, 10) < (now - 1000 * seconds));
         } catch (err) {
-            gm.log("ERROR in WhileSinceDidIt: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in WhileSinceDidIt: " + err);
             return false;
         }
     },
@@ -7953,7 +7943,7 @@ caap = {
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            gm.log("ERROR in JustDidIt: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in JustDidIt: " + err);
             return false;
         }
     },
@@ -7964,12 +7954,12 @@ caap = {
                 throw "name not provided!";
             }
 
-            gm.log("Deceive Did It");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Deceive Did It");
             var now = (new Date().getTime()) - 6500000;
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            gm.log("ERROR in DeceiveDidIt: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DeceiveDidIt: " + err);
             return false;
         }
     },
@@ -7990,7 +7980,7 @@ caap = {
 
             return (nameTimer < now);
         } catch (err) {
-            gm.log("ERROR in CheckTimer: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckTimer: " + err);
             return false;
         }
     },
@@ -8036,7 +8026,7 @@ caap = {
                 return d_names[t_day] + " " + t_hour + ":" + t_min + " " + a_p;
             }
         } catch (err) {
-            gm.log("ERROR in FormatTime: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in FormatTime: " + err);
             return "Time Err";
         }
     },
@@ -8057,7 +8047,7 @@ caap = {
             newTime.setTime(parseInt(nameTimer, 10));
             return this.FormatTime(newTime);
         } catch (err) {
-            gm.log("ERROR in DisplayTimer: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DisplayTimer: " + err);
             return false;
         }
     },
@@ -8077,7 +8067,7 @@ caap = {
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            gm.log("ERROR in SetTimer: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetTimer: " + err);
             return false;
         }
     },
@@ -8085,10 +8075,10 @@ caap = {
     NumberOnly: function (num) {
         try {
             var numOnly = parseFloat(num.toString().replace(new RegExp("[^0-9\\.]", "g"), ''));
-            //gm.log("NumberOnly: " + numOnly);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "NumberOnly: " + numOnly);
             return numOnly;
         } catch (err) {
-            gm.log("ERROR in NumberOnly: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in NumberOnly: " + err);
             return null;
         }
     },
@@ -8097,7 +8087,7 @@ caap = {
         try {
             return html.replace(new RegExp("\\&[^;]+;", "g"), '');
         } catch (err) {
-            gm.log("ERROR in RemoveHtmlJunk: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RemoveHtmlJunk: " + err);
             return null;
         }
     },
@@ -8112,7 +8102,7 @@ caap = {
             $('#' + divName).append(text);
             return true;
         } catch (err) {
-            gm.log("ERROR in AppendTextToDiv: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AppendTextToDiv: " + err);
             return false;
         }
     },
@@ -8157,7 +8147,7 @@ caap = {
             htmlCode += '</select>';
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in MakeDropDown: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeDropDown: " + err);
             return '';
         }
     },
@@ -8189,7 +8179,7 @@ caap = {
             htmlCode += '</select>';
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in DBDropDown: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DBDropDown: " + err);
             return '';
         }
     },
@@ -8214,7 +8204,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in MakeCheckBox: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeCheckBox: " + err);
             return '';
         }
     },
@@ -8236,7 +8226,7 @@ caap = {
             var htmlCode = " <input type='text' id='caap_" + idName + "' " + formatParms + " title=" + '"' + instructions + '" ' + "value='" + gm.getValue(idName, '') + "' />";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in MakeNumberForm: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeNumberForm: " + err);
             return '';
         }
     },
@@ -8252,7 +8242,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in MakeCheckTR: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeCheckTR: " + err);
             return '';
         }
     },
@@ -8263,7 +8253,7 @@ caap = {
                 (gm.getValue(parentId, false) ? 'block' : 'none') + "'>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddCollapsingDiv: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCollapsingDiv: " + err);
             return '';
         }
     },
@@ -8282,7 +8272,7 @@ caap = {
                 "<div id='caap_" + controlId + "' style='display: " + currentDisplay + "'>";
             return toggleCode;
         } catch (err) {
-            gm.log("ERROR in ToggleControl: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ToggleControl: " + err);
             return '';
         }
     },
@@ -8292,7 +8282,7 @@ caap = {
             var htmlCode = "<textarea title=" + '"' + instructions + '"' + " type='text' id='caap_" + idName + "' " + formatParms + ">" + gm.getValue(idName, '') + "</textarea>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in MakeTextBox: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeTextBox: " + err);
             return '';
         }
     },
@@ -8307,7 +8297,7 @@ caap = {
             gm.setValue(idName, boxText);
             return true;
         } catch (err) {
-            gm.log("ERROR in SaveBoxText: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveBoxText: " + err);
             return false;
         }
     },
@@ -8326,7 +8316,7 @@ caap = {
 
             $('#caap_' + idName).html(mess);
         } catch (err) {
-            gm.log("ERROR in SetDivContent: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetDivContent: " + err);
         }
     },
 
@@ -8389,7 +8379,7 @@ caap = {
             $("#caap_" + idName + " option[value='" + value + "']").attr('selected', 'selected');
             return true;
         } catch (err) {
-            gm.log("ERROR in SelectDropOption: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SelectDropOption: " + err);
             return false;
         }
     },
@@ -8400,7 +8390,7 @@ caap = {
             $("#stopAutoQuest").css('display', 'block');
             return true;
         } catch (err) {
-            gm.log("ERROR in ShowAutoQuest: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ShowAutoQuest: " + err);
             return false;
         }
     },
@@ -8411,7 +8401,7 @@ caap = {
             $("#stopAutoQuest").css('display', 'none');
             return true;
         } catch (err) {
-            gm.log("ERROR in ClearAutoQuest: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClearAutoQuest: " + err);
             return false;
         }
     },
@@ -8422,7 +8412,7 @@ caap = {
             this.ClearAutoQuest();
             return true;
         } catch (err) {
-            gm.log("ERROR in ManualAutoQuest: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ManualAutoQuest: " + err);
             return false;
         }
     },
@@ -8435,7 +8425,7 @@ caap = {
                 if (dropList.hasOwnProperty(item)) {
                     if (item == '0' && !option) {
                         gm.setValue(idName, dropList[item]);
-                        gm.log("Saved: " + idName + "  Value: " + dropList[item]);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Saved: " + idName + "  Value: " + dropList[item]);
                     }
 
                     $("#caap_" + idName).append("<option value='" + dropList[item] + "'>" + dropList[item] + "</option>");
@@ -8449,7 +8439,7 @@ caap = {
             }
             return true;
         } catch (err) {
-            gm.log("ERROR in ChangeDropDownList: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ChangeDropDownList: " + err);
             return false;
         }
     },
@@ -8498,7 +8488,7 @@ caap = {
 
             return {x: newLeft, y: newTop};
         } catch (err) {
-            gm.log("ERROR in GetControlXY: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetControlXY: " + err);
             return {x: 0, y: 0};
         }
     },
@@ -8511,7 +8501,7 @@ caap = {
             gm.setValue('caap_top_zIndex', '1');
             gm.setValue('caap_div_zIndex', '2');
         } catch (err) {
-            gm.log("ERROR in SaveControlXY: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveControlXY: " + err);
         }
     },
 
@@ -8540,7 +8530,7 @@ caap = {
 
             return {x: newLeft, y: newTop};
         } catch (err) {
-            gm.log("ERROR in GetDashboardXY: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetDashboardXY: " + err);
             return {x: 0, y: 0};
         }
     },
@@ -8553,7 +8543,7 @@ caap = {
             gm.setValue('caap_div_zIndex', '1');
             gm.setValue('caap_top_zIndex', '2');
         } catch (err) {
-            gm.log("ERROR in SaveDashboardXY: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveDashboardXY: " + err);
         }
     },
 
@@ -8617,7 +8607,7 @@ caap = {
             $("#caap_ResetMenuLocation").button();
             return true;
         } catch (err) {
-            gm.log("ERROR in AddControl: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddControl: " + err);
             return false;
         }
     },
@@ -8632,7 +8622,7 @@ caap = {
             htmlCode += "<div id='caapPaused' style='display: " + gm.getValue('caapPause', 'block') + "'><b>Paused on mouse click.</b><br /><a href='javascript:;' id='caapRestart' >Click here to restart</a></div><hr />";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddPauseMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddPauseMenu: " + err);
             return false;
         }
     },
@@ -8646,7 +8636,7 @@ caap = {
             htmlCode += this.MakeCheckTR("Disable Autoplayer", 'Disabled', false, '', autoRunInstructions) + '</table><hr />';
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddDisableMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDisableMenu: " + err);
             return false;
         }
     },
@@ -8681,7 +8671,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddCashHealthMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCashHealthMenu: " + err);
             return false;
         }
     },
@@ -8736,7 +8726,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddQuestMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddQuestMenu: " + err);
             return false;
         }
     },
@@ -8895,7 +8885,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddBattleMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddBattleMenu: " + err);
             return false;
         }
     },
@@ -8992,7 +8982,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddMonsterMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddMonsterMenu: " + err);
             return false;
         }
     },
@@ -9021,7 +9011,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddMonsterFinderMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddMonsterFinderMenu: " + err);
             return false;
         }
     },
@@ -9063,7 +9053,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddReconMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddReconMenu: " + err);
             return false;
         }
     },
@@ -9121,7 +9111,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddGeneralsMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddGeneralsMenu: " + err);
             return false;
         }
     },
@@ -9192,7 +9182,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddSkillPointsMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddSkillPointsMenu: " + err);
             return false;
         }
     },
@@ -9320,7 +9310,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddOtherOptionsMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddOtherOptionsMenu: " + err);
             return false;
         }
     },
@@ -9338,7 +9328,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            gm.log("ERROR in AddFooterMenu: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddFooterMenu: " + err);
             return false;
         }
     },
@@ -9382,7 +9372,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in AddColorWheels: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddColorWheels: " + err);
             return false;
         }
     },
@@ -9455,7 +9445,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in AddDashboard: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDashboard: " + err);
             return false;
         }
     },
@@ -9501,7 +9491,7 @@ caap = {
             if (!this.oneMinuteUpdate('dashboard') && $('#caap_infoMonster').html() && $('#caap_infoMonster').html()) {
                 /*
                 if (this.UpdateDashboardWaitLog) {
-                    gm.log("Dashboard update is waiting on oneMinuteUpdate");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Dashboard update is waiting on oneMinuteUpdate");
                     this.UpdateDashboardWaitLog = false;
                 }
                 */
@@ -9509,7 +9499,7 @@ caap = {
                 return false;
             }
 
-            //gm.log("Updating Dashboard");
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Updating Dashboard");
             this.UpdateDashboardWaitLog = true;
             var html = "<table width=570 cellpadding=0 cellspacing=0 ><tr>";
             var displayItemList = ['Name', 'Damage', 'Damage%', 'Fort%', 'TimeLeft', 'T2K', 'Phase', 'Link'];
@@ -9554,7 +9544,7 @@ caap = {
 
                 html += caap.makeTd(monster, color);
                 displayItemList.forEach(function (displayItem) {
-                    //gm.log(' displayItem '+ displayItem + ' value '+ gm.getObjVal(monster,displayItem));
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + ' displayItem '+ displayItem + ' value '+ gm.getObjVal(monster,displayItem));
                     if (displayItem == 'Phase' && color == 'grey') {
                         html += caap.makeTd(gm.getObjVal(monsterObj, 'status'), color);
                     } else {
@@ -9638,7 +9628,7 @@ caap = {
             $("#caap_infoTargets1").html(html);
             return true;
         } catch (err) {
-            gm.log("ERROR in UpdateDashboard: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in UpdateDashboard: " + err);
             return false;
         }
     },
@@ -9678,7 +9668,7 @@ caap = {
             gm.setValue('resetdashboard', true);
             return true;
         } catch (err) {
-            gm.log("ERROR in dbDisplayListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in dbDisplayListener: " + err);
             return false;
         }
     },
@@ -9712,7 +9702,7 @@ caap = {
             $('#caap_clearTargets').click(this.clearTargetsButtonListener);
             return true;
         } catch (err) {
-            gm.log("ERROR in AddDBListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDBListener: " + err);
             return false;
         }
     },
@@ -9747,7 +9737,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in SetDisplay: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetDisplay: " + err);
             return false;
         }
     },
@@ -9755,7 +9745,7 @@ caap = {
     CheckBoxListener: function (e) {
         try {
             var idName = e.target.id.replace(/caap_/i, '');
-            gm.log("Change: setting '" + idName + "' to " + e.target.checked);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Change: setting '" + idName + "' to " + e.target.checked);
             gm.setValue(idName, e.target.checked);
             if (e.target.className) {
                 caap.SetDisplay(e.target.className, e.target.checked);
@@ -9763,7 +9753,7 @@ caap = {
 
             switch (idName) {
             case "AutoStatAdv" :
-                //gm.log("AutoStatAdv");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AutoStatAdv");
                 if (e.target.checked) {
                     caap.SetDisplay('Status_Normal', false);
                     caap.SetDisplay('Status_Adv', true);
@@ -9775,7 +9765,7 @@ caap = {
                 caap.statsMatch = true;
                 break;
             case "HideAds" :
-                //gm.log("HideAds");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "HideAds");
                 if (e.target.checked) {
                     $('.UIStandardFrame_SidebarAds').css('display', 'none');
                 } else {
@@ -9784,7 +9774,7 @@ caap = {
 
                 break;
             case "BannerDisplay" :
-                //gm.log("HideAds");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "HideAds");
                 if (e.target.checked) {
                     $('#caap_BannerHide').css('display', 'block');
                 } else {
@@ -9793,20 +9783,20 @@ caap = {
 
                 break;
             case "IgnoreBattleLoss" :
-                //gm.log("IgnoreBattleLoss");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "IgnoreBattleLoss");
                 if (e.target.checked) {
-                    gm.log("Ignore Battle Losses has been enabled.");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Ignore Battle Losses has been enabled.");
                     gm.deleteValue("BattlesLostList");
-                    gm.log("Battle Lost List has been cleared.");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Battle Lost List has been cleared.");
                 }
 
                 break;
             case "SetTitle" :
-                //gm.log("SetTitle");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitle");
             case "SetTitleAction" :
-                //gm.log("SetTitleAction");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitleAction");
             case "SetTitleName" :
-                //gm.log("SetTitleName");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitleName");
                 if (e.target.checked) {
                     var DocumentTitle = '';
                     if (gm.getValue('SetTitleAction', false)) {
@@ -9827,7 +9817,7 @@ caap = {
 
                 break;
             case "unlockMenu" :
-                //gm.log("unlockMenu");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "unlockMenu");
                 if (e.target.checked) {
                     $(":input[id^='caap_']").attr({disabled: true});
                     caap.caapDivObject.css('cursor', 'move').draggable({
@@ -9867,7 +9857,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in CheckBoxListener: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckBoxListener: " + e);
             return false;
         }
     },
@@ -9877,7 +9867,7 @@ caap = {
             var idName = e.target.id.replace(/caap_/i, ''),
                 value = e.target.value;
 
-            gm.log('Change: setting "' + idName + '" to "' + e.target.value + '"');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + e.target.value + '"');
 
             if (/Style+/.test(idName)) {
                 switch (idName) {
@@ -9912,7 +9902,7 @@ caap = {
             gm.setValue(idName, e.target.value);
             return true;
         } catch (err) {
-            gm.log("ERROR in TextBoxListener: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in TextBoxListener: " + e);
             return false;
         }
     },
@@ -9924,7 +9914,7 @@ caap = {
                     value = e.target.options[e.target.selectedIndex].value,
                     title = e.target.options[e.target.selectedIndex].title;
 
-                gm.log('Change: setting "' + idName + '" to "' + value + '" with title "' + title + '"');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + value + '" with title "' + title + '"');
                 gm.setValue(idName, value);
                 e.target.title = title;
                 //caap.SelectDropOption(idName, value);
@@ -10046,7 +10036,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in DropBoxListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DropBoxListener: " + err);
             return false;
         }
     },
@@ -10056,7 +10046,7 @@ caap = {
             var idName = e.target.id.replace(/caap_/i, ''),
                 value = e.target.value;
 
-            gm.log('Change: setting "' + idName + '" to "' + value + '"');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + value + '"');
             if (idName == 'orderbattle_monster' || idName == 'orderraid') {
                 gm.setValue('monsterReview', 0);
                 gm.setValue('monsterReviewCounter', -3);
@@ -10067,7 +10057,7 @@ caap = {
             caap.SaveBoxText(idName);
             return true;
         } catch (err) {
-            gm.log("ERROR in TextAreaListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in TextAreaListener: " + err);
             return false;
         }
     },
@@ -10093,7 +10083,7 @@ caap = {
             gm.setValue('caapPause', 'block');
             return true;
         } catch (err) {
-            gm.log("ERROR in PauseListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in PauseListener: " + err);
             return false;
         }
     },
@@ -10128,7 +10118,7 @@ caap = {
             caap.waitingForDomLoad = false;
             return true;
         } catch (err) {
-            gm.log("ERROR in RestartListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RestartListener: " + err);
             return false;
         }
     },
@@ -10173,7 +10163,7 @@ caap = {
             $(":input[id^='caap_']").attr({disabled: false});
             return true;
         } catch (err) {
-            gm.log("ERROR in ResetMenuLocationListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ResetMenuLocationListener: " + err);
             return false;
         }
     },
@@ -10184,12 +10174,12 @@ caap = {
                 subDiv = document.getElementById(subId);
 
             if (subDiv.style.display == "block") {
-                gm.log('Folding: ' + subId);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Folding: ' + subId);
                 subDiv.style.display = "none";
                 e.target.innerHTML = e.target.innerHTML.replace(/-/, '+');
                 gm.setValue('Control_' + subId.replace(/caap_/i, ''), "none");
             } else {
-                gm.log('Unfolding: ' + subId);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unfolding: ' + subId);
                 subDiv.style.display = "block";
                 e.target.innerHTML = e.target.innerHTML.replace(/\+/, '-');
                 gm.setValue('Control_' + subId.replace(/caap_/i, ''), "block");
@@ -10197,7 +10187,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in FoldingBlockListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in FoldingBlockListener: " + err);
             return false;
         }
     },
@@ -10213,10 +10203,10 @@ caap = {
                 gm.setValue('clickUrl', obj.href);
             }
 
-            //gm.log('globalContainer: ' + obj.href);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'globalContainer: ' + obj.href);
             return true;
         } catch (err) {
-            gm.log("ERROR in whatClickedURLListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in whatClickedURLListener: " + err);
             return false;
         }
     },
@@ -10232,14 +10222,14 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in windowResizeListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in windowResizeListener: " + err);
             return false;
         }
     },
 
     AddListeners: function () {
         try {
-            gm.log("Adding listeners for caap_div");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Adding listeners for caap_div");
             if ($('#caap_div').length === 0) {
                 throw "Unable to find div for caap_div";
             }
@@ -10280,7 +10270,7 @@ caap = {
             $('#caap_ResetMenuLocation').click(this.ResetMenuLocationListener);
             $('#caap_resetElite').click(function (e) {
 				Elite.runtime.waitelite = 0;
-				gm.log(' elite run ' + Elite.runtime.waitelite);
+				console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + ' elite run ' + Elite.runtime.waitelite);
                 if (!gm.getValue('FillArmy', false)) {
                     gm.deleteValue(caap.friendListType.giftc.name + 'Requested');
                     gm.deleteValue(caap.friendListType.giftc.name + 'Responded');
@@ -10296,7 +10286,7 @@ caap = {
             $('#stopAutoQuest').click(function (e) {
                 gm.setValue('AutoQuest', '');
                 gm.setValue('WhyQuest', 'Manual');
-                gm.log('Change: setting stopAutoQuest and go to Manual');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting stopAutoQuest and go to Manual');
                 caap.ManualAutoQuest();
             });
 
@@ -10348,7 +10338,7 @@ caap = {
 
                     caap.waitingForDomLoad = false;
 
-                    //gm.log("Refreshing DOM Listeners");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Refreshing DOM Listeners");
                     $('#app46755028429_globalContainer').find('a').unbind('click', caap.whatClickedURLListener);
                     $('#app46755028429_globalContainer').find('a').bind('click', caap.whatClickedURLListener);
 
@@ -10375,10 +10365,10 @@ caap = {
             We add our listener for the Display Select control.
             \-------------------------------------------------------------------------------------*/
             this.AddDBListener();
-            //gm.log("Listeners added for CAAP");
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Listeners added for CAAP");
             return true;
         } catch (e) {
-            gm.log("ERROR in AddListeners: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddListeners: " + e);
             return false;
         }
     },
@@ -10431,7 +10421,7 @@ caap = {
                 'dif': dif
             };
         } catch (e) {
-            gm.log("ERROR in GetStatusNumbers: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetStatusNumbers: " + e);
             return {
                 'num': 0,
                 'max': 0,
@@ -10469,7 +10459,7 @@ caap = {
                         gm.setValue('MyRank', this.stats.rank);
                         this.JustDidIt('MyRankLast');
                     } else {
-                        gm.log("Unknown rank " + rank + ':' + rankm[1].toString());
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unknown rank " + rank + ':' + rankm[1].toString());
                     }
                 }
 
@@ -10522,7 +10512,7 @@ caap = {
 
                 gm.setValue('Level', this.stats.level);
             } else {
-                gm.log('Could not find level re');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Could not find level re');
             }
 
             this.stats.rank = parseInt(gm.getValue('MyRank'), 10);
@@ -10538,7 +10528,7 @@ caap = {
                 this.stats.army = army;
                 var armyMess = "Army: " + this.stats.army;
             } else {
-                gm.log("Can't find armyRe in " + txtArmy);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't find armyRe in " + txtArmy);
             }
 
             // gold
@@ -10585,7 +10575,7 @@ caap = {
             // return true if probably working
             return cashObj && (health !== null);
         } catch (e) {
-            gm.log("ERROR GetStats: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR GetStats: " + e);
             return false;
         }
     },
@@ -10674,7 +10664,7 @@ caap = {
 
         var now = (new Date().getTime());
         var elapsedTime = now - parseInt(gm.getValue('performanceTimer', 0), 10);
-        gm.log('Performance Timer At ' + marker + ' Time elapsed: ' + elapsedTime);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Performance Timer At ' + marker + ' Time elapsed: ' + elapsedTime);
         gm.setValue('performanceTimer', now.toString());
     },
 
@@ -10690,24 +10680,24 @@ caap = {
             this.JustDidIt('CheckResultsTimer');
             gm.setValue('page', '');
             var pageUrl = gm.getValue('clickUrl');
-            //gm.log("Page url: " + pageUrl);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page url: " + pageUrl);
             var page = 'None';
             if (pageUrl.match(new RegExp("\/[^\/]+.php", "i"))) {
                 page = pageUrl.match(new RegExp("\/[^\/]+.php", "i"))[0].replace('/', '').replace('.php', '');
-                //gm.log("Page match: " + page);
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page match: " + page);
             }
 
             if (this.pageList[page]) {
                 if (this.CheckForImage(this.pageList[page].signaturePic)) {
                     page = gm.setValue('page', page);
-                    //gm.log("Page set value: " + page);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page set value: " + page);
                 }
 
                 if (this.pageList[page].subpages) {
                     this.pageList[page].subpages.forEach(function (subpage) {
                         if (caap.CheckForImage(caap.pageList[subpage].signaturePic)) {
                             page = gm.setValue('page', subpage);
-                            //gm.log("Page pubpage: " + page);
+                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page pubpage: " + page);
                         }
                     });
                 }
@@ -10720,14 +10710,14 @@ caap = {
             }
 
             if (gm.getValue('page', '')) {
-                gm.log('Checking results for ' + page);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Checking results for ' + page);
                 if (typeof this[this.pageList[page].CheckResultsFunction] == 'function') {
                     this[this.pageList[page].CheckResultsFunction](resultsText);
                 } else {
-                    gm.log('Check Results function not found: ' + this[this.pageList[page].CheckResultsFunction]);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Check Results function not found: ' + this[this.pageList[page].CheckResultsFunction]);
                 }
             } else {
-                gm.log('No results check defined for ' + page);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No results check defined for ' + page);
             }
 
             if (!this.stats.stamina) {
@@ -10743,14 +10733,14 @@ caap = {
             // Check for new gifts
             if (!gm.getValue('HaveGift')) {
                 if (nHtml.FindByAttrContains(document.body, 'a', 'href', 'reqs.php#confirm_')) {
-                    gm.log('We have a gift waiting!');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We have a gift waiting!');
                     gm.setValue('HaveGift', true);
                 } else {
                     var beepDiv = nHtml.FindByAttrContains(document.body, 'div', 'class', 'UIBeep_Title');
                     if (beepDiv) {
                         var beepText = $.trim(nHtml.GetText(beepDiv));
                         if (beepText.match(/sent you a gift/) && !beepText.match(/notification/)) {
-                            gm.log('We have a gift waiting');
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We have a gift waiting');
                             gm.setValue('HaveGift', true);
                         }
                     }
@@ -10782,7 +10772,7 @@ caap = {
                     var goldStored = this.NumberOnly(moneyElem.firstChild.data);
                     if (goldStored >= 0) {
                         gm.setValue('inStore', goldStored);
-                        //gm.log("Keep: Checked the gold in store: " + gm.getValue('inStore'));
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Keep: Checked the gold in store: " + gm.getValue('inStore'));
                     }
                 }
             }
@@ -10795,7 +10785,7 @@ caap = {
 
             this.performanceTimer('Done CheckResults');
         } catch (err) {
-            gm.log("ERROR in CheckResults: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults: " + err);
         }
     },
 
@@ -10806,7 +10796,7 @@ caap = {
 
     MaxEnergyQuest: function () {
         if (!gm.getValue('MaxIdleEnergy', 0)) {
-            gm.log("Changing to idle general to get Max energy");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max energy");
             return this.PassiveGeneral();
         }
 
@@ -10889,7 +10879,7 @@ caap = {
                 }
 
                 this.SetDivContent('quest_mess', 'Searching for quest.');
-                gm.log("Searching for quest");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Searching for quest");
             } else {
                 var energyCheck = this.CheckEnergy(gm.getObjVal('AutoQuest', 'energy'), gm.getValue('WhenQuest', 'Never'), 'quest_mess');
                 if (!energyCheck) {
@@ -10911,7 +10901,7 @@ caap = {
                     return true;
                 }
 
-                gm.log('Using level up general');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
             }
 
             switch (gm.getValue('QuestArea', 'Quest')) {
@@ -10967,9 +10957,9 @@ caap = {
                     if (this.SelectGeneral('LevelUpGeneral')) {
                         return true;
                     }
-                    gm.log('Using level up general');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
                 } else {
-                    gm.log('Clicking on quick switch general button.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick switch general button.');
                     this.Click(button);
                     return true;
                 }
@@ -10986,17 +10976,17 @@ caap = {
 
                 gm.setValue('storeRetrieve', '');
                 costToBuy = itemBuyPopUp.textContent.replace(new RegExp(".*\\$"), '').replace(new RegExp("[^0-9]{3,}.*"), '');
-                gm.log("costToBuy = " + costToBuy);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "costToBuy = " + costToBuy);
                 if (this.stats.cash < costToBuy) {
                     //Retrieving from Bank
                     if (this.stats.cash + (gm.getNumber('inStore', 0) - gm.getNumber('minInStore', 0)) >= costToBuy) {
-                        gm.log("Trying to retrieve: " + (costToBuy - this.stats.cash));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying to retrieve: " + (costToBuy - this.stats.cash));
                         gm.setValue("storeRetrieve", costToBuy - this.stats.cash);
                         return this.RetrieveFromBank(costToBuy - this.stats.cash);
                     } else {
                         gm.setValue('AutoQuest', '');
                         gm.setValue('WhyQuest', 'Manual');
-                        gm.log("Cant buy requires, stopping quest");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant buy requires, stopping quest");
                         this.ManualAutoQuest();
                         return false;
                     }
@@ -11004,12 +10994,12 @@ caap = {
 
                 button = this.CheckForImage('quick_buy_button.jpg');
                 if (button) {
-                    gm.log('Clicking on quick buy button.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick buy button.');
                     this.Click(button);
                     return true;
                 }
 
-                gm.log("Cant find buy button");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant find buy button");
                 return false;
             }
 
@@ -11024,37 +11014,37 @@ caap = {
                 costToBuy = button.previousElementSibling.previousElementSibling.previousElementSibling
                     .previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling
                     .firstChild.data.replace(new RegExp("[^0-9]", "g"), '');
-                gm.log("costToBuy = " + costToBuy);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "costToBuy = " + costToBuy);
                 if (this.stats.cash < costToBuy) {
                     //Retrieving from Bank
                     if (this.stats.cash + (gm.getNumber('inStore', 0) - gm.getNumber('minInStore', 0)) >= costToBuy) {
-                        gm.log("Trying to retrieve: " + (costToBuy - this.stats.cash));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying to retrieve: " + (costToBuy - this.stats.cash));
                         gm.setValue("storeRetrieve", costToBuy - this.stats.cash);
                         return this.RetrieveFromBank(costToBuy - this.stats.cash);
                     } else {
                         gm.setValue('AutoQuest', '');
                         gm.setValue('WhyQuest', 'Manual');
-                        gm.log("Cant buy General, stopping quest");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant buy General, stopping quest");
                         this.ManualAutoQuest();
                         return false;
                     }
                 }
 
-                gm.log('Clicking on quick buy general button.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick buy general button.');
                 this.Click(button);
                 return true;
             }
 
             var autoQuestDivs = this.CheckResults_quests(true);
             if (!gm.getObjVal('AutoQuest', 'name')) {
-                gm.log('Could not find AutoQuest.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Could not find AutoQuest.');
                 this.SetDivContent('quest_mess', 'Could not find AutoQuest.');
                 return false;
             }
 
             var autoQuestName = gm.getObjVal('AutoQuest', 'name');
             if (gm.getObjVal('AutoQuest', 'name') != autoQuestName) {
-                gm.log('New AutoQuest found.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'New AutoQuest found.');
                 this.SetDivContent('quest_mess', 'New AutoQuest found.');
                 return true;
             }
@@ -11064,7 +11054,7 @@ caap = {
                 var background = nHtml.FindByAttrContains(autoQuestDivs.tr, "div", "style", 'background-color');
                 if (background) {
                     if (background.style.backgroundColor == 'rgb(158, 11, 15)') {
-                        gm.log(" background.style.backgroundColor = " + background.style.backgroundColor);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + " background.style.backgroundColor = " + background.style.backgroundColor);
                         gm.setValue('storeRetrieve', 'general');
                         if (this.SelectGeneral('BuyGeneral')) {
                             return true;
@@ -11072,14 +11062,14 @@ caap = {
 
                         gm.setValue('storeRetrieve', '');
                         if (background.firstChild.firstChild.title) {
-                            gm.log("Clicking to buy " + background.firstChild.firstChild.title);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Clicking to buy " + background.firstChild.firstChild.title);
                             this.Click(background.firstChild.firstChild);
                             return true;
                         }
                     }
                 }
             } else {
-                gm.log('Can not buy quest item');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not buy quest item');
                 return false;
             }
 
@@ -11096,32 +11086,32 @@ caap = {
                         return true;
                     }
 
-                    gm.log('Using level up general');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
                 } else {
                     if (autoQuestDivs.genDiv !== undefined) {
-                        gm.log('Clicking on general ' + general);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on general ' + general);
                         this.Click(autoQuestDivs.genDiv);
                         return true;
                     } else {
-                        gm.log('Can not click on general ' + general);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not click on general ' + general);
                         return false;
                     }
                 }
             }
 
             if (autoQuestDivs.click !== undefined) {
-                gm.log('Clicking auto quest: ' + autoQuestName);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking auto quest: ' + autoQuestName);
                 gm.setValue('ReleaseControl', true);
                 this.Click(autoQuestDivs.click, 10000);
-                //gm.log("Quests: " + autoQuestName + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Quests: " + autoQuestName + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                 this.ShowAutoQuest();
                 return true;
             } else {
-                gm.log('Can not click auto quest: ' + autoQuestName);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not click auto quest: ' + autoQuestName);
                 return false;
             }
         } catch (err) {
-            gm.log("ERROR in Quests: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Quests: " + err);
             return false;
         }
     },
@@ -11129,14 +11119,14 @@ caap = {
     questName: null,
 
     QuestManually: function () {
-        gm.log("QuestManually: Setting manual quest options");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "QuestManually: Setting manual quest options");
         gm.setValue('AutoQuest', '');
         gm.setValue('WhyQuest', 'Manual');
         this.ManualAutoQuest();
     },
 
     UpdateQuestGUI: function () {
-        gm.log("UpdateQuestGUI: Setting drop down menus");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "UpdateQuestGUI: Setting drop down menus");
         this.SelectDropOption('QuestArea', gm.getValue('QuestArea'));
         this.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
     },
@@ -11157,7 +11147,7 @@ caap = {
                 ss = document.evaluate(".//div[contains(@id,'symbol_displaysymbolquest')]",
                     div, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                 if (ss.snapshotLength <= 0) {
-                    gm.log("Failed to find symbol_displaysymbolquest");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Failed to find symbol_displaysymbolquest");
                 }
 
                 for (s = 0; s < ss.snapshotLength; s += 1) {
@@ -11171,7 +11161,7 @@ caap = {
             ss = document.evaluate(".//div[contains(@class,'quests_background')]",
                 div, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
-                gm.log("Failed to find quests_background");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Failed to find quests_background");
                 return false;
             }
 
@@ -11209,7 +11199,7 @@ caap = {
                     if (expObj) {
                         experience = (this.NumberOnly(nHtml.GetText(expObj)));
                     } else {
-                        gm.log('cannot find experience:' + this.questName);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find experience:' + this.questName);
                     }
                 }
 
@@ -11229,7 +11219,7 @@ caap = {
                 }
 
                 if (!energy) {
-                    gm.log('cannot find energy for quest:' + this.questName);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find energy for quest:' + this.questName);
                     continue;
                 }
 
@@ -11239,12 +11229,12 @@ caap = {
                     var rewardHigh = this.NumberOnly(moneyM[2]);
                     reward = (rewardLow + rewardHigh) / 2;
                 } else {
-                    gm.log('no money found:' + this.questName + ' in ' + divTxt);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no money found:' + this.questName + ' in ' + divTxt);
                 }
 
                 var click = nHtml.FindByAttr(div, "input", "name", /^Do/);
                 if (!click) {
-                    gm.log('no button found:' + this.questName);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no button found:' + this.questName);
                     continue;
                 }
                 var influence = null;
@@ -11260,12 +11250,12 @@ caap = {
                     if (influenceList) {
                         influence = influenceList[1];
                     } else {
-                        gm.log("Influence div not found.");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Influence div not found.");
                     }
                 }
 
                 if (!influence) {
-                    gm.log('no influence found:' + this.questName + ' in ' + divTxt);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no influence found:' + this.questName + ' in ' + divTxt);
                 }
 
                 var general = 'none';
@@ -11288,7 +11278,7 @@ caap = {
                 }
 
                 if (s === 0) {
-                    gm.log("Adding Quest Labels and Listeners");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Adding Quest Labels and Listeners");
                 }
 
                 this.LabelQuests(div, energy, reward, experience, click);
@@ -11309,7 +11299,7 @@ caap = {
                                 pickQuestTF = true;
                             }
                         } else {
-                            gm.log('cannot find influence:' + this.questName + ': ' + influence);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find influence:' + this.questName + ': ' + influence);
                         }
 
                         break;
@@ -11320,7 +11310,7 @@ caap = {
                                 pickQuestTF = true;
                             }
                         } else {
-                            gm.log('cannot find influence:' + this.questName + ': ' + influence);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find influence:' + this.questName + ': ' + influence);
                         }
 
                         break;
@@ -11346,9 +11336,9 @@ caap = {
                     if (gm.getObjVal('AutoQuest', 'name') == this.questName) {
                         bestReward = rewardRatio;
                         var expRatio = experience / energy;
-                        gm.log("CheckResults_quests: Setting AutoQuest");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Setting AutoQuest");
                         gm.setValue('AutoQuest', 'name' + global.ls + this.questName + global.vs + 'energy' + global.ls + energy + global.vs + 'general' + global.ls + general + global.vs + 'expRatio' + global.ls + expRatio);
-                        //gm.log("CheckResults_quests: " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                         this.ShowAutoQuest();
                         autoQuestDivs.click  = click;
                         autoQuestDivs.tr     = div;
@@ -11359,7 +11349,7 @@ caap = {
 
             if (pickQuestTF) {
                 if (gm.getObjVal('AutoQuest', 'name')) {
-                    //gm.log("CheckResults_quests(pickQuestTF): " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests(pickQuestTF): " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                     this.ShowAutoQuest();
                     return autoQuestDivs;
                 }
@@ -11411,11 +11401,11 @@ caap = {
                         this.ChangeDropDownList('QuestSubArea', this.atlantisQuestList);
                         break;
                     case 'Atlantis':
-                        gm.log("CheckResults_quests: Final QuestSubArea: " + gm.getValue('QuestSubArea'));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Final QuestSubArea: " + gm.getValue('QuestSubArea'));
                         this.QuestManually();
                         break;
                     default :
-                        gm.log("CheckResults_quests: Unknown QuestSubArea: " + gm.getValue('QuestSubArea'));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Unknown QuestSubArea: " + gm.getValue('QuestSubArea'));
                         this.QuestManually();
                     }
 
@@ -11423,14 +11413,14 @@ caap = {
                     return false;
                 }
 
-                gm.log("CheckResults_quests: Finished QuestArea.");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Finished QuestArea.");
                 this.QuestManually();
                 return false;
             }
 
             return false;
         } catch (err) {
-            gm.log("ERROR in CheckResults_quests: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_quests: " + err);
             this.QuestManually();
             return false;
         }
@@ -11524,12 +11514,12 @@ caap = {
 
                 break;
             default :
-                gm.log("Error: cant find QuestSubArea: " + QuestSubArea);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error: cant find QuestSubArea: " + QuestSubArea);
             }
 
             return false;
         } catch (err) {
-            gm.log("ERROR in CheckCurrentQuestArea: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckCurrentQuestArea: " + err);
             return false;
         }
     },
@@ -11538,7 +11528,7 @@ caap = {
         try {
             var item_title = nHtml.FindByAttrXPath(questDiv, 'div', "@class='quest_desc' or @class='quest_sub_title'");
             if (!item_title) {
-                gm.log("Can't find quest description or sub-title");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't find quest description or sub-title");
                 return false;
             }
 
@@ -11548,20 +11538,20 @@ caap = {
 
             var firstb = item_title.getElementsByTagName('b')[0];
             if (!firstb) {
-                gm.log("Can't get bolded member out of " + item_title.innerHTML.toString());
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't get bolded member out of " + item_title.innerHTML.toString());
                 return false;
             }
 
             this.questName = $.trim(firstb.innerHTML.toString()).stripHTML();
             if (!this.questName) {
-                //gm.log('no quest name for this row: ' + div.innerHTML);
-                gm.log('no quest name for this row');
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no quest name for this row: ' + div.innerHTML);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no quest name for this row');
                 return false;
             }
 
             return this.questName;
         } catch (err) {
-            gm.log("ERROR in GetQuestName: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetQuestName: " + err);
             return false;
         }
     },
@@ -11611,7 +11601,7 @@ caap = {
                 }
             } else if (condition == 'At Max Energy') {
                 if (!gm.getValue('MaxIdleEnergy', 0)) {
-                    gm.log("Changing to idle general to get Max energy");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max energy");
                     this.PassiveGeneral();
                 }
 
@@ -11634,7 +11624,7 @@ caap = {
 
             return false;
         } catch (err) {
-            gm.log("ERROR in CheckEnergy: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckEnergy: " + err);
             return false;
         }
     },
@@ -11644,7 +11634,7 @@ caap = {
             element.addEventListener(type, this[listener], usecapture);
             return true;
         } catch (err) {
-            gm.log("ERROR in AddLabelListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddLabelListener: " + err);
             return false;
         }
     },
@@ -11681,7 +11671,7 @@ caap = {
                     gm.setValue('QuestSubArea', 'Kingdom of Heaven');
                 }
 
-                gm.log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             } else if (caap.CheckForImage('demi_quest_on.gif')) {
                 gm.setValue('QuestArea', 'Demi Quests');
@@ -11700,7 +11690,7 @@ caap = {
                     gm.setValue('QuestSubArea', 'Azeron');
                 }
 
-                gm.log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             } else if (caap.CheckForImage('tab_atlantis_on.gif')) {
                 gm.setValue('QuestArea', 'Atlantis');
@@ -11710,14 +11700,14 @@ caap = {
                     gm.setValue('QuestSubArea', 'Atlantis');
                 }
 
-                gm.log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             }
 
             caap.ShowAutoQuest();
             return true;
         } catch (err) {
-            gm.log("ERROR in LabelListener: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in LabelListener: " + err);
             return false;
         }
     },
@@ -11778,7 +11768,7 @@ caap = {
         if (resultsDiv) {
             var resultsText = $.trim(nHtml.GetText(resultsDiv));
             if (resultsText.match(/Your opponent is dead or too weak to battle/)) {
-                gm.log("This opponent is dead or hiding: " + this.lastBattleID);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "This opponent is dead or hiding: " + this.lastBattleID);
                 if (!this.doNotBattle) {
                     this.doNotBattle = this.lastBattleID;
                 } else {
@@ -11789,13 +11779,13 @@ caap = {
 
         var webSlice = nHtml.FindByAttrContains(document.body, 'img', 'src', 'arena_arena_guard');
         if (webSlice) {
-            gm.log('Checking Arena Guard');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Checking Arena Guard');
             webSlice = webSlice.parentNode.parentNode;
             var ss = document.evaluate(".//img[contains(@src,'ak.fbcdn.net')]", webSlice, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            gm.log('Arena Guard Slots Filled: ' + ss.snapshotLength);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Arena Guard Slots Filled: ' + ss.snapshotLength);
             if ((ss.snapshotLength < 10) && gm.getValue('ArenaEliteEnd', '') != 'NoArmy') {
                 gm.setValue('ArenaEliteNeeded', true);
-                gm.log('Arena Guard Needs To Be Filed.' + ss.snapshotLength);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Arena Guard Needs To Be Filed.' + ss.snapshotLength);
             }
         }
 
@@ -11806,7 +11796,7 @@ caap = {
                 userId = nameLink.href.match(/user=\d+/i);
                 userId = String(userId).substr(5);
                 gm.setValue("ArenaChainId", userId);
-                gm.log("Chain Attack: " + userId + "  Arena Battle");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack: " + userId + "  Arena Battle");
             } else {
                 var winresults = nHtml.FindByAttrContains(document.body, 'span', 'class', 'positive');
                 var bptxt = $.trim(nHtml.GetText(winresults.parentNode).toString());
@@ -11819,14 +11809,14 @@ caap = {
                 userId = String(userId).substr(5);
                 userName = $.trim(nHtml.GetText(nameLink));
                 var wins = 1;
-                gm.log("We Defeated " + userName + "!!");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We Defeated " + userName + "!!");
                 //Test if we should chain this guy
                 gm.setValue("BattleChainId", '');
                 var chainBP = gm.getValue('ChainBP', 'empty');
                 if (chainBP !== 'empty') {
                     if (bpnum >= Number(chainBP)) {
                         gm.setValue("BattleChainId", userId);
-                        gm.log("Chain Attack: " + userId + "  Battle Points:" + bpnum);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack: " + userId + "  Battle Points:" + bpnum);
                     } else {
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
@@ -11840,7 +11830,7 @@ caap = {
                 if (chainGold) {
                     if (goldnum >= chainGold) {
                         gm.setValue("BattleChainId", userId);
-                        gm.log("Chain Attack " + userId + " Gold:" + goldnum);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack " + userId + " Gold:" + goldnum);
                     } else {
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
@@ -11853,7 +11843,7 @@ caap = {
                 if (gm.getValue("BattleChainId", '')) {
                     var chainCount = gm.getNumber('ChainCount', 0) + 1;
                     if (chainCount >= gm.getNumber('MaxChains', 4)) {
-                        gm.log("Lets give this guy a break.");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Lets give this guy a break.");
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
                         } else {
@@ -11898,7 +11888,7 @@ caap = {
             userId = String(userId).substr(5);
             userName = $.trim(nHtml.GetText(nameLink));
 
-            gm.log("We Were Defeated By " + userName + ".");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We Were Defeated By " + userName + ".");
             gm.setValue('ChainCount', 0);
             if (gm.getValue('BattlesLostList', '').indexOf(global.vs + userId + global.vs) == -1) {
                 now = (new Date().getTime()).toString();
@@ -11959,7 +11949,7 @@ caap = {
                 if (!inp) {
                     continue;
                 } else {
-                    gm.log('inp.name is:' + inp.name);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'inp.name is:' + inp.name);
                 }
             }
 
@@ -11969,7 +11959,7 @@ caap = {
                     if (inputDuel.value == "false") {
                         continue;
                     } else {
-                        gm.log('dueling form found');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'dueling form found');
                     }
                 }
             }
@@ -12033,12 +12023,12 @@ caap = {
                     return true;
                 }
 
-                gm.log("target_id not found in battleForm");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "target_id not found in battleForm");
             }
 
-            gm.log("form not found in battleButton");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "form not found in battleButton");
         } else {
-            gm.log("battleButton not found");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "battleButton not found");
         }
 
         return false;
@@ -12113,10 +12103,10 @@ caap = {
         try {
             var invadeOrDuel = gm.getValue('BattleType');
             var target = "//input[contains(@src,'" + this.battles[type][invadeOrDuel] + "')]";
-            gm.log('target ' + target);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'target ' + target);
             var ss = document.evaluate(target, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
-                gm.log('Not on battlepage');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Not on battlepage');
                 return false;
             }
 
@@ -12147,7 +12137,7 @@ caap = {
                         yourArenaPoints = this.NumberOnly(pointstxt);
                     }
                     // var yourArenaPoints = this.NumberOnly(txt.match(/Points: \d+\ /i));
-                    gm.log('Your rank: ' + yourRankStr + ' ' + yourRank + ' Arena Points: ' + yourArenaPoints);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Your rank: ' + yourRankStr + ' ' + yourRank + ' Arena Points: ' + yourArenaPoints);
 
 
                     if (yourArenaGoal && yourArenaPoints) {
@@ -12156,10 +12146,10 @@ caap = {
                             var APLimit = gm.getNumber('APLimit', 0);
                             if (!APLimit) {
                                 gm.setValue('APLimit', yourArenaPoints + gm.getNumber('ArenaRankBuffer', 500));
-                                gm.log('We need ' + APLimit + ' as a buffer for current rank');
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We need ' + APLimit + ' as a buffer for current rank');
                             } else if (APLimit <= yourArenaPoints) {
                                 this.SetTimer('ArenaRankTimer', 1 * 60 * 60);
-                                gm.log('We are safely at rank: ' + yourRankStr + ' Points:' + yourArenaPoints);
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We are safely at rank: ' + yourRankStr + ' Points:' + yourArenaPoints);
                                 this.SetDivContent('battle_mess', 'Arena Rank ' + yourArenaGoal + ' Achieved');
                                 return false;
                             }
@@ -12168,7 +12158,7 @@ caap = {
                         }
                     }
                 } else {
-                    gm.log('Unable To Find Your Arena Rank');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable To Find Your Arena Rank');
                     yourRank = 0;
                 }
             } else {
@@ -12184,12 +12174,12 @@ caap = {
             var ARMax = gm.getNumber("FreshMeatARMax", 1000);
             var ARMin = gm.getNumber("FreshMeatARMin", 0);
 
-            //gm.log("my army/rank/level:" + this.stats.army + "/" + this.stats.rank + "/" + this.stats.level);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "my army/rank/level:" + this.stats.army + "/" + this.stats.rank + "/" + this.stats.level);
             for (var s = 0; s < ss.snapshotLength; s += 1) {
                 var button = ss.snapshotItem(s);
                 var tr = button;
                 if (!tr) {
-                    gm.log('No tr parent of button?');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No tr parent of button?');
                     continue;
                 }
 
@@ -12203,7 +12193,7 @@ caap = {
                     txt = tr.childNodes[3].childNodes[3].textContent;
                     levelm = this.battles.Raid.regex.exec(txt);
                     if (!levelm) {
-                        gm.log("Can't match battleRaidRe in " + txt);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't match battleRaidRe in " + txt);
                         continue;
                     }
 
@@ -12228,7 +12218,7 @@ caap = {
                     txt = $.trim(nHtml.GetText(tr));
                     levelm = this.battles.Freshmeat.regex.exec(txt);
                     if (!levelm) {
-                        gm.log("Can't match battleLevelRe in " + txt);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't match battleLevelRe in " + txt);
                         continue;
                     }
 
@@ -12257,11 +12247,11 @@ caap = {
                 armyRatio = Math.min(armyRatio, ARMax);
                 armyRatio = Math.max(armyRatio, ARMin);
                 if (armyRatio <= 0) {
-                    gm.log("Bad ratio");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Bad ratio");
                     continue;
                 }
 
-                gm.log("Army Ratio: " + armyRatio + " Level: " + level + " Rank: " + rank + " Army: " + army);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Army Ratio: " + armyRatio + " Level: " + level + " Rank: " + rank + " Army: " + army);
 
                 // if we know our army size, and this one is larger than armyRatio, don't battle
                 if (this.stats.army && (army > (this.stats.army * armyRatio))) {
@@ -12270,7 +12260,7 @@ caap = {
 
                 inp = nHtml.FindByAttrXPath(tr, "input", "@name='target_id'");
                 if (!inp) {
-                    gm.log("Could not find 'target_id' input");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
                     continue;
                 }
 
@@ -12283,13 +12273,13 @@ caap = {
                 var dfl = gm.getValue('BattlesLostList', '');
                 // don't battle people we recently lost to
                 if (dfl.indexOf(global.vs + userid + global.vs) >= 0) {
-                    gm.log("We lost to this id before: " + userid);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We lost to this id before: " + userid);
                     continue;
                 }
 
                 // don't battle people we've already battled too much
                 if (this.doNotBattle && this.doNotBattle.indexOf(userid) >= 0) {
-                    gm.log("We attacked this id before: " + userid);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We attacked this id before: " + userid);
                     continue;
                 }
 
@@ -12329,7 +12319,7 @@ caap = {
                     inp = nHtml.FindByAttrXPath(form, "input", "@name='target_id'");
                     if (inp) {
                         inp.value = chainId;
-                        gm.log("Chain attacking: " + chainId);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain attacking: " + chainId);
                         this.ClickBattleButton(anyButton);
                         this.lastBattleID = chainId;
                         this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12337,7 +12327,7 @@ caap = {
                         return true;
                     }
 
-                    gm.log("Could not find 'target_id' input");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
                 } else if (gm.getValue('PlusOneKills', false) && type == 'Raid') {
                     if (plusOneSafe) {
                         anyButton = ss.snapshotItem(0);
@@ -12346,7 +12336,7 @@ caap = {
                         if (inp) {
                             var firstId = inp.value;
                             inp.value = '200000000000001';
-                            gm.log("Target ID Overriden For +1 Kill. Expected Defender: " + firstId);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Target ID Overriden For +1 Kill. Expected Defender: " + firstId);
                             this.ClickBattleButton(anyButton);
                             this.lastBattleID = firstId;
                             this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12354,20 +12344,20 @@ caap = {
                             return true;
                         }
 
-                        gm.log("Could not find 'target_id' input");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
                     } else {
-                        gm.log("Not safe for +1 kill.");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not safe for +1 kill.");
                     }
                 } else {
                     for (var z = 0; z < count; z += 1) {
-                        //gm.log("safeTargets["+z+"].id = "+safeTargets[z].id+" safeTargets["+z+"].score = "+safeTargets[z].score);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "safeTargets["+z+"].id = "+safeTargets[z].id+" safeTargets["+z+"].score = "+safeTargets[z].score);
                         if (!this.lastBattleID && this.lastBattleID == safeTargets[z].id && z < count - 1) {
                             continue;
                         }
 
                         var bestButton = safeTargets[z].button;
                         if (bestButton !== null) {
-                            gm.log('Found Target score: ' + safeTargets[z].score + ' id: ' + safeTargets[z].id + ' Number: ' + safeTargets[z].targetNumber);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Found Target score: ' + safeTargets[z].score + ' id: ' + safeTargets[z].id + ' Number: ' + safeTargets[z].targetNumber);
                             this.ClickBattleButton(bestButton);
                             this.lastBattleID = safeTargets[z].id;
                             this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12375,7 +12365,7 @@ caap = {
                             return true;
                         }
 
-                        gm.log('Attack button is null');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Attack button is null');
                     }
                 }
             }
@@ -12383,13 +12373,13 @@ caap = {
             this.notSafeCount += 1;
             if (this.notSafeCount > 100) {
                 this.SetDivContent('battle_mess', 'Leaving Battle. Will Return Soon.');
-                gm.log('No safe targets limit reached. Releasing control for other processes.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No safe targets limit reached. Releasing control for other processes.');
                 this.notSafeCount = 0;
                 return false;
             }
 
             this.SetDivContent('battle_mess', 'No targets matching criteria');
-            gm.log('No safe targets: ' + this.notSafeCount);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No safe targets: ' + this.notSafeCount);
 
             if (type == 'Raid') {
                 var engageButton = this.monsterEngageButtons[gm.getValue('targetFromraid', '')];
@@ -12406,7 +12396,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in BattleFreshmeat: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in BattleFreshmeat: " + err);
             return this.ClickAjax('raid.php');
         }
     },
@@ -12423,9 +12413,9 @@ caap = {
             }
 
             if (gm.getValue('WhenBattle') == 'Stay Hidden' && !this.NeedToHide()) {
-                //gm.log("Not Hiding Mode: Safe To Wait For Other Activity.")
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not Hiding Mode: Safe To Wait For Other Activity.")
                 this.SetDivContent('battle_mess', 'We Dont Need To Hide Yet');
-                gm.log('We Dont Need To Hide Yet');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We Dont Need To Hide Yet');
                 return false;
             }
 
@@ -12436,15 +12426,15 @@ caap = {
             }
 
             var target = this.GetCurrentBattleTarget(mode);
-            //gm.log('Mode: ' + mode);
-            //gm.log('Target: ' + target);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Mode: ' + mode);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Target: ' + target);
             if (!target) {
-                gm.log('No valid battle target');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No valid battle target');
                 return false;
             }
 
             if (target == 'NoRaid') {
-                //gm.log('No Raid To Attack');
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No Raid To Attack');
                 return false;
             }
 
@@ -12457,7 +12447,7 @@ caap = {
             }
 
             if (this.WhileSinceDidIt('MyRankLast', 60 * 60)) {
-                gm.log('Visiting keep to get new rank');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Visiting keep to get new rank');
                 this.NavigateTo('keep');
                 return true;
             }
@@ -12478,7 +12468,7 @@ caap = {
                 if (chainButton) {
                     if (target != 'arena' && gm.getValue("BattleChainId", '')) {
                         this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-                        gm.log('Chaining Target: ' + gm.getValue("BattleChainId", ''));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Chaining Target: ' + gm.getValue("BattleChainId", ''));
                         this.ClickBattleButton(chainButton);
                         gm.setValue("BattleChainId", '');
                         return true;
@@ -12486,7 +12476,7 @@ caap = {
 
                     if (target == 'arena' && gm.getValue("ArenaChainId", '') && this.CheckStamina('Battle', 5)) {
                         this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-                        gm.log('Chaining Target: ' + gm.getValue("ArenaChainId", ''));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Chaining Target: ' + gm.getValue("ArenaChainId", ''));
                         this.ClickBattleButton(chainButton);
                         gm.setValue("ArenaChainId", '');
                         return true;
@@ -12494,7 +12484,7 @@ caap = {
                 }
             }
 
-            gm.log('Battle Target: ' + target);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Battle Target: ' + target);
 
             if (!this.notSafeCount) {
                 this.notSafeCount = 0;
@@ -12514,7 +12504,7 @@ caap = {
                 if (gm.getValue('clearCompleteRaids', false) && this.completeButton.raid) {
                     this.Click(this.completeButton.raid, 1000);
                     this.completeButton.raid = '';
-                    gm.log('Cleared a completed raid');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cleared a completed raid');
                     return true;
                 }
 
@@ -12527,7 +12517,7 @@ caap = {
                         return true;
                     }
 
-                    gm.log('Unable to engage raid ' + raidName);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to engage raid ' + raidName);
                     return false;
                 }
 
@@ -12549,7 +12539,7 @@ caap = {
 
                         return true;
                     }
-                    gm.log('Doing Raid UserID list, but no target');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Raid UserID list, but no target');
                     return false;
                 }
 
@@ -12574,7 +12564,7 @@ caap = {
 
                         return true;
                     }
-                    gm.log('Doing Freshmeat UserID list, but no target');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Freshmeat UserID list, but no target');
                     return false;
                 }
 
@@ -12600,7 +12590,7 @@ caap = {
                         return true;
                     }
 
-                    gm.log('Doing Arena UserID list, but no target');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Arena UserID list, but no target');
                     return false;
                 }
 
@@ -12608,7 +12598,7 @@ caap = {
             default:
                 var dfl = gm.getValue('BattlesLostList', '');
                 if (dfl.indexOf(global.vs + target + global.vs) >= 0) {
-                    gm.log('Avoiding Losing Target: ' + target);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Avoiding Losing Target: ' + target);
                     this.NextBattleTarget();
                     return true;
                 }
@@ -12632,11 +12622,11 @@ caap = {
                     this.NextBattleTarget();
                     return true;
                 }
-                gm.log('Doing default UserID list, but no target');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing default UserID list, but no target');
                 return false;
             }
         } catch (err) {
-            gm.log("ERROR in Battle: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Battle: " + err);
             return false;
         }
     },
@@ -13068,7 +13058,7 @@ caap = {
 
             return parseInt(value, 10);
         } catch (err) {
-            gm.log("ERROR in parseCondition: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in parseCondition: " + err);
             return false;
         }
     },
@@ -13089,7 +13079,7 @@ caap = {
 
             return words[count];
         } catch (err) {
-            gm.log("ERROR in getMonstType: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in getMonstType: " + err);
             return '';
         }
     },
@@ -13107,13 +13097,13 @@ caap = {
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    gm.log('On another player\'s keep.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
                     return false;
                 }
             } else {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + unsafeWindow.Env.user) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    gm.log('On another player\'s keep.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
                     return false;
                 }
             }
@@ -13186,7 +13176,7 @@ caap = {
             //gm.setValue('resetdashboard',true);
             return true;
         } catch (err) {
-            gm.log("ERROR in CheckResults_fightList: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_fightList: " + err);
             return false;
         }
     },
@@ -13210,7 +13200,7 @@ caap = {
             var nextSiegeAttackPlusSiegeDamage = 0;
             for (var s in boss.siegeClicks) {
                 if (boss.siegeClicks.hasOwnProperty(s)) {
-                    //gm.log('s ' + s + ' T2K ' + T2K+ ' hpLeft ' + hpLeft);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 's ' + s + ' T2K ' + T2K+ ' hpLeft ' + hpLeft);
                     if (s < siegeStage - 1  || clicksNeededInCurrentStage === 0) {
                         totalSiegeDamage += boss.siegeDam[s];
                         totalSiegeClicks += boss.siegeClicks[s];
@@ -13219,7 +13209,7 @@ caap = {
                     if (s == siegeStage - 1) {
                         attackDamPerHour = (damageDone - totalSiegeDamage) / timeUsed;
                         clicksPerHour = (totalSiegeClicks + boss.siegeClicks[s] - clicksNeededInCurrentStage) / timeUsed;
-                        //gm.log('Attack Damage Per Hour: ' + attackDamPerHour + ' Damage Done: ' + damageDone + ' Total Siege Damage: ' + totalSiegeDamage + ' Time Used: ' + timeUsed + ' Clicks Per Hour: ' + clicksPerHour);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Attack Damage Per Hour: ' + attackDamPerHour + ' Damage Done: ' + damageDone + ' Total Siege Damage: ' + totalSiegeDamage + ' Time Used: ' + timeUsed + ' Clicks Per Hour: ' + clicksPerHour);
                     }
 
                     if (s >= siegeStage - 1) {
@@ -13237,10 +13227,10 @@ caap = {
             }
 
             var t2kValue = Math.round(T2K * 10) / 10;
-            gm.log('T2K based on siege: ' + t2kValue + ' T2K estimate without calculating siege impacts: ' + Math.round(percentHealthLeft / (100 - percentHealthLeft) * timeLeft * 10) / 10);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'T2K based on siege: ' + t2kValue + ' T2K estimate without calculating siege impacts: ' + Math.round(percentHealthLeft / (100 - percentHealthLeft) * timeLeft * 10) / 10);
             return t2kValue;
         } catch (err) {
-            gm.log("ERROR in t2kCalc: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in t2kCalc: " + err);
             return 0;
         }
     },
@@ -13255,7 +13245,7 @@ caap = {
                 if (!webSlice) {
                     webSlice = this.CheckForImage('nm_top_2.jpg');
                     if (!webSlice) {
-                        gm.log('Can not find identifier for monster fight page.');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not find identifier for monster fight page.');
                         return;
                     }
                 }
@@ -13313,10 +13303,10 @@ caap = {
             //if (monsterTicker1 || monsterTicker2) {
             var monsterTicker = $("#app46755028429_monsterTicker");
             if (monsterTicker.length) {
-                //gm.log("Monster ticker found.");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monster ticker found.");
                 time = monsterTicker.text().split(":");
             } else {
-                gm.log("Could not locate Monster ticker.");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not locate Monster ticker.");
             }
 
             var boss_name = '';
@@ -13398,15 +13388,15 @@ caap = {
                         }
 
                         gm.setListObjVal('monsterOl', monster, 'Damage', damDone);
-                        //if (damDone) gm.log("Damage done = " + gm.getListObjVal('monsterOl',monster,'Damage'));
+                        //if (damDone) console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Damage done = " + gm.getListObjVal('monsterOl',monster,'Damage'));
                     } else {
-                        gm.log("Player hasn't done damage yet");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Player hasn't done damage yet");
                     }
                 } else {
-                    gm.log("couldn't get top table");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "couldn't get top table");
                 }
             } else {
-                gm.log("couldn't get dragoncontainer");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "couldn't get dragoncontainer");
             }
 
             var monsterConditions = gm.getListObjVal('monsterOl', monster, 'conditions', '');
@@ -13416,7 +13406,7 @@ caap = {
                 if (counter >= 0 && monsterList[counter].indexOf(monster) >= 0 &&
                     (nHtml.FindByAttrContains(document.body, 'a', 'href', '&action=collectReward') ||
                      nHtml.FindByAttrContains(document.body, 'input', 'alt', 'Collect Reward'))) {
-                    gm.log('Collecting Reward');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Collecting Reward');
                     gm.setListObjVal('monsterOl', monster, 'review', "1");
                     gm.setValue('monsterReviewCounter', counter -= 1);
                     gm.setListObjVal('monsterOl', monster, 'status', 'Collect Reward');
@@ -13443,12 +13433,12 @@ caap = {
                 var hpBar = null;
                 var imgHealthBar = nHtml.FindByAttrContains(document.body, "img", "src", monstHealthImg);
                 if (imgHealthBar) {
-                    //gm.log("Found monster health div.");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found monster health div.");
                     var divAttr = imgHealthBar.parentNode.getAttribute("style").split(";");
                     var attrWidth = divAttr[1].split(":");
                     hpBar = $.trim(attrWidth[1]);
                 } else {
-                    gm.log("Could not find monster health div.");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find monster health div.");
                 }
 
                 if (hpBar) {
@@ -13456,7 +13446,7 @@ caap = {
                     gm.setListObjVal('monsterOl', monster, 'Damage%', hp);
                     boss = this.monsterInfo[monstType];
                     if (!boss) {
-                        gm.log('Unknown monster');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unknown monster');
                         return;
                     }
                 }
@@ -13482,15 +13472,15 @@ caap = {
 
                         var divSeigeLogs = document.getElementById("app46755028429_siege_log");
                         if (divSeigeLogs && !currentPhase) {
-                            //gm.log("Found siege logs.");
+                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found siege logs.");
                             var divSeigeCount = divSeigeLogs.getElementsByTagName("div").length;
                             if (divSeigeCount) {
                                 currentPhase = Math.round(divSeigeCount / 4) + 1;
                             } else {
-                                gm.log("Could not count siege logs.");
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not count siege logs.");
                             }
                         } else {
-                            gm.log("Could not find siege logs.");
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find siege logs.");
                         }
                     }
 
@@ -13507,7 +13497,7 @@ caap = {
                     gm.setListObjVal('monsterOl', monster, 'T2K', T2K.toString() + ' hr');
                 }
             } else {
-                gm.log('Monster is dead or fled');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Monster is dead or fled');
                 gm.setListObjVal('monsterOl', monster, 'color', 'grey');
                 var dofCheck = gm.getListObjVal('monsterOl', monster, 'status');
                 if (dofCheck != 'Complete' && dofCheck != 'Collect Reward') {
@@ -13536,7 +13526,7 @@ caap = {
 
             // Start of Keep On Budget (KOB) code Part 1 -- required variables
 
-            gm.log('Start of Keep On Budget (KOB) Code');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Start of Keep On Budget (KOB) Code');
 
             //default is disabled for everything
             var KOBenable = false;
@@ -13556,15 +13546,15 @@ caap = {
             //create a temp variable so we don't need to call parseCondition more than once for each if statement
             var KOBtmp = this.parseCondition('kob', monsterConditions);
             if (isNaN(KOBtmp)) {
-                gm.log('NaN branch');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'NaN branch');
                 KOBenable = true;
                 KOBbiasHours = 0;
             } else if (!KOBtmp) {
-                gm.log('false branch');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'false branch');
                 KOBenable = false;
                 KOBbiasHours = 0;
             } else {
-                gm.log('passed value branch');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'passed value branch');
                 KOBenable = true;
                 KOBbiasHours = KOBtmp;
             }
@@ -13573,28 +13563,28 @@ caap = {
             if (this.InLevelUpMode() || this.stats.stamina.num >= this.stats.stamina.max - 5) {
                 KOBenable = false;
             }
-            gm.log('Level Up Mode: ' + this.InLevelUpMode() + ' Stamina Avail: ' + this.stats.stamina.num + ' Stamina Max: ' + this.stats.stamina.max);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Level Up Mode: ' + this.InLevelUpMode() + ' Stamina Avail: ' + this.stats.stamina.num + ' Stamina Max: ' + this.stats.stamina.max);
 
             //log results of previous two tests
-            gm.log('KOBenable: ' + KOBenable + ' KOB Bias Hours: ' + KOBbiasHours);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOBenable: ' + KOBenable + ' KOB Bias Hours: ' + KOBbiasHours);
 
             //Total Time alotted for monster
             var KOBtotalMonsterTime = this.monsterInfo[monstType].duration;
-            gm.log('Total Time for Monster: ' + KOBtotalMonsterTime);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Total Time for Monster: ' + KOBtotalMonsterTime);
 
             //Total Damage remaining
-            gm.log('HP left: ' + hp);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'HP left: ' + hp);
 
             //Time Left Remaining
             var KOBtimeLeft = parseInt(time[0], 10) + (parseInt(time[1], 10) * 0.0166);
-            gm.log('TimeLeft: ' + KOBtimeLeft);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'TimeLeft: ' + KOBtimeLeft);
 
             //calculate the bias offset for time remaining
             var KOBbiasedTF = KOBtimeLeft - KOBbiasHours;
 
             //Percentage of time remaining for the currently selected monster
             var KOBPercentTimeRemaining = Math.round(KOBbiasedTF / KOBtotalMonsterTime * 1000) / 10;
-            gm.log('Percent Time Remaining: ' + KOBPercentTimeRemaining);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Percent Time Remaining: ' + KOBPercentTimeRemaining);
 
             // End of Keep On Budget (KOB) code Part 1 -- required variables
 
@@ -13604,7 +13594,7 @@ caap = {
                 //used with KOB code
                 KOBmax = true;
                 //used with kob debugging
-                gm.log('KOB - max activated');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - max activated');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13613,7 +13603,7 @@ caap = {
                 //used with KOB code
                 KOBminFort = true;
                 //used with kob debugging
-                gm.log('KOB - MinFort activated');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - MinFort activated');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13623,7 +13613,7 @@ caap = {
                 //used with KOB code
                 KOBach = true;
                 //used with kob debugging
-                gm.log('KOB - achievement reached');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - achievement reached');
                 if (isTarget && lastDamDone < achLevel) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13635,10 +13625,10 @@ caap = {
                 // this line is required or we attack anyway.
                 gm.setListObjVal('monsterOl', monster, 'over', 'max');
                 //used with kob debugging
-                gm.log('KOB - budget reached');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - budget reached');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
-                    gm.log('This monster no longer a target due to kob');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'This monster no longer a target due to kob');
                 }
 
             } else {
@@ -13656,7 +13646,7 @@ caap = {
                 }, 2000);
             }
         } catch (err) {
-            gm.log("ERROR in CheckResults_viewFight: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_viewFight: " + err);
         }
     },
 
@@ -13666,7 +13656,7 @@ caap = {
                 return;
             }
 
-            //gm.log('Selecting monster');
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Selecting monster');
             // First we forget everything about who we already picked.
             gm.setValue('targetFrombattle_monster', '');
             gm.setValue('targetFromfortify', '');
@@ -13784,11 +13774,11 @@ caap = {
                                             this.monsterInfo[monstType].fort) {
                                         if (over == 'ach') {
                                             if (!firstFortOverAch) {
-                                                //gm.log('hitit');
+                                                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'hitit');
                                                 firstFortOverAch = monster;
                                             }
                                         } else if (over != 'max') {
-                                            //gm.log('norm hitit');
+                                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'norm hitit');
                                             firstFortUnderMax = monster;
                                         }
                                     }
@@ -13809,7 +13799,7 @@ caap = {
                         if (!gm.getValue('targetFromfortify', '')) {
                             gm.setValue('targetFromfortify', firstFortOverAch);
                         }
-                        //gm.log('fort under max ' + firstFortUnderMax + ' fort over Ach ' + firstFortOverAch + ' fort target ' + gm.getValue('targetFromfortify', ''));
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'fort under max ' + firstFortUnderMax + ' fort over Ach ' + firstFortOverAch + ' fort target ' + gm.getValue('targetFromfortify', ''));
                     }
 
                     // If we've got a monster for this selection type then we set the GM variables for the name
@@ -13866,7 +13856,7 @@ caap = {
 
             gm.setValue('resetdashboard', true);
         } catch (err) {
-            gm.log("ERROR in selectMonster: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in selectMonster: " + err);
         }
     },
 
@@ -13899,14 +13889,14 @@ caap = {
             }
 
             if (monster != monsterOnPage) {
-                gm.log('Looking for ' + monster + ' but on ' + monsterOnPage + '. Going back to select screen');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Looking for ' + monster + ' but on ' + monsterOnPage + '. Going back to select screen');
                 var monstPage = gm.getListObjVal('monsterOl', monster, 'page');
                 return this.NavigateTo('keep,' + monstPage);
             }
 
             return false;
         } catch (err) {
-            gm.log("ERROR in monsterConfirmRightPage: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in monsterConfirmRightPage: " + err);
             return false;
         }
     },
@@ -14016,11 +14006,11 @@ caap = {
                     /*-------------------------------------------------------------------------------------\
                     Now we use ajaxSendLink to display the monsters page.
                     \-------------------------------------------------------------------------------------*/
-                    gm.log('Reviewing ' + (counter + 1) + '/' + monsterObjList.length + ' ' + monster);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Reviewing ' + (counter + 1) + '/' + monsterObjList.length + ' ' + monster);
                     gm.setValue('ReleaseControl', true);
                     link = link.replace('http://apps.facebook.com/castle_age/', '');
                     link = link.replace('?', '?twt2&');
-                    //gm.log("Link: " + link);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Link: " + link);
                     //gm.setListObjVal('monsterOl', monster, 'review','pending');
                     this.ClickAjax(link);
                     gm.setValue('monsterRepeatCount', gm.getValue('monsterRepeatCount', 0) + 1);
@@ -14037,11 +14027,11 @@ caap = {
             gm.setValue('resetselectMonster', true);
             gm.setValue('resetdashboard', true);
             gm.setValue('monsterReviewCounter', -3);
-            gm.log('Done with monster/raid review.');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Done with monster/raid review.');
             this.SetDivContent('monster_mess', '');
             return true;
         } catch (err) {
-            gm.log("ERROR in MonsterReview: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MonsterReview: " + err);
             return false;
         }
     },
@@ -14056,7 +14046,7 @@ caap = {
             ///////////////// Reivew/Siege all monsters/raids \\\\\\\\\\\\\\\\\\\\\\
 
             if (gm.getValue('WhenMonster') == 'Stay Hidden' && this.NeedToHide() && this.CheckStamina('Monster', 1)) {
-                gm.log("Stay Hidden Mode: We're not safe. Go battle.");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stay Hidden Mode: We're not safe. Go battle.");
                 this.SetDivContent('monster_mess', 'Not Safe For Monster. Battle!');
                 return false;
             }
@@ -14069,7 +14059,7 @@ caap = {
 
             // Establish a delay timer when we are 1 stamina below attack level.
             // Timer includes 5 min for stamina tick plus user defined random interval
-            //gm.log(!this.InLevelUpMode() + " && " + this.stats.stamina.num + " >= " + (gm.getNumber('MonsterStaminaReq', 1) - 1) + " && " + this.CheckTimer('battleTimer') + " && " + gm.getNumber('seedTime', 0) > 0);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + !this.InLevelUpMode() + " && " + this.stats.stamina.num + " >= " + (gm.getNumber('MonsterStaminaReq', 1) - 1) + " && " + this.CheckTimer('battleTimer') + " && " + gm.getNumber('seedTime', 0) > 0);
             if (!this.InLevelUpMode() && this.stats.stamina.num == (gm.getNumber('MonsterStaminaReq', 1) - 1) && this.CheckTimer('battleTimer') && gm.getNumber('seedTime', 0) > 0) {
                 this.SetTimer('battleTimer', 5 * 60 + Math.floor(Math.random() * gm.getValue('seedTime', 0)));
                 this.SetDivContent('monster_mess', 'Monster Delay Until: ' + this.DisplayTimer('battleTimer'));
@@ -14211,7 +14201,7 @@ caap = {
                     this.Click(attackButton, 8000);
                     return true;
                 } else {
-                    gm.log('ERROR - No button to attack/fortify with.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'ERROR - No button to attack/fortify with.');
                     this.SetTimer('NotargetFrombattle_monster', 60);
                     return false;
                 }
@@ -14225,7 +14215,7 @@ caap = {
 
             if (gm.getValue('clearCompleteMonsters', false) && this.completeButton.battle_monster) {
                 this.Click(this.completeButton.battle_monster, 1000);
-                gm.log('Cleared a completed monster');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cleared a completed monster');
                 this.completeButton.battle_monster = '';
                 return true;
             }
@@ -14234,13 +14224,13 @@ caap = {
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                         firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    gm.log('On another player\'s keep.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
                     return this.NavigateTo('keep,battle_monster');
                 }
             } else {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + unsafeWindow.Env.user) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    gm.log('On another player\'s keep.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
                     return this.NavigateTo('keep,battle_monster');
                 }
             }
@@ -14252,11 +14242,11 @@ caap = {
                 return true;
             } else {
                 this.SetTimer('NotargetFrombattle_monster', 60);
-                gm.log('No "Engage" button for ' + monster);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No "Engage" button for ' + monster);
                 return false;
             }
         } catch (err) {
-            gm.log("ERROR in Monsters: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Monsters: " + err);
             return false;
         }
     },
@@ -14277,9 +14267,9 @@ caap = {
                     var demiPointList = nHtml.GetText(smallDeity.parentNode.parentNode.parentNode).match(/\d+ \/ 10/g);
                     if (demiPointList) {
                         gm.setList('DemiPointList', demiPointList);
-                        gm.log('DemiPointList: ' + demiPointList);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'DemiPointList: ' + demiPointList);
                         if (this.CheckTimer('DemiPointTimer')) {
-                            gm.log('Set DemiPointTimer to 6 hours, and check if DemiPoints done');
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Set DemiPointTimer to 6 hours, and check if DemiPoints done');
                             this.SetTimer('DemiPointTimer', 6 * 60 * 60);
                         }
 
@@ -14288,13 +14278,13 @@ caap = {
                             if (demiPointList.hasOwnProperty(demiPtItem)) {
                                 var demiPointStr = demiPointList[demiPtItem];
                                 if (!demiPointStr) {
-                                    gm.log("Continue due to demiPointStr: " + demiPointStr);
+                                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Continue due to demiPointStr: " + demiPointStr);
                                     continue;
                                 }
 
                                 var demiPoints = demiPointStr.split('/');
                                 if (demiPoints.length != 2) {
-                                    gm.log("Continue due to demiPoints: " + demiPoints);
+                                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Continue due to demiPoints: " + demiPoints);
                                     continue;
                                 }
 
@@ -14305,9 +14295,9 @@ caap = {
                             }
                         }
 
-                        gm.log('Demi Point Timer ' + this.DisplayTimer('DemiPointTimer') + ' demipoints done is  ' + gm.getValue('DemiPointsDone', false));
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Demi Point Timer ' + this.DisplayTimer('DemiPointTimer') + ' demipoints done is  ' + gm.getValue('DemiPointsDone', false));
                     } else {
-                        gm.log("Unable to get demiPointList");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to get demiPointList");
                     }
                 }
             }
@@ -14322,7 +14312,7 @@ caap = {
 
             return false;
         } catch (err) {
-            gm.log("ERROR in DemiPoints: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DemiPoints: " + err);
             return false;
         }
     },
@@ -14359,7 +14349,7 @@ caap = {
             this.newLevelUpMode = false;
             return false;
         } catch (err) {
-            gm.log("ERROR in InLevelUpMode: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in InLevelUpMode: " + err);
             return false;
         }
     },
@@ -14410,7 +14400,7 @@ caap = {
 
             if (when == 'At Max Stamina') {
                 if (!gm.getValue('MaxIdleStamina', 0)) {
-                    gm.log("Changing to idle general to get Max Stamina");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max Stamina");
                     this.PassiveGeneral();
                 }
 
@@ -14435,7 +14425,7 @@ caap = {
             this.SetDivContent('battle_mess', 'Waiting for more stamina: ' + this.stats.stamina.num + "/" + attackMinStamina);
             return false;
         } catch (err) {
-            gm.log("ERROR in CheckStamina: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckStamina: " + err);
             return false;
         }
     },
@@ -14448,12 +14438,12 @@ caap = {
     \-------------------------------------------------------------------------------------*/
     NeedToHide: function () {
         if (gm.getValue('WhenMonster', '') == 'Never') {
-            gm.log('Stay Hidden Mode: Monster battle not enabled');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Stay Hidden Mode: Monster battle not enabled');
             return true;
         }
 
         if (!gm.getValue('targetFrombattle_monster', '')) {
-            gm.log('Stay Hidden Mode: No monster to battle');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Stay Hidden Mode: No monster to battle');
             return true;
         }
     /*-------------------------------------------------------------------------------------\
@@ -14755,11 +14745,11 @@ caap = {
         var urlix = gm.getValue("urlix", "").replace("~", "");
         if (urlix === "" && gm.getValue("mfStatus", "") != "OpenMonster" && caap.WhileSinceDidIt("clearedMonsterFinderLinks", 24 * 60 * 60)) {
             gm.setValue("mfStatus", "");
-            gm.log("Resetting monster finder history");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Resetting monster finder history");
             this.clearLinks();
         }
 
-        gm.log("All checks passed to enter Monster Finder");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "All checks passed to enter Monster Finder");
         if (window.location.href.indexOf("filter=app_46755028429") < 0) {
             var mfstatus = gm.getValue("mfStatus", "");
             if (mfstatus == "OpenMonster") {
@@ -14795,7 +14785,7 @@ caap = {
         gm.setValue("delayPer", delayPer);
         gm.setValue("iterations", iterations);
         gm.setValue("iterationsRun", 0);
-        gm.log("Set mostRecentFeed");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Set mostRecentFeed");
         this.JustDidIt("checkedFeed");
         gm.setValue("monstersExhausted", false);
         this.bottomScroll();
@@ -14807,7 +14797,7 @@ caap = {
             return false;
         }
 
-        gm.log("Checking Monster: " + gm.getValue("navLink"));
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking Monster: " + gm.getValue("navLink"));
         this.mf_attackButton = this.CheckForImage('attack_monster_button.jpg');
         if (!this.mf_attackButton) {
             this.mf_attackButton = this.CheckForImage('seamonster_power.gif');
@@ -14833,12 +14823,12 @@ caap = {
 
         if (this.mf_attackButton) {
             var dam = this.CheckResults_viewFight();
-            gm.log("Found Attack Button.  Dam: " + dam);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found Attack Button.  Dam: " + dam);
             if (!dam) {
-                gm.log("No Damage to monster, Attacking");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Damage to monster, Attacking");
                 caap.Click(this.mf_attackButton);
                 window.setTimeout(function () {
-                    gm.log("Hand off to Monsters section");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Hand off to Monsters section");
                     gm.setValue("urlixc", gm.getValue("urlixc", "~") + "~" + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                     //caap.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                     gm.setValue("mfStatus", "MonsterFound");
@@ -14846,18 +14836,18 @@ caap = {
                     gm.setValue("navLink", "");
                     //caap.VisitUrl("http://apps.facebook.com/castle_age/battle_monster.php");
                     caap.NavigateTo('battle_monster');
-                    gm.log("Navigate to battle_monster");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Navigate to battle_monster");
                     window.setTimeout(function () {
                         gm.setValue('resetselectMonster', true);
                         gm.setValue('LastAction', "Idle");
-                        gm.log("resetselectMonster");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "resetselectMonster");
                         return true;
                     }, 4000);
 
                 }, 4000);
                 return false;
             } else {
-                gm.log("Already attacked this monster, find new one");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Already attacked this monster, find new one");
                 gm.setValue("urlixc", gm.getValue("urlixc", "~") + "~" + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                 //this.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                 gm.setValue("mfStatus", "TestMonster");
@@ -14865,14 +14855,14 @@ caap = {
                 return true;
             }
         } else {
-            gm.log("No Attack Button");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button");
             if (gm.getValue("waitMonsterLoad", 0) < 2) {
-                gm.log("No Attack Button, Pass" + gm.getValue("waitMonsterLoad"));
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button, Pass" + gm.getValue("waitMonsterLoad"));
                 gm.setValue("waitMonsterLoad", gm.getValue("waitMonsterLoad", 0) + 1);
                 gm.setValue("LastAction", "Idle");
                 return true;
             } else {
-                gm.log("No Attack Button, Find New Monster");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button, Find New Monster");
                 gm.setValue("urlixc", gm.getValue("urlixc", "~") + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                 //this.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                 gm.setValue("mfStatus", "TestMonster");
@@ -14883,7 +14873,7 @@ caap = {
     },
 
     mfMain: function () {
-        gm.log("Do Stuff " + new Date());
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Do Stuff " + new Date());
         if (gm.getValue("urlix", "") === "") {
             this.clearLinks();
         }
@@ -14891,9 +14881,9 @@ caap = {
         //this.maintainAllUrl();
         //this.redirectLinks();
         this.handleCTA();
-        gm.log("Scroll Up");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll Up");
         nHtml.ScrollToTop();
-        gm.log("Select Monster");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Select Monster");
         this.selectMonst();
     },
 
@@ -14905,7 +14895,7 @@ caap = {
 
     bottomScroll: function () {
         nHtml.ScrollToBottom();
-        //gm.log("Scroll To Bottom " + new Date() );
+        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll To Bottom " + new Date() );
         nHtml.setTimeout(function () {
             caap.olderPosts();
         }, gm.getValue("delayPer", 60000));
@@ -14917,23 +14907,23 @@ caap = {
             //var showMore = nHtml.getX('//a[@class=\'PagerMoreLink\']', document, nHtml.xpath.unordered);
             var showMore = nHtml.FindByAttrContains(document, "a", "class", "PagerMoreLink");
             if (showMore) {
-                gm.log("Showing more ...");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Showing more ...");
                 caap.Click(showMore);
-                gm.log("Link clicked.");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Link clicked.");
             } else {
-                gm.log("PagerMoreLink not found!");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "PagerMoreLink not found!");
             }
         }
 
         //this.NavigateTo("Older Posts");
         gm.setValue("iterationsRun", itRun += 1);
-        gm.log("Get More Iterations " + gm.getValue("iterationsRun") + " of " + gm.getValue("iterations") + " " + new Date());
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Get More Iterations " + gm.getValue("iterationsRun") + " of " + gm.getValue("iterations") + " " + new Date());
         if (gm.getValue("iterationsRun") < gm.getValue("iterations")) {
             nHtml.setTimeout(function () {
                 caap.bottomScroll();
             }, gm.getValue("delayPer", 60000));
         } else {
-            //gm.log("Made it Here, Try mfMain");
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Made it Here, Try mfMain");
             nHtml.setTimeout(function () {
                 caap.mfMain();
             }, gm.getValue("delayPer", 120000));
@@ -14945,31 +14935,31 @@ caap = {
             return false;
         }
 
-        gm.log("Select Monst Function");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Select Monst Function");
         var monstPriority = gm.getValue("MonsterFinderOrder");
 
-        gm.log("Monst Priority: " + monstPriority);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monst Priority: " + monstPriority);
 
         var monstArray = monstPriority.split("~");
-        gm.log("MonstArray: " + monstArray[0]);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "MonstArray: " + monstArray[0]);
         for (var x = 0; x < monstArray.length; x += 1) {
             if (gm.getValue(monstArray[x], "~") == "~") {
                 gm.setValue(monstArray[x], "~");
             }
 
-            gm.log("monstArray[x]: " + monstArray[x]);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "monstArray[x]: " + monstArray[x]);
             var monstType = monstArray[x];
             var monstList = gm.getValue(monstArray[x], "~");
             var monstLinks = monstList.replace(/~~/g, "~").split("~");
             var numlinks = 0;
-            gm.log("Inside MonstArray For Loop " + monstArray[x] + " - Array[" + (monstLinks.length - 1) + "] " + gm.getValue(monstArray[x]).replace("~", "~\n"));
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Inside MonstArray For Loop " + monstArray[x] + " - Array[" + (monstLinks.length - 1) + "] " + gm.getValue(monstArray[x]).replace("~", "~\n"));
             for (var z = 0; z < monstLinks.length; z += 1) {
                 if (monstLinks[z]) {
                     var link = monstLinks[z].replace("http://apps.facebook.com/castle_age", "");
                     var urlixc = gm.getValue("urlixc", "~");
                     // + "  UrlixC: " + urlixc);
                     if (urlixc.indexOf(link) == -1) {
-                        gm.log("Navigating to Monst: " + monstArray[x] + "  Link: " + link);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Navigating to Monst: " + monstArray[x] + "  Link: " + link);
                         link = "http://apps.facebook.com/castle_age" + link;
                         gm.setValue("navLink", link);
                         gm.setValue('clickUrl', link);
@@ -14983,22 +14973,22 @@ caap = {
                         return true;
                     } else {
                         numlinks += 1;
-                        gm.log("Trimming already checked URL, Monst Type: " + monstType);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trimming already checked URL, Monst Type: " + monstType);
                         //var newVal = gm.getValue(monstArray[x],"~").replace("~" + link, "");
                         gm.setValue(monstType, gm.getValue(monstType).replace("~" + link, "").replace(/~~/g, "~"), "~");
                     }
                 }
             }
 
-            gm.log("Links Already Visited: " + monstArray[x] + " #:" + numlinks);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Links Already Visited: " + monstArray[x] + " #:" + numlinks);
         }
 
-        gm.log("All Monsters Tested");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "All Monsters Tested");
         gm.setValue("monstersExhausted", true);
         gm.setValue("mfStatus", "");
         var numurl = gm.getValue("urlix", "~");
         if (nHtml.CountInstances(numurl) > 100) {
-            gm.log("Idle- Resetting Monster Searcher Values, #-" + numurl);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Idle- Resetting Monster Searcher Values, #-" + numurl);
             caap.clearLinks(true);
             gm.setValue("LastAction", "");
         }
@@ -15009,7 +14999,7 @@ caap = {
     },
 
     clearLinks: function (resetall) {
-        gm.log("Clear Links");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Clear Links");
         if (resetall === true) {
             gm.setValue("navLink", "");
             gm.setValue("mfStatus", "");
@@ -15052,7 +15042,7 @@ caap = {
 
     handleCTA: function () {
         var ctas = nHtml.getX('//div[@class=\'GenericStory_Body\']', document, nHtml.xpath.unordered);
-        gm.log("Number of entries- " + ctas.snapshotLength);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Number of entries- " + ctas.snapshotLength);
         for (var x = 0; x < ctas.snapshotLength; x += 1) {
             var url = nHtml.getX('./div[2]/div/div/a/@href', ctas.snapshotItem(x), nHtml.xpath.string).replace("http://apps.facebook.com/castle_age", "");
             var fid = nHtml.Gup("user", url);
@@ -15064,7 +15054,7 @@ caap = {
             var urlixc = gm.getValue("urlixc", "~");
             if (src) {
                 if (urlixc.indexOf(url) >= 0) {
-                    //gm.log("Monster Already Checked");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monster Already Checked");
                 } else if (src.indexOf("cta_hydra_") >= 0 || src.indexOf("twitter_hydra_objective") >= 0) { //Hydra
                     monst = gm.getValue("hydra", "~");
                     if (monst.indexOf(url) == -1) {
@@ -15227,7 +15217,7 @@ caap = {
             }
         }
 
-        gm.log("Completed Url Handling");
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Completed Url Handling");
         this.JustDidIt("checkedFeed");
     },
 
@@ -15250,42 +15240,42 @@ caap = {
 
             var checkConsumables = nHtml.FindByAttr(document.body, "div", "class", "statsTTitle");
             if (!checkConsumables) {
-                gm.log("Going to keep for potions");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Going to keep for potions");
                 if (this.NavigateTo('keep')) {
                     return true;
                 }
             }
 
-            gm.log("Checking energy potions");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking energy potions");
             var energyPotions = $("img[title='Energy Potion']").parent().next().text().replace(new RegExp("[^0-9\\.]", "g"), "");
             if (!energyPotions) {
                 energyPotions = 0;
             }
 
-            gm.log("Energy Potions: " + energyPotions);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy Potions: " + energyPotions);
             if (energyPotions >= gm.getNumber("energyPotionsSpendOver", 39)) {
                 gm.setValue("Consume_Energy", true);
-                gm.log("Energy potions ready to consume");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy potions ready to consume");
             }
 
-            gm.log("Checking stamina potions");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking stamina potions");
             var staminaPotions = $("img[title='Stamina Potion']").parent().next().text().replace(new RegExp("[^0-9\\.]", "g"), "");
             if (!staminaPotions) {
                 staminaPotions = 0;
             }
 
-            gm.log("Stamina Potions: " + staminaPotions);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina Potions: " + staminaPotions);
             if (staminaPotions >= gm.getNumber("staminaPotionsSpendOver", 39)) {
                 gm.setValue("Consume_Stamina", true);
-                gm.log("Stamina potions ready to consume");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina potions ready to consume");
             }
 
-            gm.log("Checking experience to next level");
-            //gm.log("Experience to next level: " + this.stats.exp.dif);
-            //gm.log("Potions experience set: " + gm.getNumber("potionsExperience", 20));
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking experience to next level");
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Experience to next level: " + this.stats.exp.dif);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Potions experience set: " + gm.getNumber("potionsExperience", 20));
             if ((gm.getValue("Consume_Energy", false) || gm.getValue("Consume_Stamina", false)) &&
                 this.stats.exp.dif <= gm.getNumber("potionsExperience", 20)) {
-                gm.log("Not spending potions, experience to next level condition. Delaying 10 minutes");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not spending potions, experience to next level condition. Delaying 10 minutes");
                 this.JustDidIt('AutoPotionTimerDelay');
                 return true;
             }
@@ -15293,57 +15283,57 @@ caap = {
             if (this.stats.energy.num < this.stats.energy.max - 10 &&
                 energyPotions > gm.getNumber("energyPotionsKeepUnder", 35) &&
                 gm.getValue("Consume_Energy", false)) {
-                gm.log("Spending energy potions");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Spending energy potions");
                 var energySlice = nHtml.FindByAttr(document.body, "form", "id", "app46755028429_consume_1");
                 if (energySlice) {
                     var energyButton = nHtml.FindByAttrContains(energySlice, "input", "src", 'potion_consume.gif');
                     if (energyButton) {
-                        gm.log("Consume energy potion");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Consume energy potion");
                         caap.Click(energyButton);
                         // Check consumed should happen here if needed
                         return true;
                     } else {
-                        gm.log("Could not find consume energy button");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find consume energy button");
                     }
                 } else {
-                    gm.log("Could not find energy consume form");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find energy consume form");
                 }
 
                 return false;
             } else {
                 gm.setValue("Consume_Energy", false);
-                gm.log("Energy potion conditions not met");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy potion conditions not met");
             }
 
             if (this.stats.stamina.num < this.stats.stamina.max - 10 &&
                 staminaPotions > gm.getNumber("staminaPotionsKeepUnder", 35) &&
                 gm.getValue("Consume_Stamina", false)) {
-                gm.log("Spending stamina potions");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Spending stamina potions");
                 var staminaSlice = nHtml.FindByAttr(document.body, "form", "id", "app46755028429_consume_2");
                 if (staminaSlice) {
                     var staminaButton = nHtml.FindByAttrContains(staminaSlice, "input", "src", 'potion_consume.gif');
                     if (staminaButton) {
-                        gm.log("Consume stamina potion");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Consume stamina potion");
                         caap.Click(staminaButton);
                         // Check consumed should happen here if needed
                         return true;
                     } else {
-                        gm.log("Could not find consume stamina button");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find consume stamina button");
                     }
                 } else {
-                    gm.log("Could not find stamina consume form");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find stamina consume form");
                 }
 
                 return false;
             } else {
                 gm.setValue("Consume_Stamina", false);
-                gm.log("Stamina potion conditions not met");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina potion conditions not met");
             }
 
             this.JustDidIt('AutoPotionTimer');
             return true;
         } catch (e) {
-            gm.log("ERROR in AutoPotion: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoPotion: " + e);
             return false;
         }
     },
@@ -15383,16 +15373,16 @@ caap = {
             if (numberInput) {
                 numberInput.value = num;
             } else {
-                gm.log('Cannot find box to put in number for bank retrieve.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cannot find box to put in number for bank retrieve.');
                 return false;
             }
 
-            gm.log('Retrieving ' + num + ' from bank');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Retrieving ' + num + ' from bank');
             gm.setValue('storeRetrieve', '');
             this.Click(retrieveButton);
             return true;
         } catch (err) {
-            gm.log("ERROR in RetrieveFromBank: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RetrieveFromBank: " + err);
             return false;
         }
     },
@@ -15447,7 +15437,7 @@ caap = {
     CheckResults_gift_accept: function (resultsText) {
         // Confirm gifts actually sent
         if ($('#app46755028429_app_body').text().match(/You have sent \d+ gifts?/)) {
-            gm.log('Confirmed gifts sent out.');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Confirmed gifts sent out.');
             gm.setValue('RandomGiftPic', '');
             gm.setValue('FBSendList', '');
         }
@@ -15478,10 +15468,10 @@ caap = {
 
                     gm.listPush('GiftList', giftName);
                     giftNamePic[giftName] = this.CheckForImage('mystery', giftDiv).src.match(/[\w_\.]+$/i).toString();
-                    //gm.log('Gift name: ' + giftName + ' pic ' + giftNamePic[giftName] + ' hidden ' + giftExtraGiftTF[giftName]);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Gift name: ' + giftName + ' pic ' + giftNamePic[giftName] + ' hidden ' + giftExtraGiftTF[giftName]);
                 }
 
-                //gm.log('Gift list: ' + gm.getList('GiftList'));
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Gift list: ' + gm.getList('GiftList'));
                 if (gm.getValue('GiftChoice') == 'Get Gift List') {
                     gm.setValue('GiftChoice', 'Same Gift As Received');
                     this.SelectDropOption('GiftChoice', 'Same Gift As Received');
@@ -15507,7 +15497,7 @@ caap = {
                 if (ignoreDiv && acceptDiv) {
                     giverId = this.userRe.exec(ignoreDiv.href);
                     if (!giverId) {
-                        gm.log('Unable to find giver ID');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find giver ID');
                         return false;
                     }
 
@@ -15522,7 +15512,7 @@ caap = {
                     }
 
                     gm.setValue('GiftEntry', giverId[2] + global.vs + giverName);
-                    gm.log('Giver ID = ' + giverId[2] + ' Name  = ' + giverName);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Giver ID = ' + giverId[2] + ' Name  = ' + giverName);
                     this.JustDidIt('ClickedFacebookURL');
                     if (global.is_chrome) {
                         acceptDiv.href = "http://apps.facebook.com/reqs.php#confirm_46755028429_0";
@@ -15542,7 +15532,7 @@ caap = {
             if (gm.getValue('FBSendList', '')) {
                 button = nHtml.FindByAttrContains(document.body, 'input', 'name', 'sendit');
                 if (button) {
-                    gm.log('Sending gifts to Facebook');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Sending gifts to Facebook');
                     caap.Click(button);
                     return true;
                 }
@@ -15551,13 +15541,13 @@ caap = {
                 gm.setList('FBSendList', []);
                 button = nHtml.FindByAttrContains(document.body, 'input', 'name', 'ok');
                 if (button) {
-                    gm.log('Over max gifts per day');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Over max gifts per day');
                     this.JustDidIt('WaitForNextGiftSend');
                     caap.Click(button);
                     return true;
                 }
 
-                gm.log('No Facebook pop up to send gifts');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No Facebook pop up to send gifts');
                 return false;
             }
 
@@ -15567,7 +15557,7 @@ caap = {
                 if (sendForm) {
                     button = nHtml.FindByAttrContains(sendForm, 'input', 'name', 'send');
                     if (button) {
-                        gm.log('Clicked CA send gift button');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicked CA send gift button');
                         gm.listAddBefore('FBSendList', gm.getList('CASendList'));
                         gm.setList('CASendList', []);
                         caap.Click(button);
@@ -15575,7 +15565,7 @@ caap = {
                     }
                 }
 
-                gm.log('No CA button to send gifts');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No CA button to send gifts');
                 gm.listAddBefore('ReceivedList', gm.getList('CASendList'));
                 gm.setList('CASendList', []);
                 return false;
@@ -15606,7 +15596,7 @@ caap = {
 
             // Get the gift to send out
             if (giftNamePic.length === 0) {
-                gm.log('No list of pictures for gift choices');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No list of pictures for gift choices');
                 return false;
             }
 
@@ -15635,15 +15625,15 @@ caap = {
                     }
                 }
                 if (!giftPic) {
-                    gm.log('No gift type match. GiverList: ' + giverList);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No gift type match. GiverList: ' + giverList);
                     return false;
                 }
                 break;
             case 'Same Gift As Received':
                 givenGiftType = giverList[0].split(global.vs)[2];
-                gm.log('Looking for same gift as ' + givenGiftType);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Looking for same gift as ' + givenGiftType);
                 if (giftList.indexOf(givenGiftType) < 0) {
-                    gm.log('No gift type match. Using first gift as default.');
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No gift type match. Using first gift as default.');
                     givenGiftType = gm.getList('GiftList')[0];
                 }
                 giftPic = giftNamePic[givenGiftType];
@@ -15656,10 +15646,10 @@ caap = {
             // Move to gifts page
             var picDiv = this.CheckForImage(giftPic);
             if (!picDiv) {
-                gm.log('Unable to find ' + giftPic);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find ' + giftPic);
                 return false;
             } else {
-                gm.log('GiftPic is ' + giftPic);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'GiftPic is ' + giftPic);
             }
 
             if (nHtml.FindByAttrContains(picDiv.parentNode.parentNode.parentNode.parentNode, 'div', 'style', 'giftpage_select')) {
@@ -15686,28 +15676,28 @@ caap = {
                     var giverID = giverData[0];
                     var giftType = giverData[2];
                     if (giftChoice == 'Same Gift As Received' && giftType != givenGiftType && giftList.indexOf(giftType) >= 0) {
-                        //gm.log('giftType ' + giftType + ' givenGiftType ' + givenGiftType);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'giftType ' + giftType + ' givenGiftType ' + givenGiftType);
                         gm.listPush('ReceivedList', giverList[p]);
                         continue;
                     }
 
                     var nameButton = nHtml.FindByAttrContains(giveDiv, 'input', 'value', giverID);
                     if (!nameButton) {
-                        gm.log('Unable to find giver ID ' + giverID);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find giver ID ' + giverID);
                         gm.listPush('NotFoundIDs', giverList[p]);
                         this.JustDidIt('WaitForNotFoundIDs');
                         continue;
                     } else {
-                        gm.log('Clicking giver ID ' + giverID);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking giver ID ' + giverID);
                         this.Click(nameButton);
                     }
 
                     //test actually clicked
                     if (nHtml.FindByAttrContains(doneDiv, 'input', 'value', giverID)) {
                         gm.listPush('CASendList', giverList[p]);
-                        gm.log('Moved ID ' + giverID);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Moved ID ' + giverID);
                     } else {
-                        gm.log('NOT moved ID ' + giverID);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'NOT moved ID ' + giverID);
                         gm.listPush('NotFoundIDs', giverList[p]);
                         this.JustDidIt('WaitForNotFoundIDs');
                     }
@@ -15716,7 +15706,7 @@ caap = {
 
             return true;
         } catch (e) {
-            gm.log("ERROR in AutoGift: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoGift: " + e);
             return false;
         }
     },
@@ -15738,7 +15728,7 @@ caap = {
                 return false;
             }
 
-            gm.log('On FB page with gift ready to go');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On FB page with gift ready to go');
             if (window.location.href.indexOf('facebook.com/reqs.php') >= 0) {
                 var ss = document.evaluate(".//input[contains(@name,'/castle/tracker.php')]", document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                 for (var s = 0; s < ss.snapshotLength; s += 1) {
@@ -15755,7 +15745,7 @@ caap = {
 
                     var giftType = $.trim(giftDiv.value.replace(/^Accept /i, ''));
                     if (gm.getList('GiftList').indexOf(giftType) < 0) {
-                        gm.log('Unknown gift type.');
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unknown gift type.');
                         giftType = 'Unknown Gift';
                     }
 
@@ -15763,7 +15753,7 @@ caap = {
                         gm.listPush('ReceivedList', giftEntry + global.vs + giftType);
                     }
 
-                    gm.log('This giver: ' + user + ' gave ' + giftType + ' Givers: ' + gm.getList('ReceivedList'));
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'This giver: ' + user + ' gave ' + giftType + ' Givers: ' + gm.getList('ReceivedList'));
                     caap.Click(giftDiv);
                     gm.setValue('GiftEntry', '');
                     return true;
@@ -15774,7 +15764,7 @@ caap = {
                 return false;
             }
 
-            gm.log('Error: unable to find gift');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Error: unable to find gift');
             if (gm.getValue('ReceivedList', ' ').indexOf(giftEntry) < 0) {
                 gm.listPush('ReceivedList', giftEntry + '\tUnknown Gift');
             }
@@ -15783,7 +15773,7 @@ caap = {
             gm.setValue('GiftEntry', '');
             return true;
         } catch (e) {
-            gm.log("ERROR in AcceptGiftOnFB: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AcceptGiftOnFB: " + e);
             return false;
         }
     },
@@ -15806,7 +15796,7 @@ caap = {
 
     IncreaseStat: function (attribute, attrAdjust, atributeSlice) {
         try {
-            //gm.log("Attribute: " + attribute + "   Adjust: " + attrAdjust);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute: " + attribute + "   Adjust: " + attrAdjust);
             var lc_attribute = attribute.toLowerCase();
             var button = '';
             switch (lc_attribute) {
@@ -15826,12 +15816,12 @@ caap = {
                 button = nHtml.FindByAttrContains(atributeSlice, 'a', 'href', 'health_max');
                 break;
             default :
-                gm.log("Unable to identify attribute " + lc_attribute);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to identify attribute " + lc_attribute);
                 return "Fail";
             }
 
             if (!button) {
-                gm.log("Unable to locate upgrade button for " + lc_attribute);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to locate upgrade button for " + lc_attribute);
                 return "Fail";
             }
 
@@ -15848,10 +15838,10 @@ caap = {
                 health = parseInt(nHtml.FindByAttrContains(atributeSlice, 'a', 'href', 'health_max').parentNode.parentNode.childNodes[3].firstChild.data.replace(new RegExp("[^0-9]", "g"), ''), 10);
             }
 
-            //gm.log("Energy ="+energy+" Stamina ="+stamina+" Attack ="+attack+" Defense ="+defense+" Heath ="+health);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy ="+energy+" Stamina ="+stamina+" Attack ="+attack+" Defense ="+defense+" Heath ="+health);
             var ajaxLoadIcon = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app46755028429_AjaxLoadIcon');
             if (!ajaxLoadIcon || ajaxLoadIcon.style.display !== 'none') {
-                gm.log("Unable to find AjaxLoadIcon?");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to find AjaxLoadIcon?");
                 return "Fail";
             }
 
@@ -15870,14 +15860,14 @@ caap = {
             }
 
             if (attrAdjustNew > attrCurrent) {
-                gm.log("Status Before:  " + lc_attribute + "=" + attrCurrent + " Adjusting To:" + logTxt);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Status Before:  " + lc_attribute + "=" + attrCurrent + " Adjusting To:" + logTxt);
                 this.Click(button);
                 return "Click";
             }
 
             return "Next";
         } catch (e) {
-            gm.log("ERROR in IncreaseStat: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in IncreaseStat: " + e);
             return "Fail";
         }
     },
@@ -15894,7 +15884,7 @@ caap = {
 
             if (!this.statsMatch) {
                 if (this.autoStatRuleLog) {
-                    gm.log("User should change their stats rules");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "User should change their stats rules");
                     this.autoStatRuleLog = false;
                 }
 
@@ -15903,19 +15893,19 @@ caap = {
 
             var content = document.getElementById('app46755028429_main_bntp');
             if (!content) {
-                //gm.log("id:main_bntp not found");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "id:main_bntp not found");
                 return false;
             }
 
             var a = nHtml.FindByAttrContains(content, 'a', 'href', 'keep.php');
             if (!a) {
-                //gm.log("a:href:keep.php not found");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "a:href:keep.php not found");
                 return false;
             }
 
             this.statsPoints = a.firstChild.firstChild.data.replace(new RegExp("[^0-9]", "g"), '');
             if (!this.statsPoints || this.statsPoints < gm.getValue("SkillPointsNeed", 1)) {
-                //gm.log("Dont have enough stats points");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Dont have enough stats points");
                 return false;
             }
 
@@ -15934,7 +15924,7 @@ caap = {
 
             for (var n = startAtt; n <= stopAtt; n += 1) {
                 if (gm.getValue('Attribute' + n, '') === '') {
-                    //gm.log("Attribute" + n + " is blank: continue");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " is blank: continue");
                     continue;
                 }
 
@@ -15946,22 +15936,22 @@ caap = {
 
                 switch (this.IncreaseStat(gm.getValue('Attribute' + n, ''), gm.getValue('AttrValue' + n, 0), atributeSlice)) {
                 case "Next" :
-                    //gm.log("Attribute" + n + " : next");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " : next");
                     continue;
                 case "Click" :
-                    //gm.log("Attribute" + n + " : click");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " : click");
                     return true;
                 default :
-                    //gm.log("Attribute" + n + " unknown return value");
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " unknown return value");
                     return false;
                 }
             }
 
-            gm.log("No rules match to increase stats");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No rules match to increase stats");
             this.statsMatch = false;
             return false;
         } catch (e) {
-            gm.log("ERROR in AutoStat: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoStat: " + e);
             return false;
         }
     },
@@ -15973,12 +15963,12 @@ caap = {
                 return false;
             }
 
-            gm.log("Collecting Master and Apprentice reward");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collecting Master and Apprentice reward");
             caap.SetDivContent('idle_mess', 'Collect MA Reward');
             var buttonMas = nHtml.FindByAttrContains(document.body, "img", "src", "ma_view_progress_main");
             var buttonApp = nHtml.FindByAttrContains(document.body, "img", "src", "ma_main_learn_more");
             if (!buttonMas && !buttonApp) {
-                gm.log("Going to home");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Going to home");
                 if (this.NavigateTo('index')) {
                     return true;
                 }
@@ -15987,12 +15977,12 @@ caap = {
             if (buttonMas) {
                 this.Click(buttonMas);
                 caap.SetDivContent('idle_mess', 'Collected MA Reward');
-                gm.log("Collected Master and Apprentice reward");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collected Master and Apprentice reward");
             }
 
             if (!buttonMas && buttonApp) {
                 caap.SetDivContent('idle_mess', 'No MA Rewards');
-                gm.log("No Master and Apprentice rewards");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Master and Apprentice rewards");
             }
 
             window.setTimeout(function () {
@@ -16000,10 +15990,10 @@ caap = {
             }, 5000);
 
             this.JustDidIt('AutoCollectMATimer');
-            gm.log("Collect Master and Apprentice reward completed");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collect Master and Apprentice reward completed");
             return true;
         } catch (e) {
-            gm.log("ERROR in AutoCollectMA: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoCollectMA: " + e);
             return false;
         }
     },
@@ -16029,14 +16019,14 @@ caap = {
 
     GetFriendList: function (listType, force) {
         try {
-            gm.log("Entered GetFriendList and request is for: " + listType.name);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Entered GetFriendList and request is for: " + listType.name);
             if (force) {
                 gm.deleteValue(listType.name + 'Requested');
                 gm.deleteValue(listType.name + 'Responded');
             }
 
             if (!gm.getValue(listType.name + 'Requested', false)) {
-                gm.log("Getting Friend List: " + listType.name);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Getting Friend List: " + listType.name);
                 gm.setValue(listType.name + 'Requested', true);
 
                 $.ajax({
@@ -16044,12 +16034,12 @@ caap = {
                     error:
                         function (XMLHttpRequest, textStatus, errorThrown) {
                             gm.deleteValue(listType.name + 'Requested');
-                            gm.log("GetFriendList(" + listType.name + "): " + textStatus);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + textStatus);
                         },
                     success:
                         function (data, textStatus, XMLHttpRequest) {
                             try {
-                                gm.log("GetFriendList.ajax splitting data");
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax splitting data");
                                 data = data.split('<div class="unselected_list">');
                                 if (data.length < 2) {
                                     throw "Could not locate 'unselected_list'";
@@ -16060,34 +16050,34 @@ caap = {
                                     throw "Could not locate 'selected_list'";
                                 }
 
-                                gm.log("GetFriendList.ajax data split ok");
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax data split ok");
                                 var friendList = [];
                                 $('<div></div>').html(data[0]).find('input').each(function (index) {
                                     friendList.push($(this).val());
                                 });
 
-                                gm.log("GetFriendList.ajax saving friend list of " + friendList.length + " ids");
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax saving friend list of " + friendList.length + " ids");
                                 if (friendList.length) {
                                     gm.setList(listType.name + 'Responded', friendList);
                                 } else {
                                     gm.setValue(listType.name + 'Responded', true);
                                 }
 
-                                gm.log("GetFriendList(" + listType.name + "): " + textStatus);
-                                //gm.log("GetFriendList(" + listType.name + "): " + friendList);
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + textStatus);
+                                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + friendList);
                             } catch (err) {
                                 gm.deleteValue(listType.name + 'Requested');
-                                gm.log("ERROR in GetFriendList.ajax: " + err);
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetFriendList.ajax: " + err);
                             }
                         }
                 });
             } else {
-                gm.log("Already requested GetFriendList for: " + listType.name);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Already requested GetFriendList for: " + listType.name);
             }
 
             return true;
         } catch (e) {
-            gm.log("ERROR in GetFriendList(" + listType.name + "): " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetFriendList(" + listType.name + "): " + e);
             return false;
         }
     },
@@ -16101,7 +16091,7 @@ caap = {
                     caap.addFriendSpamCheck -= 1;
                 }
 
-                gm.log("AddFriend(" + id + "): " + textStatus);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AddFriend(" + id + "): " + textStatus);
             };
 
             $.ajax({
@@ -16112,7 +16102,7 @@ caap = {
 
             return true;
         } catch (e) {
-            gm.log("ERROR in AddFriend(" + id + "): " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddFriend(" + id + "): " + e);
             return false;
         }
     },
@@ -16126,13 +16116,13 @@ caap = {
             var armyCount = gm.getValue("ArmyCount", 0);
             if (armyCount === 0) {
                 this.SetDivContent('idle_mess', 'Filling Army');
-                gm.log("Filling army");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Filling army");
             }
 
             if (gm.getValue(caListType.name + 'Responded', false) === true ||
                     gm.getValue(fbListType.name + 'Responded', false) === true) {
                 this.SetDivContent('idle_mess', '<b>Fill Army Completed</b>');
-                gm.log("Fill Army Completed: no friends found");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Fill Army Completed: no friends found");
                 window.setTimeout(function () {
                     caap.SetDivContent('idle_mess', '');
                 }, 5000);
@@ -16154,16 +16144,16 @@ caap = {
             }
 
             var castleageList = gm.getList(caListType.name + 'Responded');
-            //gm.log("gifList: " + castleageList);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "gifList: " + castleageList);
             var facebookList = gm.getList(fbListType.name + 'Responded');
-            //gm.log("facebookList: " + facebookList);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "facebookList: " + facebookList);
             if ((castleageList.length && facebookList.length) || fillArmyList.length) {
                 if (!fillArmyList.length) {
                     var diffList = facebookList.filter(function (facebookID) {
                         return (castleageList.indexOf(facebookID) >= 0);
                     });
 
-                    //gm.log("diffList: " + diffList);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "diffList: " + diffList);
                     gm.setList('FillArmyList', diffList);
                     fillArmyList = gm.getList('FillArmyList');
                     gm.deleteValue(caListType.name + 'Responded');
@@ -16188,7 +16178,7 @@ caap = {
                 }
 
                 this.SetDivContent('idle_mess', 'Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
-                gm.log('Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
                 gm.setValue("ArmyCount", armyCount);
                 if (armyCount >= fillArmyList.length) {
                     this.SetDivContent('idle_mess', '<b>Fill Army Completed</b>');
@@ -16196,7 +16186,7 @@ caap = {
                         caap.SetDivContent('idle_mess', '');
                     }, 5000);
 
-                    gm.log("Fill Army Completed");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Fill Army Completed");
                     gm.setValue('FillArmy', false);
                     gm.deleteValue("ArmyCount");
                     gm.deleteValue('FillArmyList');
@@ -16205,7 +16195,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in AutoFillArmy: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoFillArmy: " + err);
             this.SetDivContent('idle_mess', '<b>Fill Army Failed</b>');
             window.setTimeout(function () {
                 caap.SetDivContent('idle_mess', '');
@@ -16228,37 +16218,37 @@ caap = {
                 return false;
             }
 
-            gm.log("Performing AjaxGiftCheck");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Performing AjaxGiftCheck");
 
             $.ajax({
                 url: "http://apps.facebook.com/castle_age/index.php",
                 error:
                     function (XMLHttpRequest, textStatus, errorThrown) {
-                        gm.log("AjaxGiftCheck.ajax: " + textStatus);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: " + textStatus);
                     },
                 success:
                     function (data, textStatus, XMLHttpRequest) {
                         try {
-                            gm.log("AjaxGiftCheck.ajax: Checking data.");
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: Checking data.");
                             if ($(data).find("a[href*='reqs.php#confirm_']").length) {
-                                gm.log('AjaxGiftCheck.ajax: We have a gift waiting!');
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'AjaxGiftCheck.ajax: We have a gift waiting!');
                                 gm.setValue('HaveGift', true);
                             } else {
-                                gm.log('AjaxGiftCheck.ajax: No gifts waiting.');
+                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'AjaxGiftCheck.ajax: No gifts waiting.');
                             }
 
-                            gm.log("AjaxGiftCheck.ajax: Done.");
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: Done.");
                         } catch (err) {
-                            gm.log("ERROR in AjaxGiftCheck.ajax: " + err);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AjaxGiftCheck.ajax: " + err);
                         }
                     }
             });
 
             this.JustDidIt('AjaxGiftCheckTimer');
-            gm.log("Completed AjaxGiftCheck");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Completed AjaxGiftCheck");
             return true;
         } catch (err) {
-            gm.log("ERROR in AjaxGiftCheck: " + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AjaxGiftCheck: " + err);
             return false;
         }
     },
@@ -16308,7 +16298,7 @@ caap = {
     \-------------------------------------------------------------------------------------*/
             if (!document.getElementById("iframeRecon")) {
                 nHtml.OpenInIFrame('http://apps.facebook.com/castle_age/battle.php#iframeRecon', 'iframeRecon');
-                gm.log('Opening the recon iframe');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Opening the recon iframe');
                 this.SetTimer('PlayerReconTimer', 30);
                 return true;
             }
@@ -16318,7 +16308,7 @@ caap = {
     \-------------------------------------------------------------------------------------*/
             var pageObj = document.getElementById("iframeRecon").contentDocument;
             if (!pageObj) {
-                gm.log('Recon HTML page not ready. waithing For 30 more secionds.');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon HTML page not ready. waithing For 30 more secionds.');
                 this.SetTimer('PlayerReconTimer', 30);
                 return true;
             }
@@ -16332,12 +16322,12 @@ caap = {
             var ss = pageObj.evaluate(target, pageObj, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
                 pageObj.location.reload(true);
-                gm.log('Recon can not find battle page');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon can not find battle page');
                 caap.SetDivContent('idle_mess', '');
                 return false;
             }
 
-            //gm.log("Found targets: "+ss.snapshotLength);
+            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found targets: "+ss.snapshotLength);
     /*-------------------------------------------------------------------------------------\
     Next we get our Recon Player settings for lowest rank, highest level, and army ratio
     base multiplier.
@@ -16369,7 +16359,7 @@ caap = {
                 var txt = $.trim(nHtml.GetText(tr));
                 var levelm = regex.exec(txt);
                 if (!levelm) {
-                    gm.log('Recon can not parse target text string' + txt);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon can not parse target text string' + txt);
                     continue;
                 }
 
@@ -16384,7 +16374,7 @@ caap = {
                 var armyNum = parseInt(levelm[4], 10);
                 var userID = nHtml.FindByAttrXPath(tr, "input", "@name='target_id'", pageObj).value;
                 var aliveTime = (new Date().getTime());
-                //gm.log('Player stats: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Player stats: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
     /*-------------------------------------------------------------------------------------\
     We filter out targets that are above the recon max level or below the recon min rank
     \-------------------------------------------------------------------------------------*/
@@ -16403,14 +16393,14 @@ caap = {
                 var levelMultiplier = this.stats.level / levelNum;
                 var armyRatio = reconARBase * levelMultiplier;
                 if (armyRatio <= 0) {
-                    gm.log('Recon unable to calculate army ratio: ' + reconARBase + '/' + levelMultiplier);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon unable to calculate army ratio: ' + reconARBase + '/' + levelMultiplier);
                     continue;
                 }
 
                 if (armyNum > (this.stats.army * armyRatio)) {
                     continue;
                 }
-                //gm.log('Target Found: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Target Found: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
     /*-------------------------------------------------------------------------------------\
     Ok, recon has found a viable target. We get any existing values from the targetsOL
     database.
@@ -16470,7 +16460,7 @@ caap = {
 
             return false;
         } catch (e) {
-            gm.log("ERROR in Recon :" + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Recon :" + e);
             return false;
         }
     },
@@ -16521,7 +16511,7 @@ caap = {
         }
 
         if (lastAction != thisAction) {
-            gm.log('Changed from doing ' + lastAction + ' to ' + thisAction);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Changed from doing ' + lastAction + ' to ' + thisAction);
             gm.setValue('LastAction', thisAction);
         }
     },
@@ -16556,7 +16546,7 @@ caap = {
     MakeActionsList: function () {
         try {
             if (this.actionsList.length === 0) {
-                gm.log("Loading a fresh Action List");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Loading a fresh Action List");
                 // actionOrder is a comma seperated string of action numbers as
                 // hex pairs and can be referenced in the Master Action List
                 // Example: "00,01,02,03,04,05,06,07,08,09,0A,0B,0C,0D,0E,0F,10,11,12,13,14"
@@ -16567,7 +16557,7 @@ caap = {
                 if (actionOrderUser !== '') {
                     // We are using the user defined actionOrder set in the
                     // Advanced Hidden Options
-                    gm.log("Trying user defined Action Order");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying user defined Action Order");
                     // We take the User Action Order and convert it from a comma
                     // separated list into an array
                     actionOrderArray = actionOrderUser.split(",");
@@ -16576,23 +16566,23 @@ caap = {
                     for (action in this.masterActionList) {
                         if (this.masterActionList.hasOwnProperty(action)) {
                             masterActionListCount += 1;
-                            //gm.log("Counting Action List: " + masterActionListCount);
+                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Counting Action List: " + masterActionListCount);
                         } else {
-                            gm.log("Error Getting Master Action List length!");
-                            gm.log("Skipping 'action' from masterActionList: " + action);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error Getting Master Action List length!");
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Skipping 'action' from masterActionList: " + action);
                         }
                     }
                 } else {
                     // We are building the Action Order Array from the
                     // Master Action List
-                    gm.log("Building the default Action Order");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Building the default Action Order");
                     for (action in this.masterActionList) {
                         if (this.masterActionList.hasOwnProperty(action)) {
                             masterActionListCount = actionOrderArray.push(action);
-                            //gm.log("Action Added: " + action);
+                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action Added: " + action);
                         } else {
-                            gm.log("Error Building Default Action Order!");
-                            gm.log("Skipping 'action' from masterActionList: " + action);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error Building Default Action Order!");
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Skipping 'action' from masterActionList: " + action);
                         }
                     }
                 }
@@ -16607,41 +16597,41 @@ caap = {
                 }
 
                 if (actionOrderArrayCount < masterActionListCount) {
-                    gm.log("Warning! Action Order Array has fewer orders than default!");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Warning! Action Order Array has fewer orders than default!");
                 }
 
                 if (actionOrderArrayCount > masterActionListCount) {
-                    gm.log("Warning! Action Order Array has more orders than default!");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Warning! Action Order Array has more orders than default!");
                 }
 
                 // We build the Action List
-                //gm.log("Building Action List ...");
+                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Building Action List ...");
                 for (var itemCount = 0; itemCount !== actionOrderArrayCount; itemCount += 1) {
                     var actionItem = '';
                     if (actionOrderUser !== '') {
                         // We are using the user defined comma separated list
                         // of hex pairs
                         actionItem = this.masterActionList[parseInt(actionOrderArray[itemCount], 16)];
-                        //gm.log("(" + itemCount + ") Converted user defined hex pair to action: " + actionItem);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "(" + itemCount + ") Converted user defined hex pair to action: " + actionItem);
                     } else {
                         // We are using the Master Action List
                         actionItem = this.masterActionList[actionOrderArray[itemCount]];
-                        //gm.log("(" + itemCount + ") Converted Master Action List entry to an action: " + actionItem);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "(" + itemCount + ") Converted Master Action List entry to an action: " + actionItem);
                     }
 
                     // Check the Action Item
                     if (actionItem.length > 0 && typeof(actionItem) === "string") {
                         // We add the Action Item to the Action List
                         this.actionsList.push(actionItem);
-                        //gm.log("Added action to the list: " + actionItem);
+                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Added action to the list: " + actionItem);
                     } else {
-                        gm.log("Error! Skipping actionItem");
-                        gm.log("Action Item(" + itemCount + "): " + actionItem);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error! Skipping actionItem");
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action Item(" + itemCount + "): " + actionItem);
                     }
                 }
 
                 if (actionOrderUser !== '') {
-                    gm.log("Get Action List: " + this.actionsList);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Get Action List: " + this.actionsList);
                 }
             }
 			if (this.actionsList[0] != 'Page') {
@@ -16650,7 +16640,7 @@ caap = {
             return true;
         } catch (e) {
             // Something went wrong, log it and use the emergency Action List.
-            gm.log("ERROR in MakeActionsList: " + e);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeActionsList: " + e);
             this.actionsList = [
 				'Page',
                 "Elite",
@@ -16684,7 +16674,7 @@ caap = {
         // assorted errors...
         var href = location.href;
         if (href.indexOf('/common/error.html') >= 0) {
-            gm.log('detected error page, waiting to go back to previous page.');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'detected error page, waiting to go back to previous page.');
             window.setTimeout(function () {
                 window.history.go(-1);
             }, 30 * 1000);
@@ -16693,7 +16683,7 @@ caap = {
         }
 
         if (document.getElementById('try_again_button')) {
-            gm.log('detected Try Again message, waiting to reload');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'detected Try Again message, waiting to reload');
             // error
             window.setTimeout(function () {
                 window.history.go(0);
@@ -16722,10 +16712,10 @@ caap = {
 
         if (locationFBMF) {
             if (gm.getValue("mfStatus", "") == "OpenMonster") {
-                gm.log("Opening Monster " + gm.getValue("navLink"));
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Opening Monster " + gm.getValue("navLink"));
                 this.CheckMonster();
             } else if (gm.getValue("mfStatus", "") == "CheckMonster") {
-                gm.log("Scanning URL for new monster");
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scanning URL for new monster");
                 this.selectMonst();
             }
 
@@ -16739,7 +16729,7 @@ caap = {
         var button = nHtml.FindByAttrContains(document.body, "a", "class", 'undo_link');
         if (button) {
             this.Click(button);
-            gm.log('Undoing notification');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Undoing notification');
         }
 
         var caapDisabled = gm.getValue('Disabled', false);
@@ -16763,7 +16753,7 @@ caap = {
                 this.ReloadCastleAge();
             }
 
-            gm.log('Page no-load count: ' + noWindowLoad);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Page no-load count: ' + noWindowLoad);
             this.WaitMainLoop();
             return;
         } else {
@@ -16786,7 +16776,7 @@ caap = {
         }
 
         if (this.WhileSinceDidIt('clickedOnSomething', 25) && this.waitingForDomLoad) {
-            gm.log('Clicked on something, but nothing new loaded.  Reloading page.');
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicked on something, but nothing new loaded.  Reloading page.');
             this.ReloadCastleAge();
         }
 
@@ -16799,14 +16789,14 @@ caap = {
         this.MakeActionsList();
         var actionsListCopy = this.actionsList.slice();
 
-        //gm.log("Action List: " + actionsListCopy);
+        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action List: " + actionsListCopy);
         if (!gm.getValue('ReleaseControl', false)) {
             actionsListCopy.unshift(gm.getValue('LastAction', 'Idle'));
         } else {
             gm.setValue('ReleaseControl', false);
         }
 
-        //gm.log('Action List2: ' + actionsListCopy);
+        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
             if (actionsListCopy.hasOwnProperty(action)) {
                 worker = WorkerByName(actionsListCopy[action]);
@@ -16816,14 +16806,14 @@ caap = {
                     worker._unflush();
                     result = worker._work(true);
                     if (result) {
-                        gm.log('Doing worker ' + worker.name);
+                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing worker ' + worker.name);
                     }
                 } else {
-                    gm.log('ERROR - No function for ' + actionsListCopy[action]);
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'ERROR - No function for ' + actionsListCopy[action]);
                 }
 
                 if (result) {
-                    //gm.log('Action: ' + actionsListCopy[action]);
+                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Action: ' + actionsListCopy[action]);
                     this.CheckLastAction(actionsListCopy[action]);
                     break;
                 }
@@ -16866,7 +16856,7 @@ caap = {
 
         nHtml.setTimeout(function () {
             if (caap.WhileSinceDidIt('clickedOnSomething', 5 * 60)) {
-                gm.log('Reloading if not paused after inactivity');
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Reloading if not paused after inactivity');
                 if ((window.location.href.indexOf('castle_age') >= 0 || window.location.href.indexOf('reqs.php#confirm_46755028429_0') >= 0) &&
                         !gm.getValue('Disabled') && (gm.getValue('caapPause') == 'none')) {
                     if (global.is_chrome) {
@@ -16892,7 +16882,7 @@ if (typeof GM_log !== 'function') {
     throw "Error: Your browser does not appear to support Greasemonkey scripts!";
 }
 
-gm.log("Starting");
+console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Starting");
 //////////   Start Golem _main.js
 
 var show_debug = true;
@@ -16928,7 +16918,7 @@ var log = console.log;
 
 if (show_debug) {
 	var debug = function(txt) {
-				console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
+		console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
 	};
 } else {
 	var debug = function(){};
@@ -16959,13 +16949,13 @@ if (global.is_chrome) {
             ConvertGMtoJSON();
         }
     } catch (e) {
-        gm.log("Error converting DB: " + e);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error converting DB: " + e);
     }
 
     try {
         CM_Listener();
     } catch (e) {
-        gm.log("Error loading CM_Listener" + e);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error loading CM_Listener" + e);
     }
 }
 
@@ -17014,7 +17004,7 @@ if (!global.is_chrome) {
                             gm.setValue('SUC_last_update', new Date().getTime() + '');
                             gm.setValue('SUC_target_script_name', script_name);
                             gm.setValue('SUC_remote_version', remote_version);
-                            gm.log('remote version ' + remote_version);
+                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'remote version ' + remote_version);
                             if (remote_version > caapVersion) {
                                 global.newVersionAvailable = true;
                                 if (forced) {
@@ -17041,7 +17031,7 @@ if (!global.is_chrome) {
 
         updateCheck(false);
     } catch (err) {
-        gm.log("ERROR in GitHub updater: " + err);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GitHub updater: " + err);
     }
 }
 
@@ -17090,7 +17080,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
                 var attribute = gm.getValue("Attribute" + a, '');
                 if (attribute !== '') {
                     gm.setValue("Attribute" + a, attribute.ucFirst());
-                    gm.log("Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
                 }
             }
         }
@@ -17128,7 +17118,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 
         gm.setValue('LastVersion', caapVersion);
     } catch (err) {
-        gm.log("ERROR in Environment updater: " + err);
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Environment updater: " + err);
     }
 }
 
@@ -17137,10 +17127,10 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 /////////////////////////////////////////////////////////////////////
 
 $(function () {
-    gm.log('Full page load completed');
+    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Full page load completed');
     // If unable to read in gm.values, then reload the page
     if (gm.getValue('caapPause', 'none') !== 'none' && gm.getValue('caapPause', 'none') !== 'block') {
-        gm.log('Refresh page because unable to load gm.values due to unsafewindow error');
+        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Refresh page because unable to load gm.values due to unsafewindow error');
         window.location.href = window.location.href;
     }
 
@@ -17159,9 +17149,9 @@ $(function () {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
 			}
-            
+
 			Page.identify();
-			gm.log('Workers: ' + Workers.length);
+			console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
 					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
 					Workers[ii]._setup();

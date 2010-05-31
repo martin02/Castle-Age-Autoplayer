@@ -69,7 +69,7 @@ Generals.update = function(type, worker) {
 		}
 		Config.set('generals', ['any'].concat(list.sort()));
 	}
-	
+
 	// Take all existing priorities and change them to rank starting from 1 and keeping existing order.
 	for (i in data) {
 		if (data[i].level < 4) {
@@ -84,7 +84,7 @@ Generals.update = function(type, worker) {
 	}
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
-	
+
 	if ((type === 'data' || worker === Town) && invade && duel) {
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -399,4 +399,3 @@ Generals.dashboard = function(sort, rev) {
 		$('#golem-dashboard-Generals thead th:eq('+sort+')').attr('name',(rev ? 'reverse' : 'sort')).append('&nbsp;' + (rev ? '&uarr;' : '&darr;'));
 	}
 }
-

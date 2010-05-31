@@ -49,7 +49,7 @@ nHtml = {
         var xp = ".//" + tag + "[" + className + "]";
         try {
             if (obj === null) {
-                gm.log('Trying to find xpath with null obj:' + xp);
+                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Trying to find xpath with null obj:' + xp);
                 return null;
             }
 
@@ -59,7 +59,7 @@ nHtml = {
 
             q = subDocument.evaluate(xp, obj, null, this.xpath.first, null);
         } catch (err) {
-            gm.log("XPath Failed:" + xp + "," + err);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "XPath Failed:" + xp + "," + err);
         }
 
         if (q && q.singleNodeValue) {
@@ -194,14 +194,14 @@ nHtml = {
     ResetIFrame: function (key) {
         var iframe = document.getElementById(key);
         if (iframe) {
-            gm.log("Deleting iframe = " + key);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Deleting iframe = " + key);
             iframe.parentNode.removeChild(iframe);
         } else {
-            gm.log("Frame not found = " + key);
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Frame not found = " + key);
         }
 
         if (document.getElementById(key)) {
-            gm.log("Found iframe");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found iframe");
         }
     },
 
@@ -218,18 +218,18 @@ nHtml = {
     },
 
     ScrollToBottom: function () {
-        //gm.log("Scroll Height: " + document.body.scrollHeight);
+        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll Height: " + document.body.scrollHeight);
         if (document.body.scrollHeight) {
             if (global.is_chrome) {
                 var dh = document.body.scrollHeight;
                 var ch = document.body.clientHeight;
                 if (dh > ch) {
                     var moveme = dh - ch;
-                    gm.log("Scrolling down by: " + moveme + "px");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling down by: " + moveme + "px");
                     window.scroll(0, moveme);
-                    gm.log("Scrolled ok");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
                 } else {
-                    gm.log("Not scrolling to bottom. Client height is greater than document height!");
+                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not scrolling to bottom. Client height is greater than document height!");
                 }
             } else {
                 window.scrollBy(0, document.body.scrollHeight);
@@ -239,9 +239,9 @@ nHtml = {
 
     ScrollToTop: function () {
         if (global.is_chrome) {
-            gm.log("Scrolling to top");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling to top");
             window.scroll(0, 0);
-            gm.log("Scrolled ok");
+            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
         } else {
             window.scrollByPages(-1000);
         }

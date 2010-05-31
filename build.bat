@@ -19,12 +19,16 @@ type object_html.js >>_normal.user.js 2>nul
 type object_caap.js >>_normal.user.js 2>nul
 type _main.js >>_normal.user.js 2>nul
 
+echo Cleaning EOL
+uddu dos2unix.exe _normal.user.js
+
 rem ----------------------------------------------------------------------
 rem INSTALLED VERSION - Means you only need to hit F5 / refresh in Firefox
 rem Just change the path to your firefox installed version, only the '???' should need changing on Windows7
 
 echo Installing new version to Firefox
 copy _normal.user.js Castle-Age-Autoplayer.user.js >nul
+echo Installing new version to Chrome
 copy Castle-Age-Autoplayer.user.js Chrome/Castle-Age-Autoplayer.user.js >nul
 copy README Chrome/README >nul
 del /F /Q _normal.user.js

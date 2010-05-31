@@ -9874,8 +9874,9 @@ caap = {
 
     TextBoxListener: function (e) {
         try {
-            var idName = e.target.id.replace(/caap_/i, '');
-            var value = e.target.value;
+            var idName = e.target.id.replace(/caap_/i, ''),
+                value = e.target.value;
+                
             gm.log('Change: setting "' + idName + '" to "' + e.target.value + '"');
 
             if (/Style+/.test(idName)) {
@@ -9919,9 +9920,10 @@ caap = {
     DropBoxListener: function (e) {
         try {
             if (e.target.selectedIndex > 0) {
-                var idName = e.target.id.replace(/caap_/i, '');
-                var value = e.target.options[e.target.selectedIndex].value;
-                var title = e.target.options[e.target.selectedIndex].title;
+                var idName = e.target.id.replace(/caap_/i, ''),
+                    value = e.target.options[e.target.selectedIndex].value,
+                    title = e.target.options[e.target.selectedIndex].title;
+
                 gm.log('Change: setting "' + idName + '" to "' + value + '" with title "' + title + '"');
                 gm.setValue(idName, value);
                 e.target.title = title;
@@ -10051,8 +10053,9 @@ caap = {
 
     TextAreaListener: function (e) {
         try {
-            var idName = e.target.id.replace(/caap_/i, '');
-            var value = e.target.value;
+            var idName = e.target.id.replace(/caap_/i, ''),
+                value = e.target.value;
+
             gm.log('Change: setting "' + idName + '" to "' + value + '"');
             if (idName == 'orderbattle_monster' || idName == 'orderraid') {
                 gm.setValue('monsterReview', 0);
@@ -10132,12 +10135,21 @@ caap = {
 
     ResetMenuLocationListener: function (e) {
         try {
+            var caap_divXY = {
+                    x: 0,
+                    y: 0
+                },
+                caap_topXY = {
+                    x: 0,
+                    y: 0
+                };
+
             gm.deleteValue('caap_div_menuLeft');
             gm.deleteValue('caap_div_menuTop');
             gm.deleteValue('caap_div_zIndex');
             caap.controlXY.x = '';
             caap.controlXY.y = $(caap.controlXY.selector).offset().top;
-            var caap_divXY = caap.GetControlXY(true);
+            caap_divXY = caap.GetControlXY(true);
             caap.caapDivObject.css({
                 'cursor' : '',
                 'z-index' : '2',
@@ -10150,7 +10162,7 @@ caap = {
             gm.deleteValue('caap_top_zIndex');
             caap.dashboardXY.x = '';
             caap.dashboardXY.y = $(caap.dashboardXY.selector).offset().top - 10;
-            var caap_topXY = caap.GetDashboardXY(true);
+            caap_topXY = caap.GetDashboardXY(true);
             caap.caapTopObject.css({
                 'cursor' : '',
                 'z-index' : '1',
@@ -10168,8 +10180,9 @@ caap = {
 
     FoldingBlockListener: function (e) {
         try {
-            var subId = e.target.id.replace(/_Switch/i, '');
-            var subDiv = document.getElementById(subId);
+            var subId = e.target.id.replace(/_Switch/i, ''),
+                subDiv = document.getElementById(subId);
+
             if (subDiv.style.display == "block") {
                 gm.log('Folding: ' + subId);
                 subDiv.style.display = "none";

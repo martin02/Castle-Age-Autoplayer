@@ -1,0 +1,12 @@
+K 10
+svn:ignore
+V 89
+_head_revision.js
+releases
+chrome
+_min.user.js
+_head_tortoise.js
+_head_netbeans.js
+*.bat
+
+END

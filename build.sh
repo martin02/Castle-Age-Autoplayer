@@ -20,6 +20,9 @@ cat object_html.js >> _normal.user.js
 cat object_caap.js >> _normal.user.js
 cat _main.js >> _normal.user.js
 
+echo "Cleaning EOL"
+dos2unix _normal.user.js
+
 # ----------------------------------------------------------------------
 # INSTALLED VERSION - Means you only need to hit F5 / refresh in Firefox
 # Just change the path to your firefox installed version, only the '???' should need changing on Windows7

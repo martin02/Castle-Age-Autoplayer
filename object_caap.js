@@ -2236,7 +2236,7 @@ caap = {
         try {
             var idName = e.target.id.replace(/caap_/i, ''),
                 value = e.target.value;
-                
+
             gm.log('Change: setting "' + idName + '" to "' + e.target.value + '"');
 
             if (/Style+/.test(idName)) {
@@ -7814,7 +7814,8 @@ caap = {
     },
 
     CheckResults_index: function (resultsText) {
-        this.JustDidIt('checkForGifts');
+        //this.JustDidIt('checkForGifts');
+        News.parse(true);
     },
 
     AutoGift: function () {

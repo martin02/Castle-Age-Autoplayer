@@ -2150,7 +2150,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
+	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...
@@ -7204,7 +7204,7 @@ gm = {
 
 	// Takes a list of comma or return separated values, and returns a list with valid entries
     getListFromText: function (n) {
-        var getTheList = gm.getValue(n).split(/[\n,]/);
+        var getTheList = (gm.getValue(n) ? gm.getValue(n).split(/[\n,]/) : []);
         this.debug('GetList ' + n + ' value ' + getTheList);
         var ret = getTheList.filter(function (item) {
             return item.trim() || false;

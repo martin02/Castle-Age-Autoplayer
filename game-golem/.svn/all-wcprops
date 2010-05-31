@@ -1,91 +1,91 @@
 K 25
 svn:wc:ra_dav:version-url
 V 23
-/svn/!svn/ver/494/trunk
+/svn/!svn/ver/495/trunk
 END
 worker_bank.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/467/trunk/worker_bank.js
+/svn/!svn/ver/495/trunk/worker_bank.js
 END
 worker_+settings.js
 K 25
 svn:wc:ra_dav:version-url
 V 43
-/svn/!svn/ver/432/trunk/worker_+settings.js
+/svn/!svn/ver/495/trunk/worker_+settings.js
 END
 worker_levelup.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/454/trunk/worker_levelup.js
+/svn/!svn/ver/495/trunk/worker_levelup.js
 END
 worker_+config.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/472/trunk/worker_+config.js
+/svn/!svn/ver/495/trunk/worker_+config.js
 END
 worker_title.js
 K 25
 svn:wc:ra_dav:version-url
 V 39
-/svn/!svn/ver/473/trunk/worker_title.js
+/svn/!svn/ver/495/trunk/worker_title.js
 END
 worker_town.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/467/trunk/worker_town.js
+/svn/!svn/ver/495/trunk/worker_town.js
 END
 _main.js
 K 25
 svn:wc:ra_dav:version-url
 V 32
-/svn/!svn/ver/493/trunk/_main.js
+/svn/!svn/ver/495/trunk/_main.js
 END
 worker_potions.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/467/trunk/worker_potions.js
+/svn/!svn/ver/495/trunk/worker_potions.js
 END
 worker_player.js
 K 25
 svn:wc:ra_dav:version-url
 V 40
-/svn/!svn/ver/493/trunk/worker_player.js
+/svn/!svn/ver/495/trunk/worker_player.js
 END
 worker_+update.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/432/trunk/worker_+update.js
+/svn/!svn/ver/495/trunk/worker_+update.js
 END
 worker_+queue.js
 K 25
 svn:wc:ra_dav:version-url
 V 40
-/svn/!svn/ver/467/trunk/worker_+queue.js
+/svn/!svn/ver/495/trunk/worker_+queue.js
 END
 _head_tortoise.tmpl
 K 25
 svn:wc:ra_dav:version-url
 V 43
-/svn/!svn/ver/470/trunk/_head_tortoise.tmpl
+/svn/!svn/ver/495/trunk/_head_tortoise.tmpl
 END
 css.js
 K 25
 svn:wc:ra_dav:version-url
 V 30
-/svn/!svn/ver/368/trunk/css.js
+/svn/!svn/ver/495/trunk/css.js
 END
 _jquery-latest.min.js
 K 25
 svn:wc:ra_dav:version-url
 V 45
-/svn/!svn/ver/442/trunk/_jquery-latest.min.js
+/svn/!svn/ver/495/trunk/_jquery-latest.min.js
 END
 _release.user.js
 K 25
@@ -97,31 +97,37 @@ build.sh
 K 25
 svn:wc:ra_dav:version-url
 V 32
-/svn/!svn/ver/492/trunk/build.sh
+/svn/!svn/ver/495/trunk/build.sh
 END
 worker_blessing.js
 K 25
 svn:wc:ra_dav:version-url
 V 42
-/svn/!svn/ver/467/trunk/worker_blessing.js
+/svn/!svn/ver/495/trunk/worker_blessing.js
 END
 worker_heal.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/467/trunk/worker_heal.js
-END
-utility.js
-K 25
-svn:wc:ra_dav:version-url
-V 34
-/svn/!svn/ver/442/trunk/utility.js
+/svn/!svn/ver/495/trunk/worker_heal.js
 END
 worker_income.js
 K 25
 svn:wc:ra_dav:version-url
 V 40
-/svn/!svn/ver/467/trunk/worker_income.js
+/svn/!svn/ver/495/trunk/worker_income.js
+END
+utility.js
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/!svn/ver/495/trunk/utility.js
+END
+worker_battle.js
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/495/trunk/worker_battle.js
 END
 _normal.user.js
 K 25
@@ -129,89 +135,83 @@ svn:wc:ra_dav:version-url
 V 39
 /svn/!svn/ver/494/trunk/_normal.user.js
 END
-worker_battle.js
+worker_news.js
 K 25
 svn:wc:ra_dav:version-url
-V 40
-/svn/!svn/ver/467/trunk/worker_battle.js
+V 38
+/svn/!svn/ver/495/trunk/worker_news.js
 END
 _jquery-ui-latest.min.js
 K 25
 svn:wc:ra_dav:version-url
 V 48
-/svn/!svn/ver/442/trunk/_jquery-ui-latest.min.js
-END
-worker_news.js
-K 25
-svn:wc:ra_dav:version-url
-V 38
-/svn/!svn/ver/432/trunk/worker_news.js
+/svn/!svn/ver/495/trunk/_jquery-ui-latest.min.js
 END
 worker_idle.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/432/trunk/worker_idle.js
+/svn/!svn/ver/495/trunk/worker_idle.js
 END
 worker_land.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/467/trunk/worker_land.js
+/svn/!svn/ver/495/trunk/worker_land.js
 END
 worker.js
 K 25
 svn:wc:ra_dav:version-url
 V 33
-/svn/!svn/ver/453/trunk/worker.js
+/svn/!svn/ver/495/trunk/worker.js
 END
 worker_alchemy.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/467/trunk/worker_alchemy.js
+/svn/!svn/ver/495/trunk/worker_alchemy.js
 END
 _head_netbeans.tmpl
 K 25
 svn:wc:ra_dav:version-url
 V 43
-/svn/!svn/ver/482/trunk/_head_netbeans.tmpl
-END
-worker_upgrade.js
-K 25
-svn:wc:ra_dav:version-url
-V 41
-/svn/!svn/ver/467/trunk/worker_upgrade.js
+/svn/!svn/ver/495/trunk/_head_netbeans.tmpl
 END
 worker_+page.js
 K 25
 svn:wc:ra_dav:version-url
 V 39
-/svn/!svn/ver/467/trunk/worker_+page.js
+/svn/!svn/ver/495/trunk/worker_+page.js
+END
+worker_upgrade.js
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/495/trunk/worker_upgrade.js
 END
 worker_monster.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/467/trunk/worker_monster.js
+/svn/!svn/ver/495/trunk/worker_monster.js
 END
 worker_arena.js.unused
 K 25
 svn:wc:ra_dav:version-url
 V 46
-/svn/!svn/ver/387/trunk/worker_arena.js.unused
+/svn/!svn/ver/495/trunk/worker_arena.js.unused
 END
 worker_gift.js
 K 25
 svn:wc:ra_dav:version-url
 V 38
-/svn/!svn/ver/456/trunk/worker_gift.js
+/svn/!svn/ver/495/trunk/worker_gift.js
 END
 worker_generals.js
 K 25
 svn:wc:ra_dav:version-url
 V 42
-/svn/!svn/ver/457/trunk/worker_generals.js
+/svn/!svn/ver/495/trunk/worker_generals.js
 END
 CA_Golem.xml
 K 25
@@ -223,31 +223,31 @@ worker_quest.js
 K 25
 svn:wc:ra_dav:version-url
 V 39
-/svn/!svn/ver/467/trunk/worker_quest.js
+/svn/!svn/ver/495/trunk/worker_quest.js
 END
 worker_history.js
 K 25
 svn:wc:ra_dav:version-url
 V 41
-/svn/!svn/ver/442/trunk/worker_history.js
+/svn/!svn/ver/495/trunk/worker_history.js
 END
 worker_elite.js
 K 25
 svn:wc:ra_dav:version-url
 V 39
-/svn/!svn/ver/494/trunk/worker_elite.js
+/svn/!svn/ver/495/trunk/worker_elite.js
 END
 worker_+dashboard.js
 K 25
 svn:wc:ra_dav:version-url
 V 44
-/svn/!svn/ver/432/trunk/worker_+dashboard.js
+/svn/!svn/ver/495/trunk/worker_+dashboard.js
 END
 _head.js
 K 25
 svn:wc:ra_dav:version-url
 V 32
-/svn/!svn/ver/338/trunk/_head.js
+/svn/!svn/ver/495/trunk/_head.js
 END
 _normal_chrome.user.js
 K 25
@@ -259,5 +259,5 @@ build.txt
 K 25
 svn:wc:ra_dav:version-url
 V 33
-/svn/!svn/ver/492/trunk/build.txt
+/svn/!svn/ver/495/trunk/build.txt
 END

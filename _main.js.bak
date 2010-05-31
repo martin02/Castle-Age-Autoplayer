@@ -1,0 +1,298 @@
+
+/////////////////////////////////////////////////////////////////////
+//                         BEGIN
+/////////////////////////////////////////////////////////////////////
+
+if (typeof GM_log != 'function') {
+    alert("Your browser does not appear to support Greasemonkey scripts!");
+    throw "Error: Your browser does not appear to support Greasemonkey scripts!";
+}
+gm.log("Starting");
+//////////   Start Golem _main.js
+
+var show_debug = true;
+
+// Shouldn't touch
+var VERSION = 30.9;
+var script_started = Date.now();
+
+// Automatically filled
+var userID = 0;
+var imagepath = '';
+
+// Decide which facebook app we're in...
+var applications = {
+	'reqs.php':['','Gifts'], // For gifts etc
+	'castle_age':['46755028429', 'Castle Age']
+};
+
+if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
+	for (var i in applications) {
+		if (window.location.pathname.indexOf(i) === 1) {
+			var APP = i;
+			var APPID = applications[i][0];
+			var APPNAME = applications[i][1];
+			var PREFIX = 'golem'+APPID+'_';
+			break;
+		}
+	}
+}
+
+var log = console.log;
+
+if (show_debug) {
+	var debug = function(txt) {
+		console.log('[' + (new Date()).format('G:i:s') + '] ' + txt);
+	};
+} else {
+	var debug = function(){};
+}
+
+if (typeof unsafeWindow === 'undefined') {
+	unsafeWindow = window;
+}
+
+//////////   End Golem _main.js
+
+
+/////////////////////////////////////////////////////////////////////
+//                         Chrome Startup
+/////////////////////////////////////////////////////////////////////
+
+if (global.is_chrome) {
+    try {
+        var lastVersion = localStorage.getItem(global.gameName + '__LastVersion', 0);
+        var shouldTryConvert = false;
+        if (lastVersion) {
+            if (lastVersion.substr(0, 1) == 's') {
+                shouldTryConvert = true;
+            }
+        }
+
+        if (caapVersion <= '140.21.9' || shouldTryConvert) {
+            ConvertGMtoJSON();
+        }
+    } catch (e) {
+        gm.log("Error converting DB: " + e);
+    }
+
+    try {
+        CM_Listener();
+    } catch (e) {
+        gm.log("Error loading CM_Listener" + e);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+//                         Set Title
+/////////////////////////////////////////////////////////////////////
+
+if (gm.getValue('SetTitle')) {
+    var DocumentTitle = '';
+    if (gm.getValue('SetTitleAction', false)) {
+        DocumentTitle += "Starting - ";
+    }
+
+    if (gm.getValue('SetTitleName', false)) {
+        DocumentTitle += gm.getValue('PlayerName', 'CAAP') + " - ";
+    }
+
+    document.title = DocumentTitle + global.documentTitle;
+}
+
+/////////////////////////////////////////////////////////////////////
+//                          GitHub updater
+// Used by browsers other than Chrome (namely Firefox and Flock)
+// to get updates from github.com
+/////////////////////////////////////////////////////////////////////
+
+if (!global.is_chrome) {
+    try {
+        if (gm.getValue('SUC_remote_version', 0) > caapVersion) {
+            global.newVersionAvailable = true;
+        }
+
+        // update script from: http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/Castle-Age-Autoplayer.user.js
+
+        function updateCheck(forced) {
+            if ((forced) || (parseInt(gm.getValue('SUC_last_update', '0'), 10) + (86400000 * 1) <= (new Date().getTime()))) {
+                try {
+                    GM_xmlhttpRequest({
+                        method: 'GET',
+                        url: 'http://github.com/Xotic750/Castle-Age-Autoplayer/raw/master/Castle-Age-Autoplayer.user.js',
+                        headers: {'Cache-Control': 'no-cache'},
+                        onload: function (resp) {
+                            var rt = resp.responseText;
+                            var remote_version = new RegExp("@version\\s*(.*?)\\s*$", "m").exec(rt)[1];
+                            var script_name = (new RegExp("@name\\s*(.*?)\\s*$", "m").exec(rt))[1];
+                            gm.setValue('SUC_last_update', new Date().getTime() + '');
+                            gm.setValue('SUC_target_script_name', script_name);
+                            gm.setValue('SUC_remote_version', remote_version);
+                            gm.log('remote version ' + remote_version);
+                            if (remote_version > caapVersion) {
+                                global.newVersionAvailable = true;
+                                if (forced) {
+                                    if (confirm('There is an update available for the Greasemonkey script "' + script_name + '."\nWould you like to go to the install page now?')) {
+                                        GM_openInTab('http://senses.ws/caap/index.php?topic=771.msg3582#msg3582');
+                                    }
+                                }
+                            } else if (forced) {
+                                alert('No update is available for "' + script_name + '."');
+                            }
+                        }
+                    });
+                } catch (err) {
+                    if (forced) {
+                        alert('An error occurred while checking for updates:\n' + err);
+                    }
+                }
+            }
+        }
+
+        GM_registerMenuCommand(gm.getValue('SUC_target_script_name', '???') + ' - Manual Update Check', function () {
+            updateCheck(true);
+        });
+
+        updateCheck(false);
+    } catch (err) {
+        gm.log("ERROR in GitHub updater: " + err);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+// Put code to be run once to upgrade an old version's variables to
+// new format or such here.
+/////////////////////////////////////////////////////////////////////
+
+if (gm.getValue('LastVersion', 0) != caapVersion) {
+    try {
+        if (parseInt(gm.getValue('LastVersion', 0), 10) < 121) {
+            gm.setValue('WhenBattle', gm.getValue('WhenFight', 'Stamina Available'));
+        }
+
+        // This needs looking at, although not really used, need to check we are using caap keys
+        if (parseInt(gm.getValue('LastVersion', 0), 10) < 126) {
+            var storageKeys = GM_listValues();
+            for (var key = 0; key < storageKeys.length; key += 1) {
+                if (GM_getValue(storageKeys[key])) {
+                    GM_setValue(storageKeys[key], GM_getValue(storageKeys[key]).toString().replace('~', global.os).replace('`', global.vs));
+                }
+            }
+        }
+
+        if (parseInt(gm.getValue('LastVersion', 0), 10) < 130 && gm.getValue('MonsterGeneral')) {
+            gm.setValue('AttackGeneral', gm.getValue('MonsterGeneral'));
+            gm.deleteValue('MonsterGeneral');
+        }
+
+        if (parseInt(gm.getValue('LastVersion', 0), 10) < 133) {
+            var clearList = ['FreshMeatMaxLevel', 'FreshMeatARMax', 'FreshMeatARMin'];
+            clearList.forEach(function (gmVal) {
+                gm.setValue(gmVal, '');
+            });
+        }
+
+        if ((gm.getValue('LastVersion', 0) < '140.15.3' || gm.getValue('LastVersion', 0) < '140.21.0') &&
+                gm.getValue("actionOrder", '') !== '') {
+            alert("You are using a user defined Action List!\n" +
+                  "The Master Action List has changed!\n" +
+                  "You must update your Action List!");
+        }
+
+        if (gm.getValue('LastVersion', 0) < '140.16.2') {
+            for (var a = 1; a <= 5; a += 1) {
+                var attribute = gm.getValue("Attribute" + a, '');
+                if (attribute !== '') {
+                    gm.setValue("Attribute" + a, attribute.ucFirst());
+                    gm.log("Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
+                }
+            }
+        }
+
+        if (gm.getValue('LastVersion', 0) < '140.23.0') {
+            var convertToArray = function (name) {
+                var value = gm.getValue(name, '');
+                var eList = [];
+                if (value.length) {
+                    value = value.replace(/\n/gi, ',');
+                    eList = value.split(',');
+                    var fEmpty = function (e) {
+                        return e !== '';
+                    };
+
+                    eList = eList.filter(fEmpty);
+                    if (!eList.length) {
+                        eList = [];
+                    }
+                }
+
+                gm.setList(name, eList);
+            };
+
+            convertToArray('EliteArmyList');
+            convertToArray('BattleTargets');
+        }
+
+        if (gm.getValue('LastVersion', 0) < '140.23.6') {
+            gm.deleteValue('AutoEliteGetList');
+            gm.deleteValue('AutoEliteReqNext');
+            gm.deleteValue('AutoEliteEnd');
+            gm.deleteValue('MyEliteTodo');
+        }
+
+        gm.setValue('LastVersion', caapVersion);
+    } catch (err) {
+        gm.log("ERROR in Environment updater: " + err);
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+//                    On Page Load
+/////////////////////////////////////////////////////////////////////
+
+$(function () {
+    gm.log('Full page load completed');
+    // If unable to read in gm.values, then reload the page
+    if (gm.getValue('caapPause', 'none') !== 'none' && gm.getValue('caapPause', 'none') !== 'block') {
+        gm.log('Refresh page because unable to load gm.values due to unsafewindow error');
+        window.location.href = window.location.href;
+    }
+
+    gm.setValue('clickUrl', window.location.href);
+    global.AddCSS();
+    if (window.location.href.indexOf('facebook.com/castle_age/') >= 0) {
+        gm.setValue('caapPause', 'none');
+        gm.setValue('ReleaseControl', true);
+        if (global.is_chrome) {
+            CE_message("paused", null, gm.getValue('caapPause', 'none'));
+        }
+
+        nHtml.setTimeout(function () {
+			userID = $('head').html().regex(/user:([0-9]+),/i);
+			if (!userID || typeof userID !== 'number' || userID === 0) {
+				log('ERROR: No Facebook UserID!!!');
+				window.location.href = window.location.href; // Force reload without retrying
+			}
+			Page.identify();
+			gm.log('Workers: ' + Workers.length);
+			for (ii=0; ii<Workers.length; ii++) {
+					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
+					Workers[ii]._setup();
+			}
+			for (i=0; i<Workers.length; i++) {
+					Workers[i]._init();
+			}
+			for (i=0; i<Workers.length; i++) {
+					Workers[i]._update();
+					Workers[i]._flush();
+			}
+			Page.parse_all(); // Call once to get the ball rolling...
+            caap.init();
+        }, 200);
+    }
+
+    caap.waitMilliSecs = 8000;
+    caap.WaitMainLoop();
+});
+
+caap.ReloadOccasionally();

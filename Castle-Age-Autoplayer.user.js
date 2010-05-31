@@ -2870,7 +2870,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals'
+		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
 	}
 };
 
@@ -6649,15 +6649,6 @@ Town.blacksmith = { // Shield must come after armor (currently)
 	Gloves:	/gauntlet|glove|hand|bracer|Slayer's Embrace/i,
 	Armor:	/armor|chainmail|cloak|pauldrons|plate|raiments|robe|Blood Vestment|Garlans Battlegear|Faerie Wings/i,
 	Amulet:	/amulet|bauble|charm|crystal|eye|heart|insignia|jewel|lantern|memento|orb|shard|soul|talisman|trinket|Paladin's Oath|Poseidons Horn| Ring|Ring of|Ruby Ore|Thawing Star/i
-};
-
-Town.init = function() {
-	if (this.data.soldiers || this.data.blacksmith || this.data.magic) { // Need to reparse with new code...
-		this.data = {};
-		Page.set('town_soldiers', 0);
-		Page.set('town_blacksmith', 0);
-		Page.set('town_magic', 0);
-	}
 };
 
 Town.parse = function(change) {

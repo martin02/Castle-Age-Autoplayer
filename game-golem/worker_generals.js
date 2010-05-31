@@ -9,7 +9,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals'
+		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
 	}
 };
 

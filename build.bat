@@ -8,15 +8,15 @@ del /F /Q _normal.user.js _min.user.js 2>nul
 
 echo Joining files into _normal.user.js
 type _head.js >_normal.user.js 2>nul
+type css.js >>_normal.user.js 2>nul
+type utility.js >>_normal.user.js 2>nul
+type worker.js >>_normal.user.js 2>nul
+type worker_*.js >>_normal.user.js 2>nul
 type object_global.js >>_normal.user.js 2>nul
 type object_gm.js >>_normal.user.js 2>nul
 type object_html.js >>_normal.user.js 2>nul
 type object_caap.js >>_normal.user.js 2>nul
 type _main.js >>_normal.user.js 2>nul
-type css.js >>_normal.user.js 2>nul
-type utility.js >>_normal.user.js 2>nul
-type worker.js >>_normal.user.js 2>nul
-type worker_*.js >>_normal.user.js 2>nul
 
 rem ----------------------------------------------------------------------
 rem INSTALLED VERSION - Means you only need to hit F5 / refresh in Firefox

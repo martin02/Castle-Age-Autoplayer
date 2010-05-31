@@ -3,10 +3,11 @@
 //                         BEGIN
 /////////////////////////////////////////////////////////////////////
 
-if (typeof GM_log != 'function') {
+if (typeof GM_log !== 'function') {
     alert("Your browser does not appear to support Greasemonkey scripts!");
     throw "Error: Your browser does not appear to support Greasemonkey scripts!";
 }
+
 gm.log("Starting");
 //////////   Start Golem _main.js
 
@@ -274,19 +275,23 @@ $(function () {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
 			}
+            
 			Page.identify();
 			gm.log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
 					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
 					Workers[ii]._setup();
 			}
+
 			for (i=0; i<Workers.length; i++) {
 					Workers[i]._init();
 			}
+
 			for (i=0; i<Workers.length; i++) {
 					Workers[i]._update();
 					Workers[i]._flush();
 			}
+
 			Page.parse_all(); // Call once to get the ball rolling...
             caap.init();
         }, 200);

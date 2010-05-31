@@ -139,7 +139,8 @@ caap = {
         'Battle',
         'SubQuest',
 		'Buy',
-		'Income'
+		'Income',
+        'Banking'
     ],
 
     BuildGeneralLists: function () {
@@ -172,9 +173,9 @@ caap = {
                 }
             }
 
-            this.ChangeDropDownList('BuyGeneral', this.generalList, gm.getValue('BuyGeneral', 'Use Current'));
-            this.ChangeDropDownList('IncomeGeneral', this.generalList, gm.getValue('IncomeGeneral', 'Use Current'));
-            this.ChangeDropDownList('BankingGeneral', this.generalList, gm.getValue('BankingGeneral', 'Use Current'));
+            //this.ChangeDropDownList('BuyGeneral', this.generalList, gm.getValue('BuyGeneral', 'Use Current'));
+            //this.ChangeDropDownList('IncomeGeneral', this.generalList, gm.getValue('IncomeGeneral', 'Use Current'));
+            //this.ChangeDropDownList('BankingGeneral', this.generalList, gm.getValue('BankingGeneral', 'Use Current'));
             this.ChangeDropDownList('LevelUpGeneral', this.generalList, gm.getValue('LevelUpGeneral', 'Use Current'));
             return true;
         } catch (err) {
@@ -1420,9 +1421,9 @@ caap = {
             }
         }
 
-        htmlCode += "<tr><td>Buy</td><td style='text-align: right'>" + this.MakeDropDown('BuyGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
-        htmlCode += "<tr><td>Income</td><td style='text-align: right'>" + this.MakeDropDown('IncomeGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
-        htmlCode += "<tr><td>Banking</td><td style='text-align: right'>" + this.MakeDropDown('BankingGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
+        //htmlCode += "<tr><td>Buy</td><td style='text-align: right'>" + this.MakeDropDown('BuyGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
+        //htmlCode += "<tr><td>Income</td><td style='text-align: right'>" + this.MakeDropDown('IncomeGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
+        //htmlCode += "<tr><td>Banking</td><td style='text-align: right'>" + this.MakeDropDown('BankingGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr>';
         htmlCode += "<tr><td>Level Up</td><td style='text-align: right'>" + this.MakeDropDown('LevelUpGeneral', this.generalList, '', "style='font-size: 10px; min-width: 110px; max-width: 110px; width: 110px;'") + '</td></tr></table>';
         htmlCode += "<div id='caap_LevelUpGeneralHide' style='display: " + (gm.getValue('LevelUpGeneral', false) != 'Use Current' ? 'block' : 'none') + "'>";
         htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
@@ -9057,24 +9058,25 @@ caap = {
 
         //gm.log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
-			worker = WorkerByName(actionsListCopy[action]);
-			if (actionsListCopy.hasOwnProperty(action) &&
-					typeof this[actionsListCopy[action]] == 'function') {
-				result = this[actionsListCopy[action]]();
-			} else if (worker) {
-				worker._unflush();
-                result = worker._work(true);
-				if (result) {
-                    gm.log('Doing worker ' + worker.name);
+            if (actionsListCopy.hasOwnProperty(action)) {
+                worker = WorkerByName(actionsListCopy[action]);
+                if (typeof this[actionsListCopy[action]] == 'function') {
+                    result = this[actionsListCopy[action]]();
+                } else if (worker) {
+                    worker._unflush();
+                    result = worker._work(true);
+                    if (result) {
+                        gm.log('Doing worker ' + worker.name);
+                    }
+                } else {
+                    gm.log('ERROR - No function for ' + actionsListCopy[action]);
                 }
-            } else {
-				gm.log('ERROR - No function for ' + actionsListCopy[action]);
-			}
 
-			if (result) {
-                //gm.log('Action: ' + actionsListCopy[action]);
-                this.CheckLastAction(actionsListCopy[action]);
-                break;
+                if (result) {
+                    //gm.log('Action: ' + actionsListCopy[action]);
+                    this.CheckLastAction(actionsListCopy[action]);
+                    break;
+                }
             }
         }
 

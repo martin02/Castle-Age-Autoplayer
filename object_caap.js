@@ -1706,11 +1706,17 @@ caap = {
     AddColorWheels: function () {
         try {
             var fb1call = function (color) {
-                $('#caap_ColorSelectorDiv1').css({'background-color': color});
-                $('#caap_StyleBackgroundLight').val(color);
-                gm.setValue("StyleBackgroundLight", color);
-                gm.setValue("CustStyleBackgroundLight", color);
-            };
+                    $('#caap_ColorSelectorDiv1').css({'background-color': color});
+                    $('#caap_StyleBackgroundLight').val(color);
+                    gm.setValue("StyleBackgroundLight", color);
+                    gm.setValue("CustStyleBackgroundLight", color);
+                },
+                fb2call = function (color) {
+                    $('#caap_ColorSelectorDiv2').css({'background-color': color});
+                    $('#caap_StyleBackgroundDark').val(color);
+                    gm.setValue("StyleBackgroundDark", color);
+                    gm.setValue("CustStyleBackgroundDark", color);
+                };
 
             $.farbtastic($("<div id='caap_ColorSelectorDiv1'></div>").css({
                 background: gm.getValue("StyleBackgroundLight", "#E0C691"),
@@ -1722,13 +1728,6 @@ caap = {
                 position: 'fixed',
                 display: 'none'
             }).appendTo(document.body), fb1call).setColor(gm.getValue("StyleBackgroundLight", "#E0C691"));
-
-            var fb2call = function (color) {
-                $('#caap_ColorSelectorDiv2').css({'background-color': color});
-                $('#caap_StyleBackgroundDark').val(color);
-                gm.setValue("StyleBackgroundDark", color);
-                gm.setValue("CustStyleBackgroundDark", color);
-            };
 
             $.farbtastic($("<div id='caap_ColorSelectorDiv2'></div>").css({
                 background: gm.getValue("StyleBackgroundDark", "#B09060"),
@@ -1998,8 +1997,8 @@ caap = {
             html += '</table>';
             $("#caap_infoTargets1").html(html);
             return true;
-        } catch (e) {
-            gm.log("ERROR in UpdateDashboard: " + e);
+        } catch (err) {
+            gm.log("ERROR in UpdateDashboard: " + err);
             return false;
         }
     },
@@ -2008,34 +2007,40 @@ caap = {
     AddDBListener creates the listener for our dashboard controls.
     \-------------------------------------------------------------------------------------*/
     dbDisplayListener: function (e) {
-        var value = e.target.options[e.target.selectedIndex].value;
-        gm.setValue('DBDisplay', value);
-        switch (value) {
-        case "Target List" :
-            caap.SetDisplay('infoMonster', false);
-            caap.SetDisplay('infoTargets1', true);
-            caap.SetDisplay('infoTargets2', false);
-            caap.SetDisplay('buttonMonster', false);
-            caap.SetDisplay('buttonTargets', true);
-            break;
-        case "Target Stats" :
-            caap.SetDisplay('infoMonster', false);
-            caap.SetDisplay('infoTargets1', false);
-            caap.SetDisplay('infoTargets2', true);
-            caap.SetDisplay('buttonMonster', false);
-            caap.SetDisplay('buttonTargets', true);
-            break;
-        case "Monster" :
-            caap.SetDisplay('infoMonster', true);
-            caap.SetDisplay('infoTargets1', false);
-            caap.SetDisplay('infoTargets2', false);
-            caap.SetDisplay('buttonMonster', true);
-            caap.SetDisplay('buttonTargets', false);
-            break;
-        default :
-        }
+        try {
+            var value = e.target.options[e.target.selectedIndex].value;
+            gm.setValue('DBDisplay', value);
+            switch (value) {
+            case "Target List" :
+                caap.SetDisplay('infoMonster', false);
+                caap.SetDisplay('infoTargets1', true);
+                caap.SetDisplay('infoTargets2', false);
+                caap.SetDisplay('buttonMonster', false);
+                caap.SetDisplay('buttonTargets', true);
+                break;
+            case "Target Stats" :
+                caap.SetDisplay('infoMonster', false);
+                caap.SetDisplay('infoTargets1', false);
+                caap.SetDisplay('infoTargets2', true);
+                caap.SetDisplay('buttonMonster', false);
+                caap.SetDisplay('buttonTargets', true);
+                break;
+            case "Monster" :
+                caap.SetDisplay('infoMonster', true);
+                caap.SetDisplay('infoTargets1', false);
+                caap.SetDisplay('infoTargets2', false);
+                caap.SetDisplay('buttonMonster', true);
+                caap.SetDisplay('buttonTargets', false);
+                break;
+            default :
+            }
 
-        gm.setValue('resetdashboard', true);
+            gm.setValue('resetdashboard', true);
+            return true;
+        } catch (err) {
+            gm.log("ERROR in dbDisplayListener: " + err);
+            return false;
+        }
     },
 
     refreshMonstersListener: function (e) {
@@ -2066,8 +2071,8 @@ caap = {
             $('#caap_liveFeed').click(this.liveFeedButtonListener);
             $('#caap_clearTargets').click(this.clearTargetsButtonListener);
             return true;
-        } catch (e) {
-            gm.log("ERROR in AddDBListener: " + e);
+        } catch (err) {
+            gm.log("ERROR in AddDBListener: " + err);
             return false;
         }
     },
@@ -2101,8 +2106,8 @@ caap = {
             }
 
             return true;
-        } catch (e) {
-            gm.log("ERROR in SetDisplay: " + e);
+        } catch (err) {
+            gm.log("ERROR in SetDisplay: " + err);
             return false;
         }
     },
@@ -2399,7 +2404,7 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in DropBoxListener: " + e);
+            gm.log("ERROR in DropBoxListener: " + err);
             return false;
         }
     },
@@ -2419,88 +2424,106 @@ caap = {
             caap.SaveBoxText(idName);
             return true;
         } catch (err) {
-            gm.log("ERROR in TextAreaListener: " + e);
+            gm.log("ERROR in TextAreaListener: " + err);
             return false;
         }
     },
 
     PauseListener: function (e) {
-        $('#caap_div').css({
-            'background': gm.getValue('StyleBackgroundDark', '#fee'),
-            'opacity': '1',
-            'z-index': '3'
-        });
+        try {
+            $('#caap_div').css({
+                'background': gm.getValue('StyleBackgroundDark', '#fee'),
+                'opacity': '1',
+                'z-index': '3'
+            });
 
-        $('#caap_top').css({
-            'background': gm.getValue('StyleBackgroundDark', '#fee'),
-            'opacity': '1'
-        });
+            $('#caap_top').css({
+                'background': gm.getValue('StyleBackgroundDark', '#fee'),
+                'opacity': '1'
+            });
 
-        $('#caapPaused').css('display', 'block');
-        if (global.is_chrome) {
-            CE_message("paused", null, 'block');
+            $('#caapPaused').css('display', 'block');
+            if (global.is_chrome) {
+                CE_message("paused", null, 'block');
+            }
+
+            gm.setValue('caapPause', 'block');
+            return true;
+        } catch (err) {
+            gm.log("ERROR in PauseListener: " + err);
+            return false;
         }
-
-        gm.setValue('caapPause', 'block');
     },
 
     RestartListener: function (e) {
-        $('#caapPaused').css('display', 'none');
-        $('#caap_div').css({
-            'background': gm.getValue('StyleBackgroundLight', '#efe'),
-            'opacity': gm.getValue('StyleOpacityLight', '1'),
-            'z-index': gm.getValue('caap_div_zIndex', '2'),
-            'cursor': ''
-        });
+        try {
+            $('#caapPaused').css('display', 'none');
+            $('#caap_div').css({
+                'background': gm.getValue('StyleBackgroundLight', '#efe'),
+                'opacity': gm.getValue('StyleOpacityLight', '1'),
+                'z-index': gm.getValue('caap_div_zIndex', '2'),
+                'cursor': ''
+            });
 
-        $('#caap_top').css({
-            'background': gm.getValue('StyleBackgroundLight', '#efe'),
-            'opacity': gm.getValue('StyleOpacityLight', '1'),
-            'z-index': gm.getValue('caap_top_zIndex', '1'),
-            'cursor': ''
-        });
+            $('#caap_top').css({
+                'background': gm.getValue('StyleBackgroundLight', '#efe'),
+                'opacity': gm.getValue('StyleOpacityLight', '1'),
+                'z-index': gm.getValue('caap_top_zIndex', '1'),
+                'cursor': ''
+            });
 
-        $(":input[id*='caap_']").attr({disabled: false});
-        $('#unlockMenu').attr('checked', false);
+            $(":input[id*='caap_']").attr({disabled: false});
+            $('#unlockMenu').attr('checked', false);
 
-        gm.setValue('caapPause', 'none');
-        if (global.is_chrome) {
-            CE_message("paused", null, gm.getValue('caapPause', 'none'));
+            gm.setValue('caapPause', 'none');
+            if (global.is_chrome) {
+                CE_message("paused", null, gm.getValue('caapPause', 'none'));
+            }
+
+            gm.setValue('ReleaseControl', true);
+            gm.setValue('resetselectMonster', true);
+            caap.waitingForDomLoad = false;
+            return true;
+        } catch (err) {
+            gm.log("ERROR in RestartListener: " + err);
+            return false;
         }
-
-        gm.setValue('ReleaseControl', true);
-        gm.setValue('resetselectMonster', true);
-        caap.waitingForDomLoad = false;
     },
 
     ResetMenuLocationListener: function (e) {
-        gm.deleteValue('caap_div_menuLeft');
-        gm.deleteValue('caap_div_menuTop');
-        gm.deleteValue('caap_div_zIndex');
-        caap.controlXY.x = '';
-        caap.controlXY.y = $(caap.controlXY.selector).offset().top;
-        var caap_divXY = caap.GetControlXY(true);
-        caap.caapDivObject.css({
-            'cursor' : '',
-            'z-index' : '2',
-            'top' : caap_divXY.y + 'px',
-            'left' : caap_divXY.x + 'px'
-        });
+        try {
+            gm.deleteValue('caap_div_menuLeft');
+            gm.deleteValue('caap_div_menuTop');
+            gm.deleteValue('caap_div_zIndex');
+            caap.controlXY.x = '';
+            caap.controlXY.y = $(caap.controlXY.selector).offset().top;
+            var caap_divXY = caap.GetControlXY(true);
+            caap.caapDivObject.css({
+                'cursor' : '',
+                'z-index' : '2',
+                'top' : caap_divXY.y + 'px',
+                'left' : caap_divXY.x + 'px'
+            });
 
-        gm.deleteValue('caap_top_menuLeft');
-        gm.deleteValue('caap_top_menuTop');
-        gm.deleteValue('caap_top_zIndex');
-        caap.dashboardXY.x = '';
-        caap.dashboardXY.y = $(caap.dashboardXY.selector).offset().top - 10;
-        var caap_topXY = caap.GetDashboardXY(true);
-        caap.caapTopObject.css({
-            'cursor' : '',
-            'z-index' : '1',
-            'top' : caap_topXY.y + 'px',
-            'left' : caap_topXY.x + 'px'
-        });
+            gm.deleteValue('caap_top_menuLeft');
+            gm.deleteValue('caap_top_menuTop');
+            gm.deleteValue('caap_top_zIndex');
+            caap.dashboardXY.x = '';
+            caap.dashboardXY.y = $(caap.dashboardXY.selector).offset().top - 10;
+            var caap_topXY = caap.GetDashboardXY(true);
+            caap.caapTopObject.css({
+                'cursor' : '',
+                'z-index' : '1',
+                'top' : caap_topXY.y + 'px',
+                'left' : caap_topXY.x + 'px'
+            });
 
-        $(":input[id^='caap_']").attr({disabled: false});
+            $(":input[id^='caap_']").attr({disabled: false});
+            return true;
+        } catch (err) {
+            gm.log("ERROR in ResetMenuLocationListener: " + err);
+            return false;
+        }
     },
 
     FoldingBlockListener: function (e) {
@@ -2521,30 +2544,43 @@ caap = {
 
             return true;
         } catch (err) {
-            gm.log("ERROR in FoldingBlockListener: " + e);
+            gm.log("ERROR in FoldingBlockListener: " + err);
             return false;
         }
     },
 
     whatClickedURLListener: function (event) {
-        var obj = event.target;
-        while (obj && !obj.href) {
-            obj = obj.parentNode;
-        }
+        try {
+            var obj = event.target;
+            while (obj && !obj.href) {
+                obj = obj.parentNode;
+            }
 
-        if (obj && obj.href) {
-            gm.setValue('clickUrl', obj.href);
-        }
+            if (obj && obj.href) {
+                gm.setValue('clickUrl', obj.href);
+            }
 
-        //gm.log('globalContainer: ' + obj.href);
+            //gm.log('globalContainer: ' + obj.href);
+            return true;
+        } catch (err) {
+            gm.log("ERROR in whatClickedURLListener: " + err);
+            return false;
+        }
     },
 
     windowResizeListener: function (e) {
-        if (window.location.href.indexOf('castle_age')) {
-            var caap_divXY = caap.GetControlXY();
-            caap.caapDivObject.css('left', caap_divXY.x + 'px');
-            var caap_topXY = caap.GetDashboardXY();
-            caap.caapTopObject.css('left', caap_topXY.x + 'px');
+        try {
+            if (window.location.href.indexOf('castle_age')) {
+                var caap_divXY = caap.GetControlXY();
+                caap.caapDivObject.css('left', caap_divXY.x + 'px');
+                var caap_topXY = caap.GetDashboardXY();
+                caap.caapTopObject.css('left', caap_topXY.x + 'px');
+            }
+
+            return true;
+        } catch (err) {
+            gm.log("ERROR in windowResizeListener: " + err);
+            return false;
         }
     },
 

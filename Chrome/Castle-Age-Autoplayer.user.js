@@ -10484,6 +10484,7 @@ caap = {
     GetStats: function () {
         try {
             this.stats = {};
+            /*
             if (!global.is_firefox) {
                 if (document.getElementById('app46755028429_healForm')) {
                     // Facebook ID
@@ -10497,6 +10498,7 @@ caap = {
                     }
                 }
             }
+            */
 
             // rank
             var attrDiv = nHtml.FindByAttrContains(document.body, "div", "class", 'keep_stat_title');
@@ -13145,6 +13147,7 @@ caap = {
 
             var page = gm.getValue('page', 'battle_monster');
             var firstMonsterButtonDiv = this.CheckForImage('dragon_list_btn_');
+            /*
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
@@ -13157,6 +13160,12 @@ caap = {
                     log('On another player\'s keep.');
                     return false;
                 }
+            }
+            */
+            if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + userID) ||
+                                             firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
+                log('On another player\'s keep.');
+                return false;
             }
 
             // Review monsters and find attack and fortify button
@@ -13332,6 +13341,7 @@ caap = {
                 monstType = this.getMonstType(monster);
             }
 
+            /*
             if (!global.is_firefox) {
                 if (nHtml.FindByAttr(webSlice, 'img', 'uid', gm.getValue('FBID', 'x'))) {
                     monster = monster.replace(yourRegEx, 'Your ');
@@ -13340,6 +13350,10 @@ caap = {
                 if (nHtml.FindByAttr(webSlice, 'img', 'uid', unsafeWindow.Env.user)) {
                     monster = monster.replace(yourRegEx, 'Your ');
                 }
+            }
+            */
+            if (nHtml.FindByAttr(webSlice, 'img', 'uid', userID)) {
+                monster = monster.replace(yourRegEx, 'Your ');
             }
 
             var now = (new Date().getTime());
@@ -13415,11 +13429,14 @@ caap = {
             if (webSlice) {
                 webSlice = nHtml.FindByAttrContains(webSlice, "td", "valign", "top");
                 if (webSlice) {
+                    /*
                     if (!global.is_firefox) {
                         webSlice = nHtml.FindByAttrContains(webSlice, "a", "href", "keep.php?user=" + gm.getValue('FBID', 'x'));
                     } else {
                         webSlice = nHtml.FindByAttrContains(webSlice, "a", "href", "keep.php?user=" + unsafeWindow.Env.user);
                     }
+                    */
+                    webSlice = nHtml.FindByAttrContains(webSlice, "a", "href", "keep.php?user=" + userID);
 
                     if (webSlice) {
                         var damList = null;
@@ -13929,6 +13946,7 @@ caap = {
                 monsterOnPage = $.trim(monsterOnPage.substring(0, monsterOnPage.indexOf('You have (')));
             }
 
+            /*
             if (!global.is_firefox) {
                 if (nHtml.FindByAttr(webSlice, 'img', 'uid', gm.getValue('FBID', 'x'))) {
                     monsterOnPage = monsterOnPage.replace(yourRegEx, 'Your ');
@@ -13937,6 +13955,10 @@ caap = {
                 if (nHtml.FindByAttr(webSlice, 'img', 'uid', unsafeWindow.Env.user)) {
                     monsterOnPage = monsterOnPage.replace(yourRegEx, 'Your ');
                 }
+            }
+            */
+            if (nHtml.FindByAttr(webSlice, 'img', 'uid', userID)) {
+                monsterOnPage = monsterOnPage.replace(yourRegEx, 'Your ');
             }
 
             if (monster != monsterOnPage) {
@@ -14272,6 +14294,7 @@ caap = {
             }
 
             var firstMonsterButtonDiv = this.CheckForImage('dragon_list_btn_');
+            /*
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                         firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
@@ -14284,6 +14307,12 @@ caap = {
                     log('On another player\'s keep.');
                     return this.NavigateTo('keep,battle_monster');
                 }
+            }
+            */
+            if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + userID) ||
+                                             firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
+                log('On another player\'s keep.');
+                return this.NavigateTo('keep,battle_monster');
             }
 
             var engageButton = this.monsterEngageButtons[monster];

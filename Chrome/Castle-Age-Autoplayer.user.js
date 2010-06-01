@@ -11333,7 +11333,7 @@ caap = {
                 }
 
                 this.LabelQuests(div, energy, reward, experience, click);
-                //gm.log(gm.getValue('QuestSubArea', 'Atlantis'));
+                //log(gm.getValue('QuestSubArea', 'Atlantis'));
                 if (this.CheckCurrentQuestArea(gm.getValue('QuestSubArea', 'Atlantis'))) {
                     if (gm.getValue('GetOrbs', false) && questType == 'boss' && whyQuest != 'Manual') {
                         if (!haveOrb) {
@@ -11406,7 +11406,7 @@ caap = {
                 }
 
                 if ((whyQuest == 'Max Influence' || whyQuest == 'Advancement') && gm.getValue('switchQuestArea', false)) { //if not find quest, probably you already maxed the subarea, try another area
-                    //gm.log(gm.getValue('QuestSubArea(pickQuestTF)'));
+                    //log(gm.getValue('QuestSubArea(pickQuestTF)'));
                     switch (gm.getValue('QuestSubArea')) {
                     case 'Land of Fire':
                         gm.setValue('QuestSubArea', 'Land of Earth');
@@ -12666,7 +12666,7 @@ caap = {
                 if (this.NavigateTo(navigate, image)) {
                     return true;
                 }
-                //gm.log(battleUpto +'th battle target: ' + );
+                //log(battleUpto +'th battle target: ' + );
 
                 gm.setValue(chainid, '');
                 if (this.BattleUserId(target)) {
@@ -13816,7 +13816,7 @@ caap = {
                                     var maxToFortify = (this.parseCondition('f%', monsterConditions)  !== false) ? this.parseCondition('f%', monsterConditions) : gm.getNumber('MaxToFortify', 0);
                                     monstType = this.getMonstType(monster);
                                     /*
-                                    gm.log(monster + ' monsterFort < maxToFortify ' + (monsterFort < maxToFortify) + ' this.monsterInfo[monstType] ' +
+                                    log(monster + ' monsterFort < maxToFortify ' + (monsterFort < maxToFortify) + ' this.monsterInfo[monstType] ' +
                                         this.monsterInfo[monstType]+ ' this.monsterInfo[monstType].fort ' + this.monsterInfo[monstType].fort);
                                     */
                                     if (!firstFortUnderMax && monsterFort < maxToFortify &&
@@ -14246,7 +14246,7 @@ caap = {
                         attackMess = (gm.getValue('MonsterStaminaReq', 1) >= 5 ? 'Power' : 'Single') + ' Attacking ' + monster;
                     }
 
-                    gm.log(attackMess);
+                    log(attackMess);
                     this.SetDivContent('monster_mess', attackMess);
                     gm.setValue('ReleaseControl', true);
                     this.Click(attackButton, 8000);

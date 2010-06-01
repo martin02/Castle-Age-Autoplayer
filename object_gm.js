@@ -45,7 +45,7 @@ gm = {
 
             return value == y && value.toString() == y.toString();
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.isInt: " + err);
+            log("ERROR in gm.isInt: " + err);
             return false;
         }
     },
@@ -65,7 +65,7 @@ gm = {
             GM_setValue(global.gameName + "__" + n, v);
             return v;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.setValue: " + err);
+            log("ERROR in gm.setValue: " + err);
             return null;
         }
     },

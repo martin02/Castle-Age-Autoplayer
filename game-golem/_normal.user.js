@@ -15,7 +15,7 @@
 // 
 // For the unshrunk Work In Progress version (which may introduce new bugs)
 // - http://game-golem.googlecode.com/svn/trunk/_normal.user.js
-var revision = "493";
+var revision = "495";
 // User changeable
 var show_debug = true;
 
@@ -2228,7 +2228,7 @@ Bank.stash = function(amount) {
 };
 
 Bank.retrieve = function(amount) {
-	WorkerByName(Queue.get('runtime.current')).settings.bank = true;
+	!iscaap() && (WorkerByName(Queue.get('runtime.current')).settings.bank = true);
 	amount -= Player.get('cash');
 	if (amount <= 0 || (Player.get('bank') - this.option.keep) < amount) {
 		return true; // Got to deal with being poor exactly the same as having it in hand...
@@ -2948,7 +2948,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals'
+		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
 	}
 };
 
@@ -3008,7 +3008,7 @@ Generals.update = function(type, worker) {
 		}
 		Config.set('generals', ['any'].concat(list.sort()));
 	}
-	
+
 	// Take all existing priorities and change them to rank starting from 1 and keeping existing order.
 	for (i in data) {
 		if (data[i].level < 4) {
@@ -3023,7 +3023,7 @@ Generals.update = function(type, worker) {
 	}
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
-	
+
 	if ((type === 'data' || worker === Town) && invade && duel) {
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -3338,7 +3338,6 @@ Generals.dashboard = function(sort, rev) {
 		$('#golem-dashboard-Generals thead th:eq('+sort+')').attr('name',(rev ? 'reverse' : 'sort')).append('&nbsp;' + (rev ? '&uarr;' : '&darr;'));
 	}
 }
-
 /********** Worker.Gift() **********
 * Auto accept gifts and return if needed
 * *** Needs to talk to Alchemy to work out what's being made
@@ -6727,15 +6726,6 @@ Town.blacksmith = { // Shield must come after armor (currently)
 	Gloves:	/gauntlet|glove|hand|bracer|Slayer's Embrace/i,
 	Armor:	/armor|chainmail|cloak|pauldrons|plate|raiments|robe|Blood Vestment|Garlans Battlegear|Faerie Wings/i,
 	Amulet:	/amulet|bauble|charm|crystal|eye|heart|insignia|jewel|lantern|memento|orb|shard|soul|talisman|trinket|Paladin's Oath|Poseidons Horn| Ring|Ring of|Ruby Ore|Thawing Star/i
-};
-
-Town.init = function() {
-	if (this.data.soldiers || this.data.blacksmith || this.data.magic) { // Need to reparse with new code...
-		this.data = {};
-		Page.set('town_soldiers', 0);
-		Page.set('town_blacksmith', 0);
-		Page.set('town_magic', 0);
-	}
 };
 
 Town.parse = function(change) {

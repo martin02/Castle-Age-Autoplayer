@@ -47,7 +47,7 @@ global = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCSS: " + err);
+            log("ERROR in AddCSS: " + err);
             return false;
         }
     },
@@ -69,7 +69,7 @@ global = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in alert: " + err);
+            log("ERROR in alert: " + err);
             return false;
         }
     },

@@ -8,6 +8,8 @@ rm -f _normal.user.js _min.user.js
 
 echo "Joining files into _normal.user.js"
 cat _head.js > _normal.user.js
+cat game-golem/_head_tortoise.js >> _normal.user.js
+cat _main_golem.js >> _normal.user.js
 cat game-golem/css.js >> _normal.user.js
 cat game-golem/utility.js >> _normal.user.js
 cat game-golem/worker.js >> _normal.user.js

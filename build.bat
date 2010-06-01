@@ -8,6 +8,8 @@ del /F /Q _normal.user.js _min.user.js 2>nul
 
 echo Joining files into _normal.user.js
 type _head.js >_normal.user.js 2>nul
+type game-golem\_head_tortoise.js >>_normal.user.js 2>nul
+type _main_golem.js >>_normal.user.js 2>nul
 type game-golem\css.js >>_normal.user.js 2>nul
 type game-golem\utility.js >>_normal.user.js 2>nul
 type game-golem\worker.js >>_normal.user.js 2>nul

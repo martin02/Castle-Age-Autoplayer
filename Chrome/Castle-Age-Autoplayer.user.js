@@ -39,6 +39,57 @@ String.prototype.stripHTML = function (html) {
 };
 
 ///////////////////////////
+var revision = "495";
+//////////   Start Golem _main.js
+
+// User changeable
+var show_debug = true;
+
+// Shouldn't touch
+var VERSION = "31.1";
+var script_started = Date.now();
+
+// Automatically filled
+var userID = 0;
+var imagepath = '';
+var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
+
+// Decide which facebook app we're in...
+if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
+	var applications = {
+		'reqs.php':['','Gifts'], // For gifts etc
+		'castle_age':['46755028429', 'Castle Age']
+	};
+
+	for (var i in applications) {
+		if (window.location.pathname.indexOf(i) === 1) {
+			var APP = i;
+			var APPID = applications[i][0];
+			var APPNAME = applications[i][1];
+			var PREFIX = 'golem'+APPID+'_';
+			break;
+		}
+	}
+	if (typeof APP !== 'undefined') {
+		var log = function(txt){
+			console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+		}
+
+		if (show_debug) {
+			var debug = function(txt) {
+				console.log('[' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '] [' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+			};
+		} else {
+			var debug = function(){};
+		}
+
+		if (typeof unsafeWindow === 'undefined') {
+			var unsafeWindow = window;
+		}
+    }
+}
+
+//////////   End Golem _main.js
 /********** CSS code **********
 * Gets pushed into the <head> on loading
 */
@@ -7047,7 +7098,7 @@ global = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCSS: " + err);
+            log("ERROR in AddCSS: " + err);
             return false;
         }
     },
@@ -7069,7 +7120,7 @@ global = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in alert: " + err);
+            log("ERROR in alert: " + err);
             return false;
         }
     },
@@ -7135,7 +7186,7 @@ gm = {
 
             return value == y && value.toString() == y.toString();
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.isInt: " + err);
+            log("ERROR in gm.isInt: " + err);
             return false;
         }
     },
@@ -7155,7 +7206,7 @@ gm = {
             GM_setValue(global.gameName + "__" + n, v);
             return v;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in gm.setValue: " + err);
+            log("ERROR in gm.setValue: " + err);
             return null;
         }
     },
@@ -7425,7 +7476,7 @@ nHtml = {
         var xp = ".//" + tag + "[" + className + "]";
         try {
             if (obj === null) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Trying to find xpath with null obj:' + xp);
+                log('Trying to find xpath with null obj:' + xp);
                 return null;
             }
 
@@ -7435,7 +7486,7 @@ nHtml = {
 
             q = subDocument.evaluate(xp, obj, null, this.xpath.first, null);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "XPath Failed:" + xp + "," + err);
+            log("XPath Failed:" + xp + "," + err);
         }
 
         if (q && q.singleNodeValue) {
@@ -7570,14 +7621,14 @@ nHtml = {
     ResetIFrame: function (key) {
         var iframe = document.getElementById(key);
         if (iframe) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Deleting iframe = " + key);
+            log("Deleting iframe = " + key);
             iframe.parentNode.removeChild(iframe);
         } else {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Frame not found = " + key);
+            log("Frame not found = " + key);
         }
 
         if (document.getElementById(key)) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found iframe");
+            log("Found iframe");
         }
     },
 
@@ -7594,18 +7645,18 @@ nHtml = {
     },
 
     ScrollToBottom: function () {
-        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll Height: " + document.body.scrollHeight);
+        //log("Scroll Height: " + document.body.scrollHeight);
         if (document.body.scrollHeight) {
             if (global.is_chrome) {
                 var dh = document.body.scrollHeight;
                 var ch = document.body.clientHeight;
                 if (dh > ch) {
                     var moveme = dh - ch;
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling down by: " + moveme + "px");
+                    log("Scrolling down by: " + moveme + "px");
                     window.scroll(0, moveme);
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
+                    log("Scrolled ok");
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not scrolling to bottom. Client height is greater than document height!");
+                    log("Not scrolling to bottom. Client height is greater than document height!");
                 }
             } else {
                 window.scrollBy(0, document.body.scrollHeight);
@@ -7615,9 +7666,9 @@ nHtml = {
 
     ScrollToTop: function () {
         if (global.is_chrome) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolling to top");
+            log("Scrolling to top");
             window.scroll(0, 0);
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scrolled ok");
+            log("Scrolled ok");
         } else {
             window.scrollByPages(-1000);
         }
@@ -7681,7 +7732,7 @@ caap = {
             this.CheckResults();
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in init: " + err);
+            log("ERROR in init: " + err);
             return false;
         }
     },
@@ -7697,7 +7748,7 @@ caap = {
             window.location.href = url;
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in VisitUrl: " + err);
+            log("ERROR in VisitUrl: " + err);
             return false;
         }
     },
@@ -7724,7 +7775,7 @@ caap = {
             */
             return !obj.dispatchEvent(evt);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Click: " + err);
+            log("ERROR in Click: " + err);
             return undefined;
         }
     },
@@ -7742,7 +7793,7 @@ caap = {
 
             return this.VisitUrl("javascript:void(a46755028429_ajaxLinkSend('globalContainer', '" + link + "'))", loadWaitTime);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClickAjax: " + err);
+            log("ERROR in ClickAjax: " + err);
             return false;
         }
     },
@@ -7755,7 +7806,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClickWait: " + err);
+            log("ERROR in ClickWait: " + err);
             return false;
         }
     },
@@ -7787,14 +7838,14 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in BuildGeneralLists: " + err);
+            log("ERROR in BuildGeneralLists: " + err);
             return false;
         }
     },
 
     ClearGeneral: function (whichGeneral) {
         try {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting ' + whichGeneral + ' to "Use Current"');
+            log('Setting ' + whichGeneral + ' to "Use Current"');
             gm.setValue(whichGeneral, 'Use Current');
             this.BuildGeneralLists();
             for (var generalType in this.standardGeneralList) {
@@ -7809,7 +7860,7 @@ caap = {
             this.ChangeDropDownList('LevelUpGeneral', this.generalList, gm.getValue('LevelUpGeneral', 'Use Current'));
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClearGeneral: " + err);
+            log("ERROR in ClearGeneral: " + err);
             return false;
         }
     },
@@ -7832,7 +7883,7 @@ caap = {
             gm.setValue('reset' + funcName, false);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in oneMinuteUpdate: " + err);
+            log("ERROR in oneMinuteUpdate: " + err);
             return false;
         }
     },
@@ -7841,7 +7892,7 @@ caap = {
         try {
             var content = document.getElementById('content');
             if (!content) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No content to Navigate to ' + imageOnPage + ' using ' + pathToPage);
+                log('No content to Navigate to ' + imageOnPage + ' using ' + pathToPage);
                 return false;
             }
 
@@ -7853,7 +7904,7 @@ caap = {
             for (var s = pathList.length - 1; s >= 0; s -= 1) {
                 var a = nHtml.FindByAttrXPath(content, 'a', "contains(@href,'/" + pathList[s] + ".php') and not(contains(@href,'" + pathList[s] + ".php?'))");
                 if (a) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Go to ' + pathList[s]);
+                    log('Go to ' + pathList[s]);
                     gm.setValue('clickUrl', 'http://apps.facebook.com/castle_age/' + pathList[s] + '.php');
                     this.Click(a);
                     return true;
@@ -7866,23 +7917,23 @@ caap = {
 
                 var input = nHtml.FindByAttrContains(document.body, "input", "src", imageTest);
                 if (input) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Click on image ' + input.src.match(/[\w.]+$/));
+                    log('Click on image ' + input.src.match(/[\w.]+$/));
                     this.Click(input);
                     return true;
                 }
 
                 var img = nHtml.FindByAttrContains(document.body, "img", "src", imageTest);
                 if (img) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Click on image ' + img.src.match(/[\w.]+$/));
+                    log('Click on image ' + img.src.match(/[\w.]+$/));
                     this.Click(img);
                     return true;
                 }
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to Navigate to ' + imageOnPage + ' using ' + pathToPage);
+            log('Unable to Navigate to ' + imageOnPage + ' using ' + pathToPage);
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in NavigateTo: " + imageOnPage + ' using ' + pathToPage + ' : ' + err);
+            log("ERROR in NavigateTo: " + imageOnPage + ' using ' + pathToPage + ' : ' + err);
             return false;
         }
     },
@@ -7914,7 +7965,7 @@ caap = {
 
             return null;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckForImage: " + err);
+            log("ERROR in CheckForImage: " + err);
             return null;
         }
     },
@@ -7928,7 +7979,7 @@ caap = {
             var now = (new Date().getTime());
             return (parseInt(nameOrNumber, 10) < (now - 1000 * seconds));
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in WhileSinceDidIt: " + err);
+            log("ERROR in WhileSinceDidIt: " + err);
             return false;
         }
     },
@@ -7943,7 +7994,7 @@ caap = {
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in JustDidIt: " + err);
+            log("ERROR in JustDidIt: " + err);
             return false;
         }
     },
@@ -7954,12 +8005,12 @@ caap = {
                 throw "name not provided!";
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Deceive Did It");
+            log("Deceive Did It");
             var now = (new Date().getTime()) - 6500000;
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DeceiveDidIt: " + err);
+            log("ERROR in DeceiveDidIt: " + err);
             return false;
         }
     },
@@ -7980,7 +8031,7 @@ caap = {
 
             return (nameTimer < now);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckTimer: " + err);
+            log("ERROR in CheckTimer: " + err);
             return false;
         }
     },
@@ -8026,7 +8077,7 @@ caap = {
                 return d_names[t_day] + " " + t_hour + ":" + t_min + " " + a_p;
             }
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in FormatTime: " + err);
+            log("ERROR in FormatTime: " + err);
             return "Time Err";
         }
     },
@@ -8047,7 +8098,7 @@ caap = {
             newTime.setTime(parseInt(nameTimer, 10));
             return this.FormatTime(newTime);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DisplayTimer: " + err);
+            log("ERROR in DisplayTimer: " + err);
             return false;
         }
     },
@@ -8067,7 +8118,7 @@ caap = {
             gm.setValue(name, now.toString());
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetTimer: " + err);
+            log("ERROR in SetTimer: " + err);
             return false;
         }
     },
@@ -8075,10 +8126,10 @@ caap = {
     NumberOnly: function (num) {
         try {
             var numOnly = parseFloat(num.toString().replace(new RegExp("[^0-9\\.]", "g"), ''));
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "NumberOnly: " + numOnly);
+            //log("NumberOnly: " + numOnly);
             return numOnly;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in NumberOnly: " + err);
+            log("ERROR in NumberOnly: " + err);
             return null;
         }
     },
@@ -8087,7 +8138,7 @@ caap = {
         try {
             return html.replace(new RegExp("\\&[^;]+;", "g"), '');
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RemoveHtmlJunk: " + err);
+            log("ERROR in RemoveHtmlJunk: " + err);
             return null;
         }
     },
@@ -8102,7 +8153,7 @@ caap = {
             $('#' + divName).append(text);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AppendTextToDiv: " + err);
+            log("ERROR in AppendTextToDiv: " + err);
             return false;
         }
     },
@@ -8147,7 +8198,7 @@ caap = {
             htmlCode += '</select>';
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeDropDown: " + err);
+            log("ERROR in MakeDropDown: " + err);
             return '';
         }
     },
@@ -8179,7 +8230,7 @@ caap = {
             htmlCode += '</select>';
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DBDropDown: " + err);
+            log("ERROR in DBDropDown: " + err);
             return '';
         }
     },
@@ -8204,7 +8255,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeCheckBox: " + err);
+            log("ERROR in MakeCheckBox: " + err);
             return '';
         }
     },
@@ -8226,7 +8277,7 @@ caap = {
             var htmlCode = " <input type='text' id='caap_" + idName + "' " + formatParms + " title=" + '"' + instructions + '" ' + "value='" + gm.getValue(idName, '') + "' />";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeNumberForm: " + err);
+            log("ERROR in MakeNumberForm: " + err);
             return '';
         }
     },
@@ -8242,7 +8293,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeCheckTR: " + err);
+            log("ERROR in MakeCheckTR: " + err);
             return '';
         }
     },
@@ -8253,7 +8304,7 @@ caap = {
                 (gm.getValue(parentId, false) ? 'block' : 'none') + "'>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCollapsingDiv: " + err);
+            log("ERROR in AddCollapsingDiv: " + err);
             return '';
         }
     },
@@ -8272,7 +8323,7 @@ caap = {
                 "<div id='caap_" + controlId + "' style='display: " + currentDisplay + "'>";
             return toggleCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ToggleControl: " + err);
+            log("ERROR in ToggleControl: " + err);
             return '';
         }
     },
@@ -8282,7 +8333,7 @@ caap = {
             var htmlCode = "<textarea title=" + '"' + instructions + '"' + " type='text' id='caap_" + idName + "' " + formatParms + ">" + gm.getValue(idName, '') + "</textarea>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeTextBox: " + err);
+            log("ERROR in MakeTextBox: " + err);
             return '';
         }
     },
@@ -8297,7 +8348,7 @@ caap = {
             gm.setValue(idName, boxText);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveBoxText: " + err);
+            log("ERROR in SaveBoxText: " + err);
             return false;
         }
     },
@@ -8316,7 +8367,7 @@ caap = {
 
             $('#caap_' + idName).html(mess);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetDivContent: " + err);
+            log("ERROR in SetDivContent: " + err);
         }
     },
 
@@ -8379,7 +8430,7 @@ caap = {
             $("#caap_" + idName + " option[value='" + value + "']").attr('selected', 'selected');
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SelectDropOption: " + err);
+            log("ERROR in SelectDropOption: " + err);
             return false;
         }
     },
@@ -8390,7 +8441,7 @@ caap = {
             $("#stopAutoQuest").css('display', 'block');
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ShowAutoQuest: " + err);
+            log("ERROR in ShowAutoQuest: " + err);
             return false;
         }
     },
@@ -8401,7 +8452,7 @@ caap = {
             $("#stopAutoQuest").css('display', 'none');
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ClearAutoQuest: " + err);
+            log("ERROR in ClearAutoQuest: " + err);
             return false;
         }
     },
@@ -8412,7 +8463,7 @@ caap = {
             this.ClearAutoQuest();
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ManualAutoQuest: " + err);
+            log("ERROR in ManualAutoQuest: " + err);
             return false;
         }
     },
@@ -8425,7 +8476,7 @@ caap = {
                 if (dropList.hasOwnProperty(item)) {
                     if (item == '0' && !option) {
                         gm.setValue(idName, dropList[item]);
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Saved: " + idName + "  Value: " + dropList[item]);
+                        log("Saved: " + idName + "  Value: " + dropList[item]);
                     }
 
                     $("#caap_" + idName).append("<option value='" + dropList[item] + "'>" + dropList[item] + "</option>");
@@ -8439,7 +8490,7 @@ caap = {
             }
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ChangeDropDownList: " + err);
+            log("ERROR in ChangeDropDownList: " + err);
             return false;
         }
     },
@@ -8488,7 +8539,7 @@ caap = {
 
             return {x: newLeft, y: newTop};
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetControlXY: " + err);
+            log("ERROR in GetControlXY: " + err);
             return {x: 0, y: 0};
         }
     },
@@ -8501,7 +8552,7 @@ caap = {
             gm.setValue('caap_top_zIndex', '1');
             gm.setValue('caap_div_zIndex', '2');
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveControlXY: " + err);
+            log("ERROR in SaveControlXY: " + err);
         }
     },
 
@@ -8530,7 +8581,7 @@ caap = {
 
             return {x: newLeft, y: newTop};
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetDashboardXY: " + err);
+            log("ERROR in GetDashboardXY: " + err);
             return {x: 0, y: 0};
         }
     },
@@ -8543,7 +8594,7 @@ caap = {
             gm.setValue('caap_div_zIndex', '1');
             gm.setValue('caap_top_zIndex', '2');
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SaveDashboardXY: " + err);
+            log("ERROR in SaveDashboardXY: " + err);
         }
     },
 
@@ -8607,7 +8658,7 @@ caap = {
             $("#caap_ResetMenuLocation").button();
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddControl: " + err);
+            log("ERROR in AddControl: " + err);
             return false;
         }
     },
@@ -8622,7 +8673,7 @@ caap = {
             htmlCode += "<div id='caapPaused' style='display: " + gm.getValue('caapPause', 'block') + "'><b>Paused on mouse click.</b><br /><a href='javascript:;' id='caapRestart' >Click here to restart</a></div><hr />";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddPauseMenu: " + err);
+            log("ERROR in AddPauseMenu: " + err);
             return false;
         }
     },
@@ -8636,7 +8687,7 @@ caap = {
             htmlCode += this.MakeCheckTR("Disable Autoplayer", 'Disabled', false, '', autoRunInstructions) + '</table><hr />';
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDisableMenu: " + err);
+            log("ERROR in AddDisableMenu: " + err);
             return false;
         }
     },
@@ -8671,7 +8722,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddCashHealthMenu: " + err);
+            log("ERROR in AddCashHealthMenu: " + err);
             return false;
         }
     },
@@ -8726,7 +8777,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddQuestMenu: " + err);
+            log("ERROR in AddQuestMenu: " + err);
             return false;
         }
     },
@@ -8885,7 +8936,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddBattleMenu: " + err);
+            log("ERROR in AddBattleMenu: " + err);
             return false;
         }
     },
@@ -8982,7 +9033,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddMonsterMenu: " + err);
+            log("ERROR in AddMonsterMenu: " + err);
             return false;
         }
     },
@@ -9011,7 +9062,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddMonsterFinderMenu: " + err);
+            log("ERROR in AddMonsterFinderMenu: " + err);
             return false;
         }
     },
@@ -9053,7 +9104,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddReconMenu: " + err);
+            log("ERROR in AddReconMenu: " + err);
             return false;
         }
     },
@@ -9111,7 +9162,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddGeneralsMenu: " + err);
+            log("ERROR in AddGeneralsMenu: " + err);
             return false;
         }
     },
@@ -9182,7 +9233,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddSkillPointsMenu: " + err);
+            log("ERROR in AddSkillPointsMenu: " + err);
             return false;
         }
     },
@@ -9310,7 +9361,7 @@ caap = {
             htmlCode += "<hr/></div>";
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddOtherOptionsMenu: " + err);
+            log("ERROR in AddOtherOptionsMenu: " + err);
             return false;
         }
     },
@@ -9328,7 +9379,7 @@ caap = {
 
             return htmlCode;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddFooterMenu: " + err);
+            log("ERROR in AddFooterMenu: " + err);
             return false;
         }
     },
@@ -9372,7 +9423,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddColorWheels: " + err);
+            log("ERROR in AddColorWheels: " + err);
             return false;
         }
     },
@@ -9445,7 +9496,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDashboard: " + err);
+            log("ERROR in AddDashboard: " + err);
             return false;
         }
     },
@@ -9491,7 +9542,7 @@ caap = {
             if (!this.oneMinuteUpdate('dashboard') && $('#caap_infoMonster').html() && $('#caap_infoMonster').html()) {
                 /*
                 if (this.UpdateDashboardWaitLog) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Dashboard update is waiting on oneMinuteUpdate");
+                    log("Dashboard update is waiting on oneMinuteUpdate");
                     this.UpdateDashboardWaitLog = false;
                 }
                 */
@@ -9499,7 +9550,7 @@ caap = {
                 return false;
             }
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Updating Dashboard");
+            //log("Updating Dashboard");
             this.UpdateDashboardWaitLog = true;
             var html = "<table width=570 cellpadding=0 cellspacing=0 ><tr>";
             var displayItemList = ['Name', 'Damage', 'Damage%', 'Fort%', 'TimeLeft', 'T2K', 'Phase', 'Link'];
@@ -9544,7 +9595,7 @@ caap = {
 
                 html += caap.makeTd(monster, color);
                 displayItemList.forEach(function (displayItem) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + ' displayItem '+ displayItem + ' value '+ gm.getObjVal(monster,displayItem));
+                    //log(' displayItem '+ displayItem + ' value '+ gm.getObjVal(monster,displayItem));
                     if (displayItem == 'Phase' && color == 'grey') {
                         html += caap.makeTd(gm.getObjVal(monsterObj, 'status'), color);
                     } else {
@@ -9628,7 +9679,7 @@ caap = {
             $("#caap_infoTargets1").html(html);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in UpdateDashboard: " + err);
+            log("ERROR in UpdateDashboard: " + err);
             return false;
         }
     },
@@ -9668,7 +9719,7 @@ caap = {
             gm.setValue('resetdashboard', true);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in dbDisplayListener: " + err);
+            log("ERROR in dbDisplayListener: " + err);
             return false;
         }
     },
@@ -9702,7 +9753,7 @@ caap = {
             $('#caap_clearTargets').click(this.clearTargetsButtonListener);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddDBListener: " + err);
+            log("ERROR in AddDBListener: " + err);
             return false;
         }
     },
@@ -9737,7 +9788,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in SetDisplay: " + err);
+            log("ERROR in SetDisplay: " + err);
             return false;
         }
     },
@@ -9745,7 +9796,7 @@ caap = {
     CheckBoxListener: function (e) {
         try {
             var idName = e.target.id.replace(/caap_/i, '');
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Change: setting '" + idName + "' to " + e.target.checked);
+            log("Change: setting '" + idName + "' to " + e.target.checked);
             gm.setValue(idName, e.target.checked);
             if (e.target.className) {
                 caap.SetDisplay(e.target.className, e.target.checked);
@@ -9753,7 +9804,7 @@ caap = {
 
             switch (idName) {
             case "AutoStatAdv" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AutoStatAdv");
+                //log("AutoStatAdv");
                 if (e.target.checked) {
                     caap.SetDisplay('Status_Normal', false);
                     caap.SetDisplay('Status_Adv', true);
@@ -9765,7 +9816,7 @@ caap = {
                 caap.statsMatch = true;
                 break;
             case "HideAds" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "HideAds");
+                //log("HideAds");
                 if (e.target.checked) {
                     $('.UIStandardFrame_SidebarAds').css('display', 'none');
                 } else {
@@ -9774,7 +9825,7 @@ caap = {
 
                 break;
             case "BannerDisplay" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "HideAds");
+                //log("HideAds");
                 if (e.target.checked) {
                     $('#caap_BannerHide').css('display', 'block');
                 } else {
@@ -9783,20 +9834,20 @@ caap = {
 
                 break;
             case "IgnoreBattleLoss" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "IgnoreBattleLoss");
+                //log("IgnoreBattleLoss");
                 if (e.target.checked) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Ignore Battle Losses has been enabled.");
+                    log("Ignore Battle Losses has been enabled.");
                     gm.deleteValue("BattlesLostList");
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Battle Lost List has been cleared.");
+                    log("Battle Lost List has been cleared.");
                 }
 
                 break;
             case "SetTitle" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitle");
+                //log("SetTitle");
             case "SetTitleAction" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitleAction");
+                //log("SetTitleAction");
             case "SetTitleName" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "SetTitleName");
+                //log("SetTitleName");
                 if (e.target.checked) {
                     var DocumentTitle = '';
                     if (gm.getValue('SetTitleAction', false)) {
@@ -9817,7 +9868,7 @@ caap = {
 
                 break;
             case "unlockMenu" :
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "unlockMenu");
+                //log("unlockMenu");
                 if (e.target.checked) {
                     $(":input[id^='caap_']").attr({disabled: true});
                     caap.caapDivObject.css('cursor', 'move').draggable({
@@ -9857,7 +9908,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckBoxListener: " + e);
+            log("ERROR in CheckBoxListener: " + e);
             return false;
         }
     },
@@ -9867,7 +9918,7 @@ caap = {
             var idName = e.target.id.replace(/caap_/i, ''),
                 value = e.target.value;
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + e.target.value + '"');
+            log('Change: setting "' + idName + '" to "' + e.target.value + '"');
 
             if (/Style+/.test(idName)) {
                 switch (idName) {
@@ -9902,7 +9953,7 @@ caap = {
             gm.setValue(idName, e.target.value);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in TextBoxListener: " + e);
+            log("ERROR in TextBoxListener: " + e);
             return false;
         }
     },
@@ -9914,7 +9965,7 @@ caap = {
                     value = e.target.options[e.target.selectedIndex].value,
                     title = e.target.options[e.target.selectedIndex].title;
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + value + '" with title "' + title + '"');
+                log('Change: setting "' + idName + '" to "' + value + '" with title "' + title + '"');
                 gm.setValue(idName, value);
                 e.target.title = title;
                 //caap.SelectDropOption(idName, value);
@@ -10036,7 +10087,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DropBoxListener: " + err);
+            log("ERROR in DropBoxListener: " + err);
             return false;
         }
     },
@@ -10046,7 +10097,7 @@ caap = {
             var idName = e.target.id.replace(/caap_/i, ''),
                 value = e.target.value;
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting "' + idName + '" to "' + value + '"');
+            log('Change: setting "' + idName + '" to "' + value + '"');
             if (idName == 'orderbattle_monster' || idName == 'orderraid') {
                 gm.setValue('monsterReview', 0);
                 gm.setValue('monsterReviewCounter', -3);
@@ -10057,7 +10108,7 @@ caap = {
             caap.SaveBoxText(idName);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in TextAreaListener: " + err);
+            log("ERROR in TextAreaListener: " + err);
             return false;
         }
     },
@@ -10083,7 +10134,7 @@ caap = {
             gm.setValue('caapPause', 'block');
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in PauseListener: " + err);
+            log("ERROR in PauseListener: " + err);
             return false;
         }
     },
@@ -10118,7 +10169,7 @@ caap = {
             caap.waitingForDomLoad = false;
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RestartListener: " + err);
+            log("ERROR in RestartListener: " + err);
             return false;
         }
     },
@@ -10163,7 +10214,7 @@ caap = {
             $(":input[id^='caap_']").attr({disabled: false});
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in ResetMenuLocationListener: " + err);
+            log("ERROR in ResetMenuLocationListener: " + err);
             return false;
         }
     },
@@ -10174,12 +10225,12 @@ caap = {
                 subDiv = document.getElementById(subId);
 
             if (subDiv.style.display == "block") {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Folding: ' + subId);
+                log('Folding: ' + subId);
                 subDiv.style.display = "none";
                 e.target.innerHTML = e.target.innerHTML.replace(/-/, '+');
                 gm.setValue('Control_' + subId.replace(/caap_/i, ''), "none");
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unfolding: ' + subId);
+                log('Unfolding: ' + subId);
                 subDiv.style.display = "block";
                 e.target.innerHTML = e.target.innerHTML.replace(/\+/, '-');
                 gm.setValue('Control_' + subId.replace(/caap_/i, ''), "block");
@@ -10187,7 +10238,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in FoldingBlockListener: " + err);
+            log("ERROR in FoldingBlockListener: " + err);
             return false;
         }
     },
@@ -10203,10 +10254,10 @@ caap = {
                 gm.setValue('clickUrl', obj.href);
             }
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'globalContainer: ' + obj.href);
+            //log('globalContainer: ' + obj.href);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in whatClickedURLListener: " + err);
+            log("ERROR in whatClickedURLListener: " + err);
             return false;
         }
     },
@@ -10222,14 +10273,14 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in windowResizeListener: " + err);
+            log("ERROR in windowResizeListener: " + err);
             return false;
         }
     },
 
     AddListeners: function () {
         try {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Adding listeners for caap_div");
+            log("Adding listeners for caap_div");
             if ($('#caap_div').length === 0) {
                 throw "Unable to find div for caap_div";
             }
@@ -10270,7 +10321,7 @@ caap = {
             $('#caap_ResetMenuLocation').click(this.ResetMenuLocationListener);
             $('#caap_resetElite').click(function (e) {
 				Elite.runtime.waitelite = 0;
-				console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + ' elite run ' + Elite.runtime.waitelite);
+				log(' elite run ' + Elite.runtime.waitelite);
                 if (!gm.getValue('FillArmy', false)) {
                     gm.deleteValue(caap.friendListType.giftc.name + 'Requested');
                     gm.deleteValue(caap.friendListType.giftc.name + 'Responded');
@@ -10286,7 +10337,7 @@ caap = {
             $('#stopAutoQuest').click(function (e) {
                 gm.setValue('AutoQuest', '');
                 gm.setValue('WhyQuest', 'Manual');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Change: setting stopAutoQuest and go to Manual');
+                log('Change: setting stopAutoQuest and go to Manual');
                 caap.ManualAutoQuest();
             });
 
@@ -10338,7 +10389,7 @@ caap = {
 
                     caap.waitingForDomLoad = false;
 
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Refreshing DOM Listeners");
+                    //log("Refreshing DOM Listeners");
                     $('#app46755028429_globalContainer').find('a').unbind('click', caap.whatClickedURLListener);
                     $('#app46755028429_globalContainer').find('a').bind('click', caap.whatClickedURLListener);
 
@@ -10365,10 +10416,10 @@ caap = {
             We add our listener for the Display Select control.
             \-------------------------------------------------------------------------------------*/
             this.AddDBListener();
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Listeners added for CAAP");
+            //log("Listeners added for CAAP");
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddListeners: " + e);
+            log("ERROR in AddListeners: " + e);
             return false;
         }
     },
@@ -10421,7 +10472,7 @@ caap = {
                 'dif': dif
             };
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetStatusNumbers: " + e);
+            log("ERROR in GetStatusNumbers: " + e);
             return {
                 'num': 0,
                 'max': 0,
@@ -10459,7 +10510,7 @@ caap = {
                         gm.setValue('MyRank', this.stats.rank);
                         this.JustDidIt('MyRankLast');
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unknown rank " + rank + ':' + rankm[1].toString());
+                        log("Unknown rank " + rank + ':' + rankm[1].toString());
                     }
                 }
 
@@ -10512,7 +10563,7 @@ caap = {
 
                 gm.setValue('Level', this.stats.level);
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Could not find level re');
+                log('Could not find level re');
             }
 
             this.stats.rank = parseInt(gm.getValue('MyRank'), 10);
@@ -10528,7 +10579,7 @@ caap = {
                 this.stats.army = army;
                 var armyMess = "Army: " + this.stats.army;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't find armyRe in " + txtArmy);
+                log("Can't find armyRe in " + txtArmy);
             }
 
             // gold
@@ -10575,7 +10626,7 @@ caap = {
             // return true if probably working
             return cashObj && (health !== null);
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR GetStats: " + e);
+            log("ERROR GetStats: " + e);
             return false;
         }
     },
@@ -10664,7 +10715,7 @@ caap = {
 
         var now = (new Date().getTime());
         var elapsedTime = now - parseInt(gm.getValue('performanceTimer', 0), 10);
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Performance Timer At ' + marker + ' Time elapsed: ' + elapsedTime);
+        log('Performance Timer At ' + marker + ' Time elapsed: ' + elapsedTime);
         gm.setValue('performanceTimer', now.toString());
     },
 
@@ -10680,24 +10731,24 @@ caap = {
             this.JustDidIt('CheckResultsTimer');
             gm.setValue('page', '');
             var pageUrl = gm.getValue('clickUrl');
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page url: " + pageUrl);
+            //log("Page url: " + pageUrl);
             var page = 'None';
             if (pageUrl.match(new RegExp("\/[^\/]+.php", "i"))) {
                 page = pageUrl.match(new RegExp("\/[^\/]+.php", "i"))[0].replace('/', '').replace('.php', '');
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page match: " + page);
+                //log("Page match: " + page);
             }
 
             if (this.pageList[page]) {
                 if (this.CheckForImage(this.pageList[page].signaturePic)) {
                     page = gm.setValue('page', page);
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page set value: " + page);
+                    //log("Page set value: " + page);
                 }
 
                 if (this.pageList[page].subpages) {
                     this.pageList[page].subpages.forEach(function (subpage) {
                         if (caap.CheckForImage(caap.pageList[subpage].signaturePic)) {
                             page = gm.setValue('page', subpage);
-                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Page pubpage: " + page);
+                            //log("Page pubpage: " + page);
                         }
                     });
                 }
@@ -10710,14 +10761,14 @@ caap = {
             }
 
             if (gm.getValue('page', '')) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Checking results for ' + page);
+                log('Checking results for ' + page);
                 if (typeof this[this.pageList[page].CheckResultsFunction] == 'function') {
                     this[this.pageList[page].CheckResultsFunction](resultsText);
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Check Results function not found: ' + this[this.pageList[page].CheckResultsFunction]);
+                    log('Check Results function not found: ' + this[this.pageList[page].CheckResultsFunction]);
                 }
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No results check defined for ' + page);
+                log('No results check defined for ' + page);
             }
 
             if (!this.stats.stamina) {
@@ -10733,14 +10784,14 @@ caap = {
             // Check for new gifts
             if (!gm.getValue('HaveGift')) {
                 if (nHtml.FindByAttrContains(document.body, 'a', 'href', 'reqs.php#confirm_')) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We have a gift waiting!');
+                    log('We have a gift waiting!');
                     gm.setValue('HaveGift', true);
                 } else {
                     var beepDiv = nHtml.FindByAttrContains(document.body, 'div', 'class', 'UIBeep_Title');
                     if (beepDiv) {
                         var beepText = $.trim(nHtml.GetText(beepDiv));
                         if (beepText.match(/sent you a gift/) && !beepText.match(/notification/)) {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We have a gift waiting');
+                            log('We have a gift waiting');
                             gm.setValue('HaveGift', true);
                         }
                     }
@@ -10772,7 +10823,7 @@ caap = {
                     var goldStored = this.NumberOnly(moneyElem.firstChild.data);
                     if (goldStored >= 0) {
                         gm.setValue('inStore', goldStored);
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Keep: Checked the gold in store: " + gm.getValue('inStore'));
+                        //log("Keep: Checked the gold in store: " + gm.getValue('inStore'));
                     }
                 }
             }
@@ -10785,7 +10836,7 @@ caap = {
 
             this.performanceTimer('Done CheckResults');
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults: " + err);
+            log("ERROR in CheckResults: " + err);
         }
     },
 
@@ -10796,7 +10847,7 @@ caap = {
 
     MaxEnergyQuest: function () {
         if (!gm.getValue('MaxIdleEnergy', 0)) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max energy");
+            log("Changing to idle general to get Max energy");
             return this.PassiveGeneral();
         }
 
@@ -10879,7 +10930,7 @@ caap = {
                 }
 
                 this.SetDivContent('quest_mess', 'Searching for quest.');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Searching for quest");
+                log("Searching for quest");
             } else {
                 var energyCheck = this.CheckEnergy(gm.getObjVal('AutoQuest', 'energy'), gm.getValue('WhenQuest', 'Never'), 'quest_mess');
                 if (!energyCheck) {
@@ -10901,7 +10952,7 @@ caap = {
                     return true;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
+                log('Using level up general');
             }
 
             switch (gm.getValue('QuestArea', 'Quest')) {
@@ -10957,9 +11008,9 @@ caap = {
                     if (this.SelectGeneral('LevelUpGeneral')) {
                         return true;
                     }
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
+                    log('Using level up general');
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick switch general button.');
+                    log('Clicking on quick switch general button.');
                     this.Click(button);
                     return true;
                 }
@@ -10976,17 +11027,17 @@ caap = {
 
                 gm.setValue('storeRetrieve', '');
                 costToBuy = itemBuyPopUp.textContent.replace(new RegExp(".*\\$"), '').replace(new RegExp("[^0-9]{3,}.*"), '');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "costToBuy = " + costToBuy);
+                log("costToBuy = " + costToBuy);
                 if (this.stats.cash < costToBuy) {
                     //Retrieving from Bank
                     if (this.stats.cash + (gm.getNumber('inStore', 0) - gm.getNumber('minInStore', 0)) >= costToBuy) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying to retrieve: " + (costToBuy - this.stats.cash));
+                        log("Trying to retrieve: " + (costToBuy - this.stats.cash));
                         gm.setValue("storeRetrieve", costToBuy - this.stats.cash);
                         return this.RetrieveFromBank(costToBuy - this.stats.cash);
                     } else {
                         gm.setValue('AutoQuest', '');
                         gm.setValue('WhyQuest', 'Manual');
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant buy requires, stopping quest");
+                        log("Cant buy requires, stopping quest");
                         this.ManualAutoQuest();
                         return false;
                     }
@@ -10994,12 +11045,12 @@ caap = {
 
                 button = this.CheckForImage('quick_buy_button.jpg');
                 if (button) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick buy button.');
+                    log('Clicking on quick buy button.');
                     this.Click(button);
                     return true;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant find buy button");
+                log("Cant find buy button");
                 return false;
             }
 
@@ -11014,37 +11065,37 @@ caap = {
                 costToBuy = button.previousElementSibling.previousElementSibling.previousElementSibling
                     .previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling
                     .firstChild.data.replace(new RegExp("[^0-9]", "g"), '');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "costToBuy = " + costToBuy);
+                log("costToBuy = " + costToBuy);
                 if (this.stats.cash < costToBuy) {
                     //Retrieving from Bank
                     if (this.stats.cash + (gm.getNumber('inStore', 0) - gm.getNumber('minInStore', 0)) >= costToBuy) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying to retrieve: " + (costToBuy - this.stats.cash));
+                        log("Trying to retrieve: " + (costToBuy - this.stats.cash));
                         gm.setValue("storeRetrieve", costToBuy - this.stats.cash);
                         return this.RetrieveFromBank(costToBuy - this.stats.cash);
                     } else {
                         gm.setValue('AutoQuest', '');
                         gm.setValue('WhyQuest', 'Manual');
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Cant buy General, stopping quest");
+                        log("Cant buy General, stopping quest");
                         this.ManualAutoQuest();
                         return false;
                     }
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on quick buy general button.');
+                log('Clicking on quick buy general button.');
                 this.Click(button);
                 return true;
             }
 
             var autoQuestDivs = this.CheckResults_quests(true);
             if (!gm.getObjVal('AutoQuest', 'name')) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Could not find AutoQuest.');
+                log('Could not find AutoQuest.');
                 this.SetDivContent('quest_mess', 'Could not find AutoQuest.');
                 return false;
             }
 
             var autoQuestName = gm.getObjVal('AutoQuest', 'name');
             if (gm.getObjVal('AutoQuest', 'name') != autoQuestName) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'New AutoQuest found.');
+                log('New AutoQuest found.');
                 this.SetDivContent('quest_mess', 'New AutoQuest found.');
                 return true;
             }
@@ -11054,7 +11105,7 @@ caap = {
                 var background = nHtml.FindByAttrContains(autoQuestDivs.tr, "div", "style", 'background-color');
                 if (background) {
                     if (background.style.backgroundColor == 'rgb(158, 11, 15)') {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + " background.style.backgroundColor = " + background.style.backgroundColor);
+                        log(" background.style.backgroundColor = " + background.style.backgroundColor);
                         gm.setValue('storeRetrieve', 'general');
                         if (this.SelectGeneral('BuyGeneral')) {
                             return true;
@@ -11062,14 +11113,14 @@ caap = {
 
                         gm.setValue('storeRetrieve', '');
                         if (background.firstChild.firstChild.title) {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Clicking to buy " + background.firstChild.firstChild.title);
+                            log("Clicking to buy " + background.firstChild.firstChild.title);
                             this.Click(background.firstChild.firstChild);
                             return true;
                         }
                     }
                 }
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not buy quest item');
+                log('Can not buy quest item');
                 return false;
             }
 
@@ -11086,32 +11137,32 @@ caap = {
                         return true;
                     }
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Using level up general');
+                    log('Using level up general');
                 } else {
                     if (autoQuestDivs.genDiv !== undefined) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking on general ' + general);
+                        log('Clicking on general ' + general);
                         this.Click(autoQuestDivs.genDiv);
                         return true;
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not click on general ' + general);
+                        log('Can not click on general ' + general);
                         return false;
                     }
                 }
             }
 
             if (autoQuestDivs.click !== undefined) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking auto quest: ' + autoQuestName);
+                log('Clicking auto quest: ' + autoQuestName);
                 gm.setValue('ReleaseControl', true);
                 this.Click(autoQuestDivs.click, 10000);
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Quests: " + autoQuestName + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                //log("Quests: " + autoQuestName + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                 this.ShowAutoQuest();
                 return true;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not click auto quest: ' + autoQuestName);
+                log('Can not click auto quest: ' + autoQuestName);
                 return false;
             }
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Quests: " + err);
+            log("ERROR in Quests: " + err);
             return false;
         }
     },
@@ -11119,14 +11170,14 @@ caap = {
     questName: null,
 
     QuestManually: function () {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "QuestManually: Setting manual quest options");
+        log("QuestManually: Setting manual quest options");
         gm.setValue('AutoQuest', '');
         gm.setValue('WhyQuest', 'Manual');
         this.ManualAutoQuest();
     },
 
     UpdateQuestGUI: function () {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "UpdateQuestGUI: Setting drop down menus");
+        log("UpdateQuestGUI: Setting drop down menus");
         this.SelectDropOption('QuestArea', gm.getValue('QuestArea'));
         this.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
     },
@@ -11147,7 +11198,7 @@ caap = {
                 ss = document.evaluate(".//div[contains(@id,'symbol_displaysymbolquest')]",
                     div, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                 if (ss.snapshotLength <= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Failed to find symbol_displaysymbolquest");
+                    log("Failed to find symbol_displaysymbolquest");
                 }
 
                 for (s = 0; s < ss.snapshotLength; s += 1) {
@@ -11161,7 +11212,7 @@ caap = {
             ss = document.evaluate(".//div[contains(@class,'quests_background')]",
                 div, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Failed to find quests_background");
+                log("Failed to find quests_background");
                 return false;
             }
 
@@ -11199,7 +11250,7 @@ caap = {
                     if (expObj) {
                         experience = (this.NumberOnly(nHtml.GetText(expObj)));
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find experience:' + this.questName);
+                        log('cannot find experience:' + this.questName);
                     }
                 }
 
@@ -11219,7 +11270,7 @@ caap = {
                 }
 
                 if (!energy) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find energy for quest:' + this.questName);
+                    log('cannot find energy for quest:' + this.questName);
                     continue;
                 }
 
@@ -11229,12 +11280,12 @@ caap = {
                     var rewardHigh = this.NumberOnly(moneyM[2]);
                     reward = (rewardLow + rewardHigh) / 2;
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no money found:' + this.questName + ' in ' + divTxt);
+                    log('no money found:' + this.questName + ' in ' + divTxt);
                 }
 
                 var click = nHtml.FindByAttr(div, "input", "name", /^Do/);
                 if (!click) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no button found:' + this.questName);
+                    log('no button found:' + this.questName);
                     continue;
                 }
                 var influence = null;
@@ -11250,12 +11301,12 @@ caap = {
                     if (influenceList) {
                         influence = influenceList[1];
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Influence div not found.");
+                        log("Influence div not found.");
                     }
                 }
 
                 if (!influence) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no influence found:' + this.questName + ' in ' + divTxt);
+                    log('no influence found:' + this.questName + ' in ' + divTxt);
                 }
 
                 var general = 'none';
@@ -11278,7 +11329,7 @@ caap = {
                 }
 
                 if (s === 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Adding Quest Labels and Listeners");
+                    log("Adding Quest Labels and Listeners");
                 }
 
                 this.LabelQuests(div, energy, reward, experience, click);
@@ -11299,7 +11350,7 @@ caap = {
                                 pickQuestTF = true;
                             }
                         } else {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find influence:' + this.questName + ': ' + influence);
+                            log('cannot find influence:' + this.questName + ': ' + influence);
                         }
 
                         break;
@@ -11310,7 +11361,7 @@ caap = {
                                 pickQuestTF = true;
                             }
                         } else {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'cannot find influence:' + this.questName + ': ' + influence);
+                            log('cannot find influence:' + this.questName + ': ' + influence);
                         }
 
                         break;
@@ -11336,9 +11387,9 @@ caap = {
                     if (gm.getObjVal('AutoQuest', 'name') == this.questName) {
                         bestReward = rewardRatio;
                         var expRatio = experience / energy;
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Setting AutoQuest");
+                        log("CheckResults_quests: Setting AutoQuest");
                         gm.setValue('AutoQuest', 'name' + global.ls + this.questName + global.vs + 'energy' + global.ls + energy + global.vs + 'general' + global.ls + general + global.vs + 'expRatio' + global.ls + expRatio);
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                        //log("CheckResults_quests: " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                         this.ShowAutoQuest();
                         autoQuestDivs.click  = click;
                         autoQuestDivs.tr     = div;
@@ -11349,7 +11400,7 @@ caap = {
 
             if (pickQuestTF) {
                 if (gm.getObjVal('AutoQuest', 'name')) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests(pickQuestTF): " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
+                    //log("CheckResults_quests(pickQuestTF): " + gm.getObjVal('AutoQuest', 'name') + " (energy: " + gm.getObjVal('AutoQuest', 'energy') + ")");
                     this.ShowAutoQuest();
                     return autoQuestDivs;
                 }
@@ -11401,11 +11452,11 @@ caap = {
                         this.ChangeDropDownList('QuestSubArea', this.atlantisQuestList);
                         break;
                     case 'Atlantis':
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Final QuestSubArea: " + gm.getValue('QuestSubArea'));
+                        log("CheckResults_quests: Final QuestSubArea: " + gm.getValue('QuestSubArea'));
                         this.QuestManually();
                         break;
                     default :
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Unknown QuestSubArea: " + gm.getValue('QuestSubArea'));
+                        log("CheckResults_quests: Unknown QuestSubArea: " + gm.getValue('QuestSubArea'));
                         this.QuestManually();
                     }
 
@@ -11413,14 +11464,14 @@ caap = {
                     return false;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "CheckResults_quests: Finished QuestArea.");
+                log("CheckResults_quests: Finished QuestArea.");
                 this.QuestManually();
                 return false;
             }
 
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_quests: " + err);
+            log("ERROR in CheckResults_quests: " + err);
             this.QuestManually();
             return false;
         }
@@ -11514,12 +11565,12 @@ caap = {
 
                 break;
             default :
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error: cant find QuestSubArea: " + QuestSubArea);
+                log("Error: cant find QuestSubArea: " + QuestSubArea);
             }
 
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckCurrentQuestArea: " + err);
+            log("ERROR in CheckCurrentQuestArea: " + err);
             return false;
         }
     },
@@ -11528,7 +11579,7 @@ caap = {
         try {
             var item_title = nHtml.FindByAttrXPath(questDiv, 'div', "@class='quest_desc' or @class='quest_sub_title'");
             if (!item_title) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't find quest description or sub-title");
+                log("Can't find quest description or sub-title");
                 return false;
             }
 
@@ -11538,20 +11589,20 @@ caap = {
 
             var firstb = item_title.getElementsByTagName('b')[0];
             if (!firstb) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't get bolded member out of " + item_title.innerHTML.toString());
+                log("Can't get bolded member out of " + item_title.innerHTML.toString());
                 return false;
             }
 
             this.questName = $.trim(firstb.innerHTML.toString()).stripHTML();
             if (!this.questName) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no quest name for this row: ' + div.innerHTML);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'no quest name for this row');
+                //log('no quest name for this row: ' + div.innerHTML);
+                log('no quest name for this row');
                 return false;
             }
 
             return this.questName;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetQuestName: " + err);
+            log("ERROR in GetQuestName: " + err);
             return false;
         }
     },
@@ -11601,7 +11652,7 @@ caap = {
                 }
             } else if (condition == 'At Max Energy') {
                 if (!gm.getValue('MaxIdleEnergy', 0)) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max energy");
+                    log("Changing to idle general to get Max energy");
                     this.PassiveGeneral();
                 }
 
@@ -11624,7 +11675,7 @@ caap = {
 
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckEnergy: " + err);
+            log("ERROR in CheckEnergy: " + err);
             return false;
         }
     },
@@ -11634,7 +11685,7 @@ caap = {
             element.addEventListener(type, this[listener], usecapture);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddLabelListener: " + err);
+            log("ERROR in AddLabelListener: " + err);
             return false;
         }
     },
@@ -11671,7 +11722,7 @@ caap = {
                     gm.setValue('QuestSubArea', 'Kingdom of Heaven');
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             } else if (caap.CheckForImage('demi_quest_on.gif')) {
                 gm.setValue('QuestArea', 'Demi Quests');
@@ -11690,7 +11741,7 @@ caap = {
                     gm.setValue('QuestSubArea', 'Azeron');
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             } else if (caap.CheckForImage('tab_atlantis_on.gif')) {
                 gm.setValue('QuestArea', 'Atlantis');
@@ -11700,14 +11751,14 @@ caap = {
                     gm.setValue('QuestSubArea', 'Atlantis');
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
+                log('Setting QuestSubArea to: ' + gm.getValue('QuestSubArea'));
                 caap.SelectDropOption('QuestSubArea', gm.getValue('QuestSubArea'));
             }
 
             caap.ShowAutoQuest();
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in LabelListener: " + err);
+            log("ERROR in LabelListener: " + err);
             return false;
         }
     },
@@ -11768,7 +11819,7 @@ caap = {
         if (resultsDiv) {
             var resultsText = $.trim(nHtml.GetText(resultsDiv));
             if (resultsText.match(/Your opponent is dead or too weak to battle/)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "This opponent is dead or hiding: " + this.lastBattleID);
+                log("This opponent is dead or hiding: " + this.lastBattleID);
                 if (!this.doNotBattle) {
                     this.doNotBattle = this.lastBattleID;
                 } else {
@@ -11779,13 +11830,13 @@ caap = {
 
         var webSlice = nHtml.FindByAttrContains(document.body, 'img', 'src', 'arena_arena_guard');
         if (webSlice) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Checking Arena Guard');
+            log('Checking Arena Guard');
             webSlice = webSlice.parentNode.parentNode;
             var ss = document.evaluate(".//img[contains(@src,'ak.fbcdn.net')]", webSlice, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Arena Guard Slots Filled: ' + ss.snapshotLength);
+            log('Arena Guard Slots Filled: ' + ss.snapshotLength);
             if ((ss.snapshotLength < 10) && gm.getValue('ArenaEliteEnd', '') != 'NoArmy') {
                 gm.setValue('ArenaEliteNeeded', true);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Arena Guard Needs To Be Filed.' + ss.snapshotLength);
+                log('Arena Guard Needs To Be Filed.' + ss.snapshotLength);
             }
         }
 
@@ -11796,7 +11847,7 @@ caap = {
                 userId = nameLink.href.match(/user=\d+/i);
                 userId = String(userId).substr(5);
                 gm.setValue("ArenaChainId", userId);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack: " + userId + "  Arena Battle");
+                log("Chain Attack: " + userId + "  Arena Battle");
             } else {
                 var winresults = nHtml.FindByAttrContains(document.body, 'span', 'class', 'positive');
                 var bptxt = $.trim(nHtml.GetText(winresults.parentNode).toString());
@@ -11809,14 +11860,14 @@ caap = {
                 userId = String(userId).substr(5);
                 userName = $.trim(nHtml.GetText(nameLink));
                 var wins = 1;
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We Defeated " + userName + "!!");
+                log("We Defeated " + userName + "!!");
                 //Test if we should chain this guy
                 gm.setValue("BattleChainId", '');
                 var chainBP = gm.getValue('ChainBP', 'empty');
                 if (chainBP !== 'empty') {
                     if (bpnum >= Number(chainBP)) {
                         gm.setValue("BattleChainId", userId);
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack: " + userId + "  Battle Points:" + bpnum);
+                        log("Chain Attack: " + userId + "  Battle Points:" + bpnum);
                     } else {
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
@@ -11830,7 +11881,7 @@ caap = {
                 if (chainGold) {
                     if (goldnum >= chainGold) {
                         gm.setValue("BattleChainId", userId);
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain Attack " + userId + " Gold:" + goldnum);
+                        log("Chain Attack " + userId + " Gold:" + goldnum);
                     } else {
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
@@ -11843,7 +11894,7 @@ caap = {
                 if (gm.getValue("BattleChainId", '')) {
                     var chainCount = gm.getNumber('ChainCount', 0) + 1;
                     if (chainCount >= gm.getNumber('MaxChains', 4)) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Lets give this guy a break.");
+                        log("Lets give this guy a break.");
                         if (!this.doNotBattle) {
                             this.doNotBattle = this.lastBattleID;
                         } else {
@@ -11888,7 +11939,7 @@ caap = {
             userId = String(userId).substr(5);
             userName = $.trim(nHtml.GetText(nameLink));
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We Were Defeated By " + userName + ".");
+            log("We Were Defeated By " + userName + ".");
             gm.setValue('ChainCount', 0);
             if (gm.getValue('BattlesLostList', '').indexOf(global.vs + userId + global.vs) == -1) {
                 now = (new Date().getTime()).toString();
@@ -11949,7 +12000,7 @@ caap = {
                 if (!inp) {
                     continue;
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'inp.name is:' + inp.name);
+                    log('inp.name is:' + inp.name);
                 }
             }
 
@@ -11959,7 +12010,7 @@ caap = {
                     if (inputDuel.value == "false") {
                         continue;
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'dueling form found');
+                        log('dueling form found');
                     }
                 }
             }
@@ -12023,12 +12074,12 @@ caap = {
                     return true;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "target_id not found in battleForm");
+                log("target_id not found in battleForm");
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "form not found in battleButton");
+            log("form not found in battleButton");
         } else {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "battleButton not found");
+            log("battleButton not found");
         }
 
         return false;
@@ -12103,10 +12154,10 @@ caap = {
         try {
             var invadeOrDuel = gm.getValue('BattleType');
             var target = "//input[contains(@src,'" + this.battles[type][invadeOrDuel] + "')]";
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'target ' + target);
+            log('target ' + target);
             var ss = document.evaluate(target, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Not on battlepage');
+                log('Not on battlepage');
                 return false;
             }
 
@@ -12137,7 +12188,7 @@ caap = {
                         yourArenaPoints = this.NumberOnly(pointstxt);
                     }
                     // var yourArenaPoints = this.NumberOnly(txt.match(/Points: \d+\ /i));
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Your rank: ' + yourRankStr + ' ' + yourRank + ' Arena Points: ' + yourArenaPoints);
+                    log('Your rank: ' + yourRankStr + ' ' + yourRank + ' Arena Points: ' + yourArenaPoints);
 
 
                     if (yourArenaGoal && yourArenaPoints) {
@@ -12146,10 +12197,10 @@ caap = {
                             var APLimit = gm.getNumber('APLimit', 0);
                             if (!APLimit) {
                                 gm.setValue('APLimit', yourArenaPoints + gm.getNumber('ArenaRankBuffer', 500));
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We need ' + APLimit + ' as a buffer for current rank');
+                                log('We need ' + APLimit + ' as a buffer for current rank');
                             } else if (APLimit <= yourArenaPoints) {
                                 this.SetTimer('ArenaRankTimer', 1 * 60 * 60);
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We are safely at rank: ' + yourRankStr + ' Points:' + yourArenaPoints);
+                                log('We are safely at rank: ' + yourRankStr + ' Points:' + yourArenaPoints);
                                 this.SetDivContent('battle_mess', 'Arena Rank ' + yourArenaGoal + ' Achieved');
                                 return false;
                             }
@@ -12158,7 +12209,7 @@ caap = {
                         }
                     }
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable To Find Your Arena Rank');
+                    log('Unable To Find Your Arena Rank');
                     yourRank = 0;
                 }
             } else {
@@ -12174,12 +12225,12 @@ caap = {
             var ARMax = gm.getNumber("FreshMeatARMax", 1000);
             var ARMin = gm.getNumber("FreshMeatARMin", 0);
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "my army/rank/level:" + this.stats.army + "/" + this.stats.rank + "/" + this.stats.level);
+            //log("my army/rank/level:" + this.stats.army + "/" + this.stats.rank + "/" + this.stats.level);
             for (var s = 0; s < ss.snapshotLength; s += 1) {
                 var button = ss.snapshotItem(s);
                 var tr = button;
                 if (!tr) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No tr parent of button?');
+                    log('No tr parent of button?');
                     continue;
                 }
 
@@ -12193,7 +12244,7 @@ caap = {
                     txt = tr.childNodes[3].childNodes[3].textContent;
                     levelm = this.battles.Raid.regex.exec(txt);
                     if (!levelm) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't match battleRaidRe in " + txt);
+                        log("Can't match battleRaidRe in " + txt);
                         continue;
                     }
 
@@ -12218,7 +12269,7 @@ caap = {
                     txt = $.trim(nHtml.GetText(tr));
                     levelm = this.battles.Freshmeat.regex.exec(txt);
                     if (!levelm) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Can't match battleLevelRe in " + txt);
+                        log("Can't match battleLevelRe in " + txt);
                         continue;
                     }
 
@@ -12247,11 +12298,11 @@ caap = {
                 armyRatio = Math.min(armyRatio, ARMax);
                 armyRatio = Math.max(armyRatio, ARMin);
                 if (armyRatio <= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Bad ratio");
+                    log("Bad ratio");
                     continue;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Army Ratio: " + armyRatio + " Level: " + level + " Rank: " + rank + " Army: " + army);
+                log("Army Ratio: " + armyRatio + " Level: " + level + " Rank: " + rank + " Army: " + army);
 
                 // if we know our army size, and this one is larger than armyRatio, don't battle
                 if (this.stats.army && (army > (this.stats.army * armyRatio))) {
@@ -12260,7 +12311,7 @@ caap = {
 
                 inp = nHtml.FindByAttrXPath(tr, "input", "@name='target_id'");
                 if (!inp) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
+                    log("Could not find 'target_id' input");
                     continue;
                 }
 
@@ -12273,13 +12324,13 @@ caap = {
                 var dfl = gm.getValue('BattlesLostList', '');
                 // don't battle people we recently lost to
                 if (dfl.indexOf(global.vs + userid + global.vs) >= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We lost to this id before: " + userid);
+                    log("We lost to this id before: " + userid);
                     continue;
                 }
 
                 // don't battle people we've already battled too much
                 if (this.doNotBattle && this.doNotBattle.indexOf(userid) >= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "We attacked this id before: " + userid);
+                    log("We attacked this id before: " + userid);
                     continue;
                 }
 
@@ -12319,7 +12370,7 @@ caap = {
                     inp = nHtml.FindByAttrXPath(form, "input", "@name='target_id'");
                     if (inp) {
                         inp.value = chainId;
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Chain attacking: " + chainId);
+                        log("Chain attacking: " + chainId);
                         this.ClickBattleButton(anyButton);
                         this.lastBattleID = chainId;
                         this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12327,7 +12378,7 @@ caap = {
                         return true;
                     }
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
+                    log("Could not find 'target_id' input");
                 } else if (gm.getValue('PlusOneKills', false) && type == 'Raid') {
                     if (plusOneSafe) {
                         anyButton = ss.snapshotItem(0);
@@ -12336,7 +12387,7 @@ caap = {
                         if (inp) {
                             var firstId = inp.value;
                             inp.value = '200000000000001';
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Target ID Overriden For +1 Kill. Expected Defender: " + firstId);
+                            log("Target ID Overriden For +1 Kill. Expected Defender: " + firstId);
                             this.ClickBattleButton(anyButton);
                             this.lastBattleID = firstId;
                             this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12344,20 +12395,20 @@ caap = {
                             return true;
                         }
 
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find 'target_id' input");
+                        log("Could not find 'target_id' input");
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not safe for +1 kill.");
+                        log("Not safe for +1 kill.");
                     }
                 } else {
                     for (var z = 0; z < count; z += 1) {
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "safeTargets["+z+"].id = "+safeTargets[z].id+" safeTargets["+z+"].score = "+safeTargets[z].score);
+                        //log("safeTargets["+z+"].id = "+safeTargets[z].id+" safeTargets["+z+"].score = "+safeTargets[z].score);
                         if (!this.lastBattleID && this.lastBattleID == safeTargets[z].id && z < count - 1) {
                             continue;
                         }
 
                         var bestButton = safeTargets[z].button;
                         if (bestButton !== null) {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Found Target score: ' + safeTargets[z].score + ' id: ' + safeTargets[z].id + ' Number: ' + safeTargets[z].targetNumber);
+                            log('Found Target score: ' + safeTargets[z].score + ' id: ' + safeTargets[z].id + ' Number: ' + safeTargets[z].targetNumber);
                             this.ClickBattleButton(bestButton);
                             this.lastBattleID = safeTargets[z].id;
                             this.SetDivContent('battle_mess', 'Attacked: ' + this.lastBattleID);
@@ -12365,7 +12416,7 @@ caap = {
                             return true;
                         }
 
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Attack button is null');
+                        log('Attack button is null');
                     }
                 }
             }
@@ -12373,13 +12424,13 @@ caap = {
             this.notSafeCount += 1;
             if (this.notSafeCount > 100) {
                 this.SetDivContent('battle_mess', 'Leaving Battle. Will Return Soon.');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No safe targets limit reached. Releasing control for other processes.');
+                log('No safe targets limit reached. Releasing control for other processes.');
                 this.notSafeCount = 0;
                 return false;
             }
 
             this.SetDivContent('battle_mess', 'No targets matching criteria');
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No safe targets: ' + this.notSafeCount);
+            log('No safe targets: ' + this.notSafeCount);
 
             if (type == 'Raid') {
                 var engageButton = this.monsterEngageButtons[gm.getValue('targetFromraid', '')];
@@ -12396,7 +12447,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in BattleFreshmeat: " + err);
+            log("ERROR in BattleFreshmeat: " + err);
             return this.ClickAjax('raid.php');
         }
     },
@@ -12413,9 +12464,9 @@ caap = {
             }
 
             if (gm.getValue('WhenBattle') == 'Stay Hidden' && !this.NeedToHide()) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not Hiding Mode: Safe To Wait For Other Activity.")
+                //log("Not Hiding Mode: Safe To Wait For Other Activity.")
                 this.SetDivContent('battle_mess', 'We Dont Need To Hide Yet');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'We Dont Need To Hide Yet');
+                log('We Dont Need To Hide Yet');
                 return false;
             }
 
@@ -12426,15 +12477,15 @@ caap = {
             }
 
             var target = this.GetCurrentBattleTarget(mode);
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Mode: ' + mode);
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Target: ' + target);
+            //log('Mode: ' + mode);
+            //log('Target: ' + target);
             if (!target) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No valid battle target');
+                log('No valid battle target');
                 return false;
             }
 
             if (target == 'NoRaid') {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No Raid To Attack');
+                //log('No Raid To Attack');
                 return false;
             }
 
@@ -12447,7 +12498,7 @@ caap = {
             }
 
             if (this.WhileSinceDidIt('MyRankLast', 60 * 60)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Visiting keep to get new rank');
+                log('Visiting keep to get new rank');
                 this.NavigateTo('keep');
                 return true;
             }
@@ -12468,7 +12519,7 @@ caap = {
                 if (chainButton) {
                     if (target != 'arena' && gm.getValue("BattleChainId", '')) {
                         this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Chaining Target: ' + gm.getValue("BattleChainId", ''));
+                        log('Chaining Target: ' + gm.getValue("BattleChainId", ''));
                         this.ClickBattleButton(chainButton);
                         gm.setValue("BattleChainId", '');
                         return true;
@@ -12476,7 +12527,7 @@ caap = {
 
                     if (target == 'arena' && gm.getValue("ArenaChainId", '') && this.CheckStamina('Battle', 5)) {
                         this.SetDivContent('battle_mess', 'Chain Attack In Progress');
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Chaining Target: ' + gm.getValue("ArenaChainId", ''));
+                        log('Chaining Target: ' + gm.getValue("ArenaChainId", ''));
                         this.ClickBattleButton(chainButton);
                         gm.setValue("ArenaChainId", '');
                         return true;
@@ -12484,7 +12535,7 @@ caap = {
                 }
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Battle Target: ' + target);
+            log('Battle Target: ' + target);
 
             if (!this.notSafeCount) {
                 this.notSafeCount = 0;
@@ -12504,7 +12555,7 @@ caap = {
                 if (gm.getValue('clearCompleteRaids', false) && this.completeButton.raid) {
                     this.Click(this.completeButton.raid, 1000);
                     this.completeButton.raid = '';
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cleared a completed raid');
+                    log('Cleared a completed raid');
                     return true;
                 }
 
@@ -12517,7 +12568,7 @@ caap = {
                         return true;
                     }
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to engage raid ' + raidName);
+                    log('Unable to engage raid ' + raidName);
                     return false;
                 }
 
@@ -12539,7 +12590,7 @@ caap = {
 
                         return true;
                     }
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Raid UserID list, but no target');
+                    log('Doing Raid UserID list, but no target');
                     return false;
                 }
 
@@ -12564,7 +12615,7 @@ caap = {
 
                         return true;
                     }
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Freshmeat UserID list, but no target');
+                    log('Doing Freshmeat UserID list, but no target');
                     return false;
                 }
 
@@ -12590,7 +12641,7 @@ caap = {
                         return true;
                     }
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing Arena UserID list, but no target');
+                    log('Doing Arena UserID list, but no target');
                     return false;
                 }
 
@@ -12598,7 +12649,7 @@ caap = {
             default:
                 var dfl = gm.getValue('BattlesLostList', '');
                 if (dfl.indexOf(global.vs + target + global.vs) >= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Avoiding Losing Target: ' + target);
+                    log('Avoiding Losing Target: ' + target);
                     this.NextBattleTarget();
                     return true;
                 }
@@ -12622,11 +12673,11 @@ caap = {
                     this.NextBattleTarget();
                     return true;
                 }
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing default UserID list, but no target');
+                log('Doing default UserID list, but no target');
                 return false;
             }
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Battle: " + err);
+            log("ERROR in Battle: " + err);
             return false;
         }
     },
@@ -13058,7 +13109,7 @@ caap = {
 
             return parseInt(value, 10);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in parseCondition: " + err);
+            log("ERROR in parseCondition: " + err);
             return false;
         }
     },
@@ -13079,7 +13130,7 @@ caap = {
 
             return words[count];
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in getMonstType: " + err);
+            log("ERROR in getMonstType: " + err);
             return '';
         }
     },
@@ -13097,13 +13148,13 @@ caap = {
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
+                    log('On another player\'s keep.');
                     return false;
                 }
             } else {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + unsafeWindow.Env.user) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
+                    log('On another player\'s keep.');
                     return false;
                 }
             }
@@ -13176,7 +13227,7 @@ caap = {
             //gm.setValue('resetdashboard',true);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_fightList: " + err);
+            log("ERROR in CheckResults_fightList: " + err);
             return false;
         }
     },
@@ -13200,7 +13251,7 @@ caap = {
             var nextSiegeAttackPlusSiegeDamage = 0;
             for (var s in boss.siegeClicks) {
                 if (boss.siegeClicks.hasOwnProperty(s)) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 's ' + s + ' T2K ' + T2K+ ' hpLeft ' + hpLeft);
+                    //log('s ' + s + ' T2K ' + T2K+ ' hpLeft ' + hpLeft);
                     if (s < siegeStage - 1  || clicksNeededInCurrentStage === 0) {
                         totalSiegeDamage += boss.siegeDam[s];
                         totalSiegeClicks += boss.siegeClicks[s];
@@ -13209,7 +13260,7 @@ caap = {
                     if (s == siegeStage - 1) {
                         attackDamPerHour = (damageDone - totalSiegeDamage) / timeUsed;
                         clicksPerHour = (totalSiegeClicks + boss.siegeClicks[s] - clicksNeededInCurrentStage) / timeUsed;
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Attack Damage Per Hour: ' + attackDamPerHour + ' Damage Done: ' + damageDone + ' Total Siege Damage: ' + totalSiegeDamage + ' Time Used: ' + timeUsed + ' Clicks Per Hour: ' + clicksPerHour);
+                        //log('Attack Damage Per Hour: ' + attackDamPerHour + ' Damage Done: ' + damageDone + ' Total Siege Damage: ' + totalSiegeDamage + ' Time Used: ' + timeUsed + ' Clicks Per Hour: ' + clicksPerHour);
                     }
 
                     if (s >= siegeStage - 1) {
@@ -13227,10 +13278,10 @@ caap = {
             }
 
             var t2kValue = Math.round(T2K * 10) / 10;
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'T2K based on siege: ' + t2kValue + ' T2K estimate without calculating siege impacts: ' + Math.round(percentHealthLeft / (100 - percentHealthLeft) * timeLeft * 10) / 10);
+            log('T2K based on siege: ' + t2kValue + ' T2K estimate without calculating siege impacts: ' + Math.round(percentHealthLeft / (100 - percentHealthLeft) * timeLeft * 10) / 10);
             return t2kValue;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in t2kCalc: " + err);
+            log("ERROR in t2kCalc: " + err);
             return 0;
         }
     },
@@ -13245,7 +13296,7 @@ caap = {
                 if (!webSlice) {
                     webSlice = this.CheckForImage('nm_top_2.jpg');
                     if (!webSlice) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Can not find identifier for monster fight page.');
+                        log('Can not find identifier for monster fight page.');
                         return;
                     }
                 }
@@ -13303,10 +13354,10 @@ caap = {
             //if (monsterTicker1 || monsterTicker2) {
             var monsterTicker = $("#app46755028429_monsterTicker");
             if (monsterTicker.length) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monster ticker found.");
+                //log("Monster ticker found.");
                 time = monsterTicker.text().split(":");
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not locate Monster ticker.");
+                log("Could not locate Monster ticker.");
             }
 
             var boss_name = '';
@@ -13388,15 +13439,15 @@ caap = {
                         }
 
                         gm.setListObjVal('monsterOl', monster, 'Damage', damDone);
-                        //if (damDone) console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Damage done = " + gm.getListObjVal('monsterOl',monster,'Damage'));
+                        //if (damDone) log("Damage done = " + gm.getListObjVal('monsterOl',monster,'Damage'));
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Player hasn't done damage yet");
+                        log("Player hasn't done damage yet");
                     }
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "couldn't get top table");
+                    log("couldn't get top table");
                 }
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "couldn't get dragoncontainer");
+                log("couldn't get dragoncontainer");
             }
 
             var monsterConditions = gm.getListObjVal('monsterOl', monster, 'conditions', '');
@@ -13406,7 +13457,7 @@ caap = {
                 if (counter >= 0 && monsterList[counter].indexOf(monster) >= 0 &&
                     (nHtml.FindByAttrContains(document.body, 'a', 'href', '&action=collectReward') ||
                      nHtml.FindByAttrContains(document.body, 'input', 'alt', 'Collect Reward'))) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Collecting Reward');
+                    log('Collecting Reward');
                     gm.setListObjVal('monsterOl', monster, 'review', "1");
                     gm.setValue('monsterReviewCounter', counter -= 1);
                     gm.setListObjVal('monsterOl', monster, 'status', 'Collect Reward');
@@ -13433,12 +13484,12 @@ caap = {
                 var hpBar = null;
                 var imgHealthBar = nHtml.FindByAttrContains(document.body, "img", "src", monstHealthImg);
                 if (imgHealthBar) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found monster health div.");
+                    //log("Found monster health div.");
                     var divAttr = imgHealthBar.parentNode.getAttribute("style").split(";");
                     var attrWidth = divAttr[1].split(":");
                     hpBar = $.trim(attrWidth[1]);
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find monster health div.");
+                    log("Could not find monster health div.");
                 }
 
                 if (hpBar) {
@@ -13446,7 +13497,7 @@ caap = {
                     gm.setListObjVal('monsterOl', monster, 'Damage%', hp);
                     boss = this.monsterInfo[monstType];
                     if (!boss) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unknown monster');
+                        log('Unknown monster');
                         return;
                     }
                 }
@@ -13472,15 +13523,15 @@ caap = {
 
                         var divSeigeLogs = document.getElementById("app46755028429_siege_log");
                         if (divSeigeLogs && !currentPhase) {
-                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found siege logs.");
+                            //log("Found siege logs.");
                             var divSeigeCount = divSeigeLogs.getElementsByTagName("div").length;
                             if (divSeigeCount) {
                                 currentPhase = Math.round(divSeigeCount / 4) + 1;
                             } else {
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not count siege logs.");
+                                log("Could not count siege logs.");
                             }
                         } else {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find siege logs.");
+                            log("Could not find siege logs.");
                         }
                     }
 
@@ -13497,7 +13548,7 @@ caap = {
                     gm.setListObjVal('monsterOl', monster, 'T2K', T2K.toString() + ' hr');
                 }
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Monster is dead or fled');
+                log('Monster is dead or fled');
                 gm.setListObjVal('monsterOl', monster, 'color', 'grey');
                 var dofCheck = gm.getListObjVal('monsterOl', monster, 'status');
                 if (dofCheck != 'Complete' && dofCheck != 'Collect Reward') {
@@ -13526,7 +13577,7 @@ caap = {
 
             // Start of Keep On Budget (KOB) code Part 1 -- required variables
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Start of Keep On Budget (KOB) Code');
+            log('Start of Keep On Budget (KOB) Code');
 
             //default is disabled for everything
             var KOBenable = false;
@@ -13546,15 +13597,15 @@ caap = {
             //create a temp variable so we don't need to call parseCondition more than once for each if statement
             var KOBtmp = this.parseCondition('kob', monsterConditions);
             if (isNaN(KOBtmp)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'NaN branch');
+                log('NaN branch');
                 KOBenable = true;
                 KOBbiasHours = 0;
             } else if (!KOBtmp) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'false branch');
+                log('false branch');
                 KOBenable = false;
                 KOBbiasHours = 0;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'passed value branch');
+                log('passed value branch');
                 KOBenable = true;
                 KOBbiasHours = KOBtmp;
             }
@@ -13563,28 +13614,28 @@ caap = {
             if (this.InLevelUpMode() || this.stats.stamina.num >= this.stats.stamina.max - 5) {
                 KOBenable = false;
             }
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Level Up Mode: ' + this.InLevelUpMode() + ' Stamina Avail: ' + this.stats.stamina.num + ' Stamina Max: ' + this.stats.stamina.max);
+            log('Level Up Mode: ' + this.InLevelUpMode() + ' Stamina Avail: ' + this.stats.stamina.num + ' Stamina Max: ' + this.stats.stamina.max);
 
             //log results of previous two tests
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOBenable: ' + KOBenable + ' KOB Bias Hours: ' + KOBbiasHours);
+            log('KOBenable: ' + KOBenable + ' KOB Bias Hours: ' + KOBbiasHours);
 
             //Total Time alotted for monster
             var KOBtotalMonsterTime = this.monsterInfo[monstType].duration;
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Total Time for Monster: ' + KOBtotalMonsterTime);
+            log('Total Time for Monster: ' + KOBtotalMonsterTime);
 
             //Total Damage remaining
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'HP left: ' + hp);
+            log('HP left: ' + hp);
 
             //Time Left Remaining
             var KOBtimeLeft = parseInt(time[0], 10) + (parseInt(time[1], 10) * 0.0166);
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'TimeLeft: ' + KOBtimeLeft);
+            log('TimeLeft: ' + KOBtimeLeft);
 
             //calculate the bias offset for time remaining
             var KOBbiasedTF = KOBtimeLeft - KOBbiasHours;
 
             //Percentage of time remaining for the currently selected monster
             var KOBPercentTimeRemaining = Math.round(KOBbiasedTF / KOBtotalMonsterTime * 1000) / 10;
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Percent Time Remaining: ' + KOBPercentTimeRemaining);
+            log('Percent Time Remaining: ' + KOBPercentTimeRemaining);
 
             // End of Keep On Budget (KOB) code Part 1 -- required variables
 
@@ -13594,7 +13645,7 @@ caap = {
                 //used with KOB code
                 KOBmax = true;
                 //used with kob debugging
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - max activated');
+                log('KOB - max activated');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13603,7 +13654,7 @@ caap = {
                 //used with KOB code
                 KOBminFort = true;
                 //used with kob debugging
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - MinFort activated');
+                log('KOB - MinFort activated');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13613,7 +13664,7 @@ caap = {
                 //used with KOB code
                 KOBach = true;
                 //used with kob debugging
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - achievement reached');
+                log('KOB - achievement reached');
                 if (isTarget && lastDamDone < achLevel) {
                     gm.setValue('resetselectMonster', true);
                 }
@@ -13625,10 +13676,10 @@ caap = {
                 // this line is required or we attack anyway.
                 gm.setListObjVal('monsterOl', monster, 'over', 'max');
                 //used with kob debugging
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'KOB - budget reached');
+                log('KOB - budget reached');
                 if (isTarget) {
                     gm.setValue('resetselectMonster', true);
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'This monster no longer a target due to kob');
+                    log('This monster no longer a target due to kob');
                 }
 
             } else {
@@ -13646,7 +13697,7 @@ caap = {
                 }, 2000);
             }
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckResults_viewFight: " + err);
+            log("ERROR in CheckResults_viewFight: " + err);
         }
     },
 
@@ -13656,7 +13707,7 @@ caap = {
                 return;
             }
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Selecting monster');
+            //log('Selecting monster');
             // First we forget everything about who we already picked.
             gm.setValue('targetFrombattle_monster', '');
             gm.setValue('targetFromfortify', '');
@@ -13774,11 +13825,11 @@ caap = {
                                             this.monsterInfo[monstType].fort) {
                                         if (over == 'ach') {
                                             if (!firstFortOverAch) {
-                                                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'hitit');
+                                                //log('hitit');
                                                 firstFortOverAch = monster;
                                             }
                                         } else if (over != 'max') {
-                                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'norm hitit');
+                                            //log('norm hitit');
                                             firstFortUnderMax = monster;
                                         }
                                     }
@@ -13799,7 +13850,7 @@ caap = {
                         if (!gm.getValue('targetFromfortify', '')) {
                             gm.setValue('targetFromfortify', firstFortOverAch);
                         }
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'fort under max ' + firstFortUnderMax + ' fort over Ach ' + firstFortOverAch + ' fort target ' + gm.getValue('targetFromfortify', ''));
+                        //log('fort under max ' + firstFortUnderMax + ' fort over Ach ' + firstFortOverAch + ' fort target ' + gm.getValue('targetFromfortify', ''));
                     }
 
                     // If we've got a monster for this selection type then we set the GM variables for the name
@@ -13856,7 +13907,7 @@ caap = {
 
             gm.setValue('resetdashboard', true);
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in selectMonster: " + err);
+            log("ERROR in selectMonster: " + err);
         }
     },
 
@@ -13889,14 +13940,14 @@ caap = {
             }
 
             if (monster != monsterOnPage) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Looking for ' + monster + ' but on ' + monsterOnPage + '. Going back to select screen');
+                log('Looking for ' + monster + ' but on ' + monsterOnPage + '. Going back to select screen');
                 var monstPage = gm.getListObjVal('monsterOl', monster, 'page');
                 return this.NavigateTo('keep,' + monstPage);
             }
 
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in monsterConfirmRightPage: " + err);
+            log("ERROR in monsterConfirmRightPage: " + err);
             return false;
         }
     },
@@ -14006,11 +14057,11 @@ caap = {
                     /*-------------------------------------------------------------------------------------\
                     Now we use ajaxSendLink to display the monsters page.
                     \-------------------------------------------------------------------------------------*/
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Reviewing ' + (counter + 1) + '/' + monsterObjList.length + ' ' + monster);
+                    log('Reviewing ' + (counter + 1) + '/' + monsterObjList.length + ' ' + monster);
                     gm.setValue('ReleaseControl', true);
                     link = link.replace('http://apps.facebook.com/castle_age/', '');
                     link = link.replace('?', '?twt2&');
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Link: " + link);
+                    //log("Link: " + link);
                     //gm.setListObjVal('monsterOl', monster, 'review','pending');
                     this.ClickAjax(link);
                     gm.setValue('monsterRepeatCount', gm.getValue('monsterRepeatCount', 0) + 1);
@@ -14027,11 +14078,11 @@ caap = {
             gm.setValue('resetselectMonster', true);
             gm.setValue('resetdashboard', true);
             gm.setValue('monsterReviewCounter', -3);
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Done with monster/raid review.');
+            log('Done with monster/raid review.');
             this.SetDivContent('monster_mess', '');
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MonsterReview: " + err);
+            log("ERROR in MonsterReview: " + err);
             return false;
         }
     },
@@ -14046,7 +14097,7 @@ caap = {
             ///////////////// Reivew/Siege all monsters/raids \\\\\\\\\\\\\\\\\\\\\\
 
             if (gm.getValue('WhenMonster') == 'Stay Hidden' && this.NeedToHide() && this.CheckStamina('Monster', 1)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stay Hidden Mode: We're not safe. Go battle.");
+                log("Stay Hidden Mode: We're not safe. Go battle.");
                 this.SetDivContent('monster_mess', 'Not Safe For Monster. Battle!');
                 return false;
             }
@@ -14059,7 +14110,7 @@ caap = {
 
             // Establish a delay timer when we are 1 stamina below attack level.
             // Timer includes 5 min for stamina tick plus user defined random interval
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + !this.InLevelUpMode() + " && " + this.stats.stamina.num + " >= " + (gm.getNumber('MonsterStaminaReq', 1) - 1) + " && " + this.CheckTimer('battleTimer') + " && " + gm.getNumber('seedTime', 0) > 0);
+            //log(!this.InLevelUpMode() + " && " + this.stats.stamina.num + " >= " + (gm.getNumber('MonsterStaminaReq', 1) - 1) + " && " + this.CheckTimer('battleTimer') + " && " + gm.getNumber('seedTime', 0) > 0);
             if (!this.InLevelUpMode() && this.stats.stamina.num == (gm.getNumber('MonsterStaminaReq', 1) - 1) && this.CheckTimer('battleTimer') && gm.getNumber('seedTime', 0) > 0) {
                 this.SetTimer('battleTimer', 5 * 60 + Math.floor(Math.random() * gm.getValue('seedTime', 0)));
                 this.SetDivContent('monster_mess', 'Monster Delay Until: ' + this.DisplayTimer('battleTimer'));
@@ -14201,7 +14252,7 @@ caap = {
                     this.Click(attackButton, 8000);
                     return true;
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'ERROR - No button to attack/fortify with.');
+                    log('ERROR - No button to attack/fortify with.');
                     this.SetTimer('NotargetFrombattle_monster', 60);
                     return false;
                 }
@@ -14215,7 +14266,7 @@ caap = {
 
             if (gm.getValue('clearCompleteMonsters', false) && this.completeButton.battle_monster) {
                 this.Click(this.completeButton.battle_monster, 1000);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cleared a completed monster');
+                log('Cleared a completed monster');
                 this.completeButton.battle_monster = '';
                 return true;
             }
@@ -14224,13 +14275,13 @@ caap = {
             if (!global.is_firefox) {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + gm.getValue('FBID', 'x')) ||
                         firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
+                    log('On another player\'s keep.');
                     return this.NavigateTo('keep,battle_monster');
                 }
             } else {
                 if ((firstMonsterButtonDiv) && !(firstMonsterButtonDiv.parentNode.href.match('user=' + unsafeWindow.Env.user) ||
                                                  firstMonsterButtonDiv.parentNode.href.match(/alchemy\.php/))) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On another player\'s keep.');
+                    log('On another player\'s keep.');
                     return this.NavigateTo('keep,battle_monster');
                 }
             }
@@ -14242,11 +14293,11 @@ caap = {
                 return true;
             } else {
                 this.SetTimer('NotargetFrombattle_monster', 60);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No "Engage" button for ' + monster);
+                log('No "Engage" button for ' + monster);
                 return false;
             }
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Monsters: " + err);
+            log("ERROR in Monsters: " + err);
             return false;
         }
     },
@@ -14267,9 +14318,9 @@ caap = {
                     var demiPointList = nHtml.GetText(smallDeity.parentNode.parentNode.parentNode).match(/\d+ \/ 10/g);
                     if (demiPointList) {
                         gm.setList('DemiPointList', demiPointList);
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'DemiPointList: ' + demiPointList);
+                        log('DemiPointList: ' + demiPointList);
                         if (this.CheckTimer('DemiPointTimer')) {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Set DemiPointTimer to 6 hours, and check if DemiPoints done');
+                            log('Set DemiPointTimer to 6 hours, and check if DemiPoints done');
                             this.SetTimer('DemiPointTimer', 6 * 60 * 60);
                         }
 
@@ -14278,13 +14329,13 @@ caap = {
                             if (demiPointList.hasOwnProperty(demiPtItem)) {
                                 var demiPointStr = demiPointList[demiPtItem];
                                 if (!demiPointStr) {
-                                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Continue due to demiPointStr: " + demiPointStr);
+                                    log("Continue due to demiPointStr: " + demiPointStr);
                                     continue;
                                 }
 
                                 var demiPoints = demiPointStr.split('/');
                                 if (demiPoints.length != 2) {
-                                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Continue due to demiPoints: " + demiPoints);
+                                    log("Continue due to demiPoints: " + demiPoints);
                                     continue;
                                 }
 
@@ -14295,9 +14346,9 @@ caap = {
                             }
                         }
 
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Demi Point Timer ' + this.DisplayTimer('DemiPointTimer') + ' demipoints done is  ' + gm.getValue('DemiPointsDone', false));
+                        log('Demi Point Timer ' + this.DisplayTimer('DemiPointTimer') + ' demipoints done is  ' + gm.getValue('DemiPointsDone', false));
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to get demiPointList");
+                        log("Unable to get demiPointList");
                     }
                 }
             }
@@ -14312,7 +14363,7 @@ caap = {
 
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in DemiPoints: " + err);
+            log("ERROR in DemiPoints: " + err);
             return false;
         }
     },
@@ -14349,7 +14400,7 @@ caap = {
             this.newLevelUpMode = false;
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in InLevelUpMode: " + err);
+            log("ERROR in InLevelUpMode: " + err);
             return false;
         }
     },
@@ -14400,7 +14451,7 @@ caap = {
 
             if (when == 'At Max Stamina') {
                 if (!gm.getValue('MaxIdleStamina', 0)) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Changing to idle general to get Max Stamina");
+                    log("Changing to idle general to get Max Stamina");
                     this.PassiveGeneral();
                 }
 
@@ -14425,7 +14476,7 @@ caap = {
             this.SetDivContent('battle_mess', 'Waiting for more stamina: ' + this.stats.stamina.num + "/" + attackMinStamina);
             return false;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in CheckStamina: " + err);
+            log("ERROR in CheckStamina: " + err);
             return false;
         }
     },
@@ -14438,12 +14489,12 @@ caap = {
     \-------------------------------------------------------------------------------------*/
     NeedToHide: function () {
         if (gm.getValue('WhenMonster', '') == 'Never') {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Stay Hidden Mode: Monster battle not enabled');
+            log('Stay Hidden Mode: Monster battle not enabled');
             return true;
         }
 
         if (!gm.getValue('targetFrombattle_monster', '')) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Stay Hidden Mode: No monster to battle');
+            log('Stay Hidden Mode: No monster to battle');
             return true;
         }
     /*-------------------------------------------------------------------------------------\
@@ -14745,11 +14796,11 @@ caap = {
         var urlix = gm.getValue("urlix", "").replace("~", "");
         if (urlix === "" && gm.getValue("mfStatus", "") != "OpenMonster" && caap.WhileSinceDidIt("clearedMonsterFinderLinks", 24 * 60 * 60)) {
             gm.setValue("mfStatus", "");
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Resetting monster finder history");
+            log("Resetting monster finder history");
             this.clearLinks();
         }
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "All checks passed to enter Monster Finder");
+        log("All checks passed to enter Monster Finder");
         if (window.location.href.indexOf("filter=app_46755028429") < 0) {
             var mfstatus = gm.getValue("mfStatus", "");
             if (mfstatus == "OpenMonster") {
@@ -14785,7 +14836,7 @@ caap = {
         gm.setValue("delayPer", delayPer);
         gm.setValue("iterations", iterations);
         gm.setValue("iterationsRun", 0);
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Set mostRecentFeed");
+        log("Set mostRecentFeed");
         this.JustDidIt("checkedFeed");
         gm.setValue("monstersExhausted", false);
         this.bottomScroll();
@@ -14797,7 +14848,7 @@ caap = {
             return false;
         }
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking Monster: " + gm.getValue("navLink"));
+        log("Checking Monster: " + gm.getValue("navLink"));
         this.mf_attackButton = this.CheckForImage('attack_monster_button.jpg');
         if (!this.mf_attackButton) {
             this.mf_attackButton = this.CheckForImage('seamonster_power.gif');
@@ -14823,12 +14874,12 @@ caap = {
 
         if (this.mf_attackButton) {
             var dam = this.CheckResults_viewFight();
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found Attack Button.  Dam: " + dam);
+            log("Found Attack Button.  Dam: " + dam);
             if (!dam) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Damage to monster, Attacking");
+                log("No Damage to monster, Attacking");
                 caap.Click(this.mf_attackButton);
                 window.setTimeout(function () {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Hand off to Monsters section");
+                    log("Hand off to Monsters section");
                     gm.setValue("urlixc", gm.getValue("urlixc", "~") + "~" + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                     //caap.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                     gm.setValue("mfStatus", "MonsterFound");
@@ -14836,18 +14887,18 @@ caap = {
                     gm.setValue("navLink", "");
                     //caap.VisitUrl("http://apps.facebook.com/castle_age/battle_monster.php");
                     caap.NavigateTo('battle_monster');
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Navigate to battle_monster");
+                    log("Navigate to battle_monster");
                     window.setTimeout(function () {
                         gm.setValue('resetselectMonster', true);
                         gm.setValue('LastAction', "Idle");
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "resetselectMonster");
+                        log("resetselectMonster");
                         return true;
                     }, 4000);
 
                 }, 4000);
                 return false;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Already attacked this monster, find new one");
+                log("Already attacked this monster, find new one");
                 gm.setValue("urlixc", gm.getValue("urlixc", "~") + "~" + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                 //this.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                 gm.setValue("mfStatus", "TestMonster");
@@ -14855,14 +14906,14 @@ caap = {
                 return true;
             }
         } else {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button");
+            log("No Attack Button");
             if (gm.getValue("waitMonsterLoad", 0) < 2) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button, Pass" + gm.getValue("waitMonsterLoad"));
+                log("No Attack Button, Pass" + gm.getValue("waitMonsterLoad"));
                 gm.setValue("waitMonsterLoad", gm.getValue("waitMonsterLoad", 0) + 1);
                 gm.setValue("LastAction", "Idle");
                 return true;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Attack Button, Find New Monster");
+                log("No Attack Button, Find New Monster");
                 gm.setValue("urlixc", gm.getValue("urlixc", "~") + gm.getValue("navLink").replace("http://apps.facebook.com/castle_age", ""));
                 //this.maintainUrl(gm.getValue("navLink").replace("http://apps.facebook.com/castle_age",""));
                 gm.setValue("mfStatus", "TestMonster");
@@ -14873,7 +14924,7 @@ caap = {
     },
 
     mfMain: function () {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Do Stuff " + new Date());
+        log("Do Stuff " + new Date());
         if (gm.getValue("urlix", "") === "") {
             this.clearLinks();
         }
@@ -14881,9 +14932,9 @@ caap = {
         //this.maintainAllUrl();
         //this.redirectLinks();
         this.handleCTA();
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll Up");
+        log("Scroll Up");
         nHtml.ScrollToTop();
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Select Monster");
+        log("Select Monster");
         this.selectMonst();
     },
 
@@ -14895,7 +14946,7 @@ caap = {
 
     bottomScroll: function () {
         nHtml.ScrollToBottom();
-        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scroll To Bottom " + new Date() );
+        //log("Scroll To Bottom " + new Date() );
         nHtml.setTimeout(function () {
             caap.olderPosts();
         }, gm.getValue("delayPer", 60000));
@@ -14907,23 +14958,23 @@ caap = {
             //var showMore = nHtml.getX('//a[@class=\'PagerMoreLink\']', document, nHtml.xpath.unordered);
             var showMore = nHtml.FindByAttrContains(document, "a", "class", "PagerMoreLink");
             if (showMore) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Showing more ...");
+                log("Showing more ...");
                 caap.Click(showMore);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Link clicked.");
+                log("Link clicked.");
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "PagerMoreLink not found!");
+                log("PagerMoreLink not found!");
             }
         }
 
         //this.NavigateTo("Older Posts");
         gm.setValue("iterationsRun", itRun += 1);
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Get More Iterations " + gm.getValue("iterationsRun") + " of " + gm.getValue("iterations") + " " + new Date());
+        log("Get More Iterations " + gm.getValue("iterationsRun") + " of " + gm.getValue("iterations") + " " + new Date());
         if (gm.getValue("iterationsRun") < gm.getValue("iterations")) {
             nHtml.setTimeout(function () {
                 caap.bottomScroll();
             }, gm.getValue("delayPer", 60000));
         } else {
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Made it Here, Try mfMain");
+            //log("Made it Here, Try mfMain");
             nHtml.setTimeout(function () {
                 caap.mfMain();
             }, gm.getValue("delayPer", 120000));
@@ -14935,31 +14986,31 @@ caap = {
             return false;
         }
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Select Monst Function");
+        log("Select Monst Function");
         var monstPriority = gm.getValue("MonsterFinderOrder");
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monst Priority: " + monstPriority);
+        log("Monst Priority: " + monstPriority);
 
         var monstArray = monstPriority.split("~");
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "MonstArray: " + monstArray[0]);
+        log("MonstArray: " + monstArray[0]);
         for (var x = 0; x < monstArray.length; x += 1) {
             if (gm.getValue(monstArray[x], "~") == "~") {
                 gm.setValue(monstArray[x], "~");
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "monstArray[x]: " + monstArray[x]);
+            log("monstArray[x]: " + monstArray[x]);
             var monstType = monstArray[x];
             var monstList = gm.getValue(monstArray[x], "~");
             var monstLinks = monstList.replace(/~~/g, "~").split("~");
             var numlinks = 0;
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Inside MonstArray For Loop " + monstArray[x] + " - Array[" + (monstLinks.length - 1) + "] " + gm.getValue(monstArray[x]).replace("~", "~\n"));
+            log("Inside MonstArray For Loop " + monstArray[x] + " - Array[" + (monstLinks.length - 1) + "] " + gm.getValue(monstArray[x]).replace("~", "~\n"));
             for (var z = 0; z < monstLinks.length; z += 1) {
                 if (monstLinks[z]) {
                     var link = monstLinks[z].replace("http://apps.facebook.com/castle_age", "");
                     var urlixc = gm.getValue("urlixc", "~");
                     // + "  UrlixC: " + urlixc);
                     if (urlixc.indexOf(link) == -1) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Navigating to Monst: " + monstArray[x] + "  Link: " + link);
+                        log("Navigating to Monst: " + monstArray[x] + "  Link: " + link);
                         link = "http://apps.facebook.com/castle_age" + link;
                         gm.setValue("navLink", link);
                         gm.setValue('clickUrl', link);
@@ -14973,22 +15024,22 @@ caap = {
                         return true;
                     } else {
                         numlinks += 1;
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trimming already checked URL, Monst Type: " + monstType);
+                        log("Trimming already checked URL, Monst Type: " + monstType);
                         //var newVal = gm.getValue(monstArray[x],"~").replace("~" + link, "");
                         gm.setValue(monstType, gm.getValue(monstType).replace("~" + link, "").replace(/~~/g, "~"), "~");
                     }
                 }
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Links Already Visited: " + monstArray[x] + " #:" + numlinks);
+            log("Links Already Visited: " + monstArray[x] + " #:" + numlinks);
         }
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "All Monsters Tested");
+        log("All Monsters Tested");
         gm.setValue("monstersExhausted", true);
         gm.setValue("mfStatus", "");
         var numurl = gm.getValue("urlix", "~");
         if (nHtml.CountInstances(numurl) > 100) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Idle- Resetting Monster Searcher Values, #-" + numurl);
+            log("Idle- Resetting Monster Searcher Values, #-" + numurl);
             caap.clearLinks(true);
             gm.setValue("LastAction", "");
         }
@@ -14999,7 +15050,7 @@ caap = {
     },
 
     clearLinks: function (resetall) {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Clear Links");
+        log("Clear Links");
         if (resetall === true) {
             gm.setValue("navLink", "");
             gm.setValue("mfStatus", "");
@@ -15042,7 +15093,7 @@ caap = {
 
     handleCTA: function () {
         var ctas = nHtml.getX('//div[@class=\'GenericStory_Body\']', document, nHtml.xpath.unordered);
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Number of entries- " + ctas.snapshotLength);
+        log("Number of entries- " + ctas.snapshotLength);
         for (var x = 0; x < ctas.snapshotLength; x += 1) {
             var url = nHtml.getX('./div[2]/div/div/a/@href', ctas.snapshotItem(x), nHtml.xpath.string).replace("http://apps.facebook.com/castle_age", "");
             var fid = nHtml.Gup("user", url);
@@ -15054,7 +15105,7 @@ caap = {
             var urlixc = gm.getValue("urlixc", "~");
             if (src) {
                 if (urlixc.indexOf(url) >= 0) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Monster Already Checked");
+                    //log("Monster Already Checked");
                 } else if (src.indexOf("cta_hydra_") >= 0 || src.indexOf("twitter_hydra_objective") >= 0) { //Hydra
                     monst = gm.getValue("hydra", "~");
                     if (monst.indexOf(url) == -1) {
@@ -15217,7 +15268,7 @@ caap = {
             }
         }
 
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Completed Url Handling");
+        log("Completed Url Handling");
         this.JustDidIt("checkedFeed");
     },
 
@@ -15240,42 +15291,42 @@ caap = {
 
             var checkConsumables = nHtml.FindByAttr(document.body, "div", "class", "statsTTitle");
             if (!checkConsumables) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Going to keep for potions");
+                log("Going to keep for potions");
                 if (this.NavigateTo('keep')) {
                     return true;
                 }
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking energy potions");
+            log("Checking energy potions");
             var energyPotions = $("img[title='Energy Potion']").parent().next().text().replace(new RegExp("[^0-9\\.]", "g"), "");
             if (!energyPotions) {
                 energyPotions = 0;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy Potions: " + energyPotions);
+            log("Energy Potions: " + energyPotions);
             if (energyPotions >= gm.getNumber("energyPotionsSpendOver", 39)) {
                 gm.setValue("Consume_Energy", true);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy potions ready to consume");
+                log("Energy potions ready to consume");
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking stamina potions");
+            log("Checking stamina potions");
             var staminaPotions = $("img[title='Stamina Potion']").parent().next().text().replace(new RegExp("[^0-9\\.]", "g"), "");
             if (!staminaPotions) {
                 staminaPotions = 0;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina Potions: " + staminaPotions);
+            log("Stamina Potions: " + staminaPotions);
             if (staminaPotions >= gm.getNumber("staminaPotionsSpendOver", 39)) {
                 gm.setValue("Consume_Stamina", true);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina potions ready to consume");
+                log("Stamina potions ready to consume");
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Checking experience to next level");
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Experience to next level: " + this.stats.exp.dif);
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Potions experience set: " + gm.getNumber("potionsExperience", 20));
+            log("Checking experience to next level");
+            //log("Experience to next level: " + this.stats.exp.dif);
+            //log("Potions experience set: " + gm.getNumber("potionsExperience", 20));
             if ((gm.getValue("Consume_Energy", false) || gm.getValue("Consume_Stamina", false)) &&
                 this.stats.exp.dif <= gm.getNumber("potionsExperience", 20)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Not spending potions, experience to next level condition. Delaying 10 minutes");
+                log("Not spending potions, experience to next level condition. Delaying 10 minutes");
                 this.JustDidIt('AutoPotionTimerDelay');
                 return true;
             }
@@ -15283,57 +15334,57 @@ caap = {
             if (this.stats.energy.num < this.stats.energy.max - 10 &&
                 energyPotions > gm.getNumber("energyPotionsKeepUnder", 35) &&
                 gm.getValue("Consume_Energy", false)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Spending energy potions");
+                log("Spending energy potions");
                 var energySlice = nHtml.FindByAttr(document.body, "form", "id", "app46755028429_consume_1");
                 if (energySlice) {
                     var energyButton = nHtml.FindByAttrContains(energySlice, "input", "src", 'potion_consume.gif');
                     if (energyButton) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Consume energy potion");
+                        log("Consume energy potion");
                         caap.Click(energyButton);
                         // Check consumed should happen here if needed
                         return true;
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find consume energy button");
+                        log("Could not find consume energy button");
                     }
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find energy consume form");
+                    log("Could not find energy consume form");
                 }
 
                 return false;
             } else {
                 gm.setValue("Consume_Energy", false);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy potion conditions not met");
+                log("Energy potion conditions not met");
             }
 
             if (this.stats.stamina.num < this.stats.stamina.max - 10 &&
                 staminaPotions > gm.getNumber("staminaPotionsKeepUnder", 35) &&
                 gm.getValue("Consume_Stamina", false)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Spending stamina potions");
+                log("Spending stamina potions");
                 var staminaSlice = nHtml.FindByAttr(document.body, "form", "id", "app46755028429_consume_2");
                 if (staminaSlice) {
                     var staminaButton = nHtml.FindByAttrContains(staminaSlice, "input", "src", 'potion_consume.gif');
                     if (staminaButton) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Consume stamina potion");
+                        log("Consume stamina potion");
                         caap.Click(staminaButton);
                         // Check consumed should happen here if needed
                         return true;
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find consume stamina button");
+                        log("Could not find consume stamina button");
                     }
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Could not find stamina consume form");
+                    log("Could not find stamina consume form");
                 }
 
                 return false;
             } else {
                 gm.setValue("Consume_Stamina", false);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Stamina potion conditions not met");
+                log("Stamina potion conditions not met");
             }
 
             this.JustDidIt('AutoPotionTimer');
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoPotion: " + e);
+            log("ERROR in AutoPotion: " + e);
             return false;
         }
     },
@@ -15373,16 +15424,16 @@ caap = {
             if (numberInput) {
                 numberInput.value = num;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Cannot find box to put in number for bank retrieve.');
+                log('Cannot find box to put in number for bank retrieve.');
                 return false;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Retrieving ' + num + ' from bank');
+            log('Retrieving ' + num + ' from bank');
             gm.setValue('storeRetrieve', '');
             this.Click(retrieveButton);
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in RetrieveFromBank: " + err);
+            log("ERROR in RetrieveFromBank: " + err);
             return false;
         }
     },
@@ -15437,15 +15488,13 @@ caap = {
     CheckResults_gift_accept: function (resultsText) {
         // Confirm gifts actually sent
         if ($('#app46755028429_app_body').text().match(/You have sent \d+ gifts?/)) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Confirmed gifts sent out.');
+            log('Confirmed gifts sent out.');
             gm.setValue('RandomGiftPic', '');
             gm.setValue('FBSendList', '');
         }
     },
 
     CheckResults_index: function (resultsText) {
-        //this.JustDidIt('checkForGifts');
-        News.parse(true);
     },
 
     AutoGift: function () {
@@ -15468,10 +15517,10 @@ caap = {
 
                     gm.listPush('GiftList', giftName);
                     giftNamePic[giftName] = this.CheckForImage('mystery', giftDiv).src.match(/[\w_\.]+$/i).toString();
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Gift name: ' + giftName + ' pic ' + giftNamePic[giftName] + ' hidden ' + giftExtraGiftTF[giftName]);
+                    //log('Gift name: ' + giftName + ' pic ' + giftNamePic[giftName] + ' hidden ' + giftExtraGiftTF[giftName]);
                 }
 
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Gift list: ' + gm.getList('GiftList'));
+                //log('Gift list: ' + gm.getList('GiftList'));
                 if (gm.getValue('GiftChoice') == 'Get Gift List') {
                     gm.setValue('GiftChoice', 'Same Gift As Received');
                     this.SelectDropOption('GiftChoice', 'Same Gift As Received');
@@ -15497,7 +15546,7 @@ caap = {
                 if (ignoreDiv && acceptDiv) {
                     giverId = this.userRe.exec(ignoreDiv.href);
                     if (!giverId) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find giver ID');
+                        log('Unable to find giver ID');
                         return false;
                     }
 
@@ -15512,7 +15561,7 @@ caap = {
                     }
 
                     gm.setValue('GiftEntry', giverId[2] + global.vs + giverName);
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Giver ID = ' + giverId[2] + ' Name  = ' + giverName);
+                    log('Giver ID = ' + giverId[2] + ' Name  = ' + giverName);
                     this.JustDidIt('ClickedFacebookURL');
                     if (global.is_chrome) {
                         acceptDiv.href = "http://apps.facebook.com/reqs.php#confirm_46755028429_0";
@@ -15532,7 +15581,7 @@ caap = {
             if (gm.getValue('FBSendList', '')) {
                 button = nHtml.FindByAttrContains(document.body, 'input', 'name', 'sendit');
                 if (button) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Sending gifts to Facebook');
+                    log('Sending gifts to Facebook');
                     caap.Click(button);
                     return true;
                 }
@@ -15541,13 +15590,13 @@ caap = {
                 gm.setList('FBSendList', []);
                 button = nHtml.FindByAttrContains(document.body, 'input', 'name', 'ok');
                 if (button) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Over max gifts per day');
+                    log('Over max gifts per day');
                     this.JustDidIt('WaitForNextGiftSend');
                     caap.Click(button);
                     return true;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No Facebook pop up to send gifts');
+                log('No Facebook pop up to send gifts');
                 return false;
             }
 
@@ -15557,7 +15606,7 @@ caap = {
                 if (sendForm) {
                     button = nHtml.FindByAttrContains(sendForm, 'input', 'name', 'send');
                     if (button) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicked CA send gift button');
+                        log('Clicked CA send gift button');
                         gm.listAddBefore('FBSendList', gm.getList('CASendList'));
                         gm.setList('CASendList', []);
                         caap.Click(button);
@@ -15565,7 +15614,7 @@ caap = {
                     }
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No CA button to send gifts');
+                log('No CA button to send gifts');
                 gm.listAddBefore('ReceivedList', gm.getList('CASendList'));
                 gm.setList('CASendList', []);
                 return false;
@@ -15596,7 +15645,7 @@ caap = {
 
             // Get the gift to send out
             if (giftNamePic.length === 0) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No list of pictures for gift choices');
+                log('No list of pictures for gift choices');
                 return false;
             }
 
@@ -15625,15 +15674,15 @@ caap = {
                     }
                 }
                 if (!giftPic) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No gift type match. GiverList: ' + giverList);
+                    log('No gift type match. GiverList: ' + giverList);
                     return false;
                 }
                 break;
             case 'Same Gift As Received':
                 givenGiftType = giverList[0].split(global.vs)[2];
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Looking for same gift as ' + givenGiftType);
+                log('Looking for same gift as ' + givenGiftType);
                 if (giftList.indexOf(givenGiftType) < 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'No gift type match. Using first gift as default.');
+                    log('No gift type match. Using first gift as default.');
                     givenGiftType = gm.getList('GiftList')[0];
                 }
                 giftPic = giftNamePic[givenGiftType];
@@ -15646,10 +15695,10 @@ caap = {
             // Move to gifts page
             var picDiv = this.CheckForImage(giftPic);
             if (!picDiv) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find ' + giftPic);
+                log('Unable to find ' + giftPic);
                 return false;
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'GiftPic is ' + giftPic);
+                log('GiftPic is ' + giftPic);
             }
 
             if (nHtml.FindByAttrContains(picDiv.parentNode.parentNode.parentNode.parentNode, 'div', 'style', 'giftpage_select')) {
@@ -15676,28 +15725,28 @@ caap = {
                     var giverID = giverData[0];
                     var giftType = giverData[2];
                     if (giftChoice == 'Same Gift As Received' && giftType != givenGiftType && giftList.indexOf(giftType) >= 0) {
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'giftType ' + giftType + ' givenGiftType ' + givenGiftType);
+                        //log('giftType ' + giftType + ' givenGiftType ' + givenGiftType);
                         gm.listPush('ReceivedList', giverList[p]);
                         continue;
                     }
 
                     var nameButton = nHtml.FindByAttrContains(giveDiv, 'input', 'value', giverID);
                     if (!nameButton) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unable to find giver ID ' + giverID);
+                        log('Unable to find giver ID ' + giverID);
                         gm.listPush('NotFoundIDs', giverList[p]);
                         this.JustDidIt('WaitForNotFoundIDs');
                         continue;
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicking giver ID ' + giverID);
+                        log('Clicking giver ID ' + giverID);
                         this.Click(nameButton);
                     }
 
                     //test actually clicked
                     if (nHtml.FindByAttrContains(doneDiv, 'input', 'value', giverID)) {
                         gm.listPush('CASendList', giverList[p]);
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Moved ID ' + giverID);
+                        log('Moved ID ' + giverID);
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'NOT moved ID ' + giverID);
+                        log('NOT moved ID ' + giverID);
                         gm.listPush('NotFoundIDs', giverList[p]);
                         this.JustDidIt('WaitForNotFoundIDs');
                     }
@@ -15706,7 +15755,7 @@ caap = {
 
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoGift: " + e);
+            log("ERROR in AutoGift: " + e);
             return false;
         }
     },
@@ -15728,7 +15777,7 @@ caap = {
                 return false;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'On FB page with gift ready to go');
+            log('On FB page with gift ready to go');
             if (window.location.href.indexOf('facebook.com/reqs.php') >= 0) {
                 var ss = document.evaluate(".//input[contains(@name,'/castle/tracker.php')]", document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
                 for (var s = 0; s < ss.snapshotLength; s += 1) {
@@ -15745,7 +15794,7 @@ caap = {
 
                     var giftType = $.trim(giftDiv.value.replace(/^Accept /i, ''));
                     if (gm.getList('GiftList').indexOf(giftType) < 0) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Unknown gift type.');
+                        log('Unknown gift type.');
                         giftType = 'Unknown Gift';
                     }
 
@@ -15753,7 +15802,7 @@ caap = {
                         gm.listPush('ReceivedList', giftEntry + global.vs + giftType);
                     }
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'This giver: ' + user + ' gave ' + giftType + ' Givers: ' + gm.getList('ReceivedList'));
+                    log('This giver: ' + user + ' gave ' + giftType + ' Givers: ' + gm.getList('ReceivedList'));
                     caap.Click(giftDiv);
                     gm.setValue('GiftEntry', '');
                     return true;
@@ -15764,7 +15813,7 @@ caap = {
                 return false;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Error: unable to find gift');
+            log('Error: unable to find gift');
             if (gm.getValue('ReceivedList', ' ').indexOf(giftEntry) < 0) {
                 gm.listPush('ReceivedList', giftEntry + '\tUnknown Gift');
             }
@@ -15773,7 +15822,7 @@ caap = {
             gm.setValue('GiftEntry', '');
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AcceptGiftOnFB: " + e);
+            log("ERROR in AcceptGiftOnFB: " + e);
             return false;
         }
     },
@@ -15796,7 +15845,7 @@ caap = {
 
     IncreaseStat: function (attribute, attrAdjust, atributeSlice) {
         try {
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute: " + attribute + "   Adjust: " + attrAdjust);
+            //log("Attribute: " + attribute + "   Adjust: " + attrAdjust);
             var lc_attribute = attribute.toLowerCase();
             var button = '';
             switch (lc_attribute) {
@@ -15816,12 +15865,12 @@ caap = {
                 button = nHtml.FindByAttrContains(atributeSlice, 'a', 'href', 'health_max');
                 break;
             default :
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to identify attribute " + lc_attribute);
+                log("Unable to identify attribute " + lc_attribute);
                 return "Fail";
             }
 
             if (!button) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to locate upgrade button for " + lc_attribute);
+                log("Unable to locate upgrade button for " + lc_attribute);
                 return "Fail";
             }
 
@@ -15838,10 +15887,10 @@ caap = {
                 health = parseInt(nHtml.FindByAttrContains(atributeSlice, 'a', 'href', 'health_max').parentNode.parentNode.childNodes[3].firstChild.data.replace(new RegExp("[^0-9]", "g"), ''), 10);
             }
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Energy ="+energy+" Stamina ="+stamina+" Attack ="+attack+" Defense ="+defense+" Heath ="+health);
+            //log("Energy ="+energy+" Stamina ="+stamina+" Attack ="+attack+" Defense ="+defense+" Heath ="+health);
             var ajaxLoadIcon = nHtml.FindByAttrContains(document.body, 'div', 'id', 'app46755028429_AjaxLoadIcon');
             if (!ajaxLoadIcon || ajaxLoadIcon.style.display !== 'none') {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Unable to find AjaxLoadIcon?");
+                log("Unable to find AjaxLoadIcon?");
                 return "Fail";
             }
 
@@ -15860,14 +15909,14 @@ caap = {
             }
 
             if (attrAdjustNew > attrCurrent) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Status Before:  " + lc_attribute + "=" + attrCurrent + " Adjusting To:" + logTxt);
+                log("Status Before:  " + lc_attribute + "=" + attrCurrent + " Adjusting To:" + logTxt);
                 this.Click(button);
                 return "Click";
             }
 
             return "Next";
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in IncreaseStat: " + e);
+            log("ERROR in IncreaseStat: " + e);
             return "Fail";
         }
     },
@@ -15884,7 +15933,7 @@ caap = {
 
             if (!this.statsMatch) {
                 if (this.autoStatRuleLog) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "User should change their stats rules");
+                    log("User should change their stats rules");
                     this.autoStatRuleLog = false;
                 }
 
@@ -15893,19 +15942,19 @@ caap = {
 
             var content = document.getElementById('app46755028429_main_bntp');
             if (!content) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "id:main_bntp not found");
+                //log("id:main_bntp not found");
                 return false;
             }
 
             var a = nHtml.FindByAttrContains(content, 'a', 'href', 'keep.php');
             if (!a) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "a:href:keep.php not found");
+                //log("a:href:keep.php not found");
                 return false;
             }
 
             this.statsPoints = a.firstChild.firstChild.data.replace(new RegExp("[^0-9]", "g"), '');
             if (!this.statsPoints || this.statsPoints < gm.getValue("SkillPointsNeed", 1)) {
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Dont have enough stats points");
+                //log("Dont have enough stats points");
                 return false;
             }
 
@@ -15924,7 +15973,7 @@ caap = {
 
             for (var n = startAtt; n <= stopAtt; n += 1) {
                 if (gm.getValue('Attribute' + n, '') === '') {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " is blank: continue");
+                    //log("Attribute" + n + " is blank: continue");
                     continue;
                 }
 
@@ -15936,22 +15985,22 @@ caap = {
 
                 switch (this.IncreaseStat(gm.getValue('Attribute' + n, ''), gm.getValue('AttrValue' + n, 0), atributeSlice)) {
                 case "Next" :
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " : next");
+                    //log("Attribute" + n + " : next");
                     continue;
                 case "Click" :
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " : click");
+                    //log("Attribute" + n + " : click");
                     return true;
                 default :
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Attribute" + n + " unknown return value");
+                    //log("Attribute" + n + " unknown return value");
                     return false;
                 }
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No rules match to increase stats");
+            log("No rules match to increase stats");
             this.statsMatch = false;
             return false;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoStat: " + e);
+            log("ERROR in AutoStat: " + e);
             return false;
         }
     },
@@ -15963,12 +16012,12 @@ caap = {
                 return false;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collecting Master and Apprentice reward");
+            log("Collecting Master and Apprentice reward");
             caap.SetDivContent('idle_mess', 'Collect MA Reward');
             var buttonMas = nHtml.FindByAttrContains(document.body, "img", "src", "ma_view_progress_main");
             var buttonApp = nHtml.FindByAttrContains(document.body, "img", "src", "ma_main_learn_more");
             if (!buttonMas && !buttonApp) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Going to home");
+                log("Going to home");
                 if (this.NavigateTo('index')) {
                     return true;
                 }
@@ -15977,12 +16026,12 @@ caap = {
             if (buttonMas) {
                 this.Click(buttonMas);
                 caap.SetDivContent('idle_mess', 'Collected MA Reward');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collected Master and Apprentice reward");
+                log("Collected Master and Apprentice reward");
             }
 
             if (!buttonMas && buttonApp) {
                 caap.SetDivContent('idle_mess', 'No MA Rewards');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "No Master and Apprentice rewards");
+                log("No Master and Apprentice rewards");
             }
 
             window.setTimeout(function () {
@@ -15990,10 +16039,10 @@ caap = {
             }, 5000);
 
             this.JustDidIt('AutoCollectMATimer');
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Collect Master and Apprentice reward completed");
+            log("Collect Master and Apprentice reward completed");
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoCollectMA: " + e);
+            log("ERROR in AutoCollectMA: " + e);
             return false;
         }
     },
@@ -16019,14 +16068,14 @@ caap = {
 
     GetFriendList: function (listType, force) {
         try {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Entered GetFriendList and request is for: " + listType.name);
+            log("Entered GetFriendList and request is for: " + listType.name);
             if (force) {
                 gm.deleteValue(listType.name + 'Requested');
                 gm.deleteValue(listType.name + 'Responded');
             }
 
             if (!gm.getValue(listType.name + 'Requested', false)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Getting Friend List: " + listType.name);
+                log("Getting Friend List: " + listType.name);
                 gm.setValue(listType.name + 'Requested', true);
 
                 $.ajax({
@@ -16034,12 +16083,12 @@ caap = {
                     error:
                         function (XMLHttpRequest, textStatus, errorThrown) {
                             gm.deleteValue(listType.name + 'Requested');
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + textStatus);
+                            log("GetFriendList(" + listType.name + "): " + textStatus);
                         },
                     success:
                         function (data, textStatus, XMLHttpRequest) {
                             try {
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax splitting data");
+                                log("GetFriendList.ajax splitting data");
                                 data = data.split('<div class="unselected_list">');
                                 if (data.length < 2) {
                                     throw "Could not locate 'unselected_list'";
@@ -16050,34 +16099,34 @@ caap = {
                                     throw "Could not locate 'selected_list'";
                                 }
 
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax data split ok");
+                                log("GetFriendList.ajax data split ok");
                                 var friendList = [];
                                 $('<div></div>').html(data[0]).find('input').each(function (index) {
                                     friendList.push($(this).val());
                                 });
 
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList.ajax saving friend list of " + friendList.length + " ids");
+                                log("GetFriendList.ajax saving friend list of " + friendList.length + " ids");
                                 if (friendList.length) {
                                     gm.setList(listType.name + 'Responded', friendList);
                                 } else {
                                     gm.setValue(listType.name + 'Responded', true);
                                 }
 
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + textStatus);
-                                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "GetFriendList(" + listType.name + "): " + friendList);
+                                log("GetFriendList(" + listType.name + "): " + textStatus);
+                                //log("GetFriendList(" + listType.name + "): " + friendList);
                             } catch (err) {
                                 gm.deleteValue(listType.name + 'Requested');
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetFriendList.ajax: " + err);
+                                log("ERROR in GetFriendList.ajax: " + err);
                             }
                         }
                 });
             } else {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Already requested GetFriendList for: " + listType.name);
+                log("Already requested GetFriendList for: " + listType.name);
             }
 
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GetFriendList(" + listType.name + "): " + e);
+            log("ERROR in GetFriendList(" + listType.name + "): " + e);
             return false;
         }
     },
@@ -16091,7 +16140,7 @@ caap = {
                     caap.addFriendSpamCheck -= 1;
                 }
 
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AddFriend(" + id + "): " + textStatus);
+                log("AddFriend(" + id + "): " + textStatus);
             };
 
             $.ajax({
@@ -16102,7 +16151,7 @@ caap = {
 
             return true;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AddFriend(" + id + "): " + e);
+            log("ERROR in AddFriend(" + id + "): " + e);
             return false;
         }
     },
@@ -16116,13 +16165,13 @@ caap = {
             var armyCount = gm.getValue("ArmyCount", 0);
             if (armyCount === 0) {
                 this.SetDivContent('idle_mess', 'Filling Army');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Filling army");
+                log("Filling army");
             }
 
             if (gm.getValue(caListType.name + 'Responded', false) === true ||
                     gm.getValue(fbListType.name + 'Responded', false) === true) {
                 this.SetDivContent('idle_mess', '<b>Fill Army Completed</b>');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Fill Army Completed: no friends found");
+                log("Fill Army Completed: no friends found");
                 window.setTimeout(function () {
                     caap.SetDivContent('idle_mess', '');
                 }, 5000);
@@ -16144,16 +16193,16 @@ caap = {
             }
 
             var castleageList = gm.getList(caListType.name + 'Responded');
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "gifList: " + castleageList);
+            //log("gifList: " + castleageList);
             var facebookList = gm.getList(fbListType.name + 'Responded');
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "facebookList: " + facebookList);
+            //log("facebookList: " + facebookList);
             if ((castleageList.length && facebookList.length) || fillArmyList.length) {
                 if (!fillArmyList.length) {
                     var diffList = facebookList.filter(function (facebookID) {
                         return (castleageList.indexOf(facebookID) >= 0);
                     });
 
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "diffList: " + diffList);
+                    //log("diffList: " + diffList);
                     gm.setList('FillArmyList', diffList);
                     fillArmyList = gm.getList('FillArmyList');
                     gm.deleteValue(caListType.name + 'Responded');
@@ -16178,7 +16227,7 @@ caap = {
                 }
 
                 this.SetDivContent('idle_mess', 'Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
+                log('Filling Army, Please wait...' + armyCount + "/" + fillArmyList.length);
                 gm.setValue("ArmyCount", armyCount);
                 if (armyCount >= fillArmyList.length) {
                     this.SetDivContent('idle_mess', '<b>Fill Army Completed</b>');
@@ -16186,7 +16235,7 @@ caap = {
                         caap.SetDivContent('idle_mess', '');
                     }, 5000);
 
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Fill Army Completed");
+                    log("Fill Army Completed");
                     gm.setValue('FillArmy', false);
                     gm.deleteValue("ArmyCount");
                     gm.deleteValue('FillArmyList');
@@ -16195,7 +16244,7 @@ caap = {
 
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AutoFillArmy: " + err);
+            log("ERROR in AutoFillArmy: " + err);
             this.SetDivContent('idle_mess', '<b>Fill Army Failed</b>');
             window.setTimeout(function () {
                 caap.SetDivContent('idle_mess', '');
@@ -16218,37 +16267,37 @@ caap = {
                 return false;
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Performing AjaxGiftCheck");
+            log("Performing AjaxGiftCheck");
 
             $.ajax({
                 url: "http://apps.facebook.com/castle_age/index.php",
                 error:
                     function (XMLHttpRequest, textStatus, errorThrown) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: " + textStatus);
+                        log("AjaxGiftCheck.ajax: " + textStatus);
                     },
                 success:
                     function (data, textStatus, XMLHttpRequest) {
                         try {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: Checking data.");
+                            log("AjaxGiftCheck.ajax: Checking data.");
                             if ($(data).find("a[href*='reqs.php#confirm_']").length) {
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'AjaxGiftCheck.ajax: We have a gift waiting!');
+                                log('AjaxGiftCheck.ajax: We have a gift waiting!');
                                 gm.setValue('HaveGift', true);
                             } else {
-                                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'AjaxGiftCheck.ajax: No gifts waiting.');
+                                log('AjaxGiftCheck.ajax: No gifts waiting.');
                             }
 
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "AjaxGiftCheck.ajax: Done.");
+                            log("AjaxGiftCheck.ajax: Done.");
                         } catch (err) {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AjaxGiftCheck.ajax: " + err);
+                            log("ERROR in AjaxGiftCheck.ajax: " + err);
                         }
                     }
             });
 
             this.JustDidIt('AjaxGiftCheckTimer');
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Completed AjaxGiftCheck");
+            log("Completed AjaxGiftCheck");
             return true;
         } catch (err) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in AjaxGiftCheck: " + err);
+            log("ERROR in AjaxGiftCheck: " + err);
             return false;
         }
     },
@@ -16298,7 +16347,7 @@ caap = {
     \-------------------------------------------------------------------------------------*/
             if (!document.getElementById("iframeRecon")) {
                 nHtml.OpenInIFrame('http://apps.facebook.com/castle_age/battle.php#iframeRecon', 'iframeRecon');
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Opening the recon iframe');
+                log('Opening the recon iframe');
                 this.SetTimer('PlayerReconTimer', 30);
                 return true;
             }
@@ -16308,7 +16357,7 @@ caap = {
     \-------------------------------------------------------------------------------------*/
             var pageObj = document.getElementById("iframeRecon").contentDocument;
             if (!pageObj) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon HTML page not ready. waithing For 30 more secionds.');
+                log('Recon HTML page not ready. waithing For 30 more secionds.');
                 this.SetTimer('PlayerReconTimer', 30);
                 return true;
             }
@@ -16322,12 +16371,12 @@ caap = {
             var ss = pageObj.evaluate(target, pageObj, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
             if (ss.snapshotLength <= 0) {
                 pageObj.location.reload(true);
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon can not find battle page');
+                log('Recon can not find battle page');
                 caap.SetDivContent('idle_mess', '');
                 return false;
             }
 
-            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Found targets: "+ss.snapshotLength);
+            //log("Found targets: "+ss.snapshotLength);
     /*-------------------------------------------------------------------------------------\
     Next we get our Recon Player settings for lowest rank, highest level, and army ratio
     base multiplier.
@@ -16359,7 +16408,7 @@ caap = {
                 var txt = $.trim(nHtml.GetText(tr));
                 var levelm = regex.exec(txt);
                 if (!levelm) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon can not parse target text string' + txt);
+                    log('Recon can not parse target text string' + txt);
                     continue;
                 }
 
@@ -16374,7 +16423,7 @@ caap = {
                 var armyNum = parseInt(levelm[4], 10);
                 var userID = nHtml.FindByAttrXPath(tr, "input", "@name='target_id'", pageObj).value;
                 var aliveTime = (new Date().getTime());
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Player stats: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
+                //log('Player stats: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
     /*-------------------------------------------------------------------------------------\
     We filter out targets that are above the recon max level or below the recon min rank
     \-------------------------------------------------------------------------------------*/
@@ -16393,14 +16442,14 @@ caap = {
                 var levelMultiplier = this.stats.level / levelNum;
                 var armyRatio = reconARBase * levelMultiplier;
                 if (armyRatio <= 0) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Recon unable to calculate army ratio: ' + reconARBase + '/' + levelMultiplier);
+                    log('Recon unable to calculate army ratio: ' + reconARBase + '/' + levelMultiplier);
                     continue;
                 }
 
                 if (armyNum > (this.stats.army * armyRatio)) {
                     continue;
                 }
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Target Found: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
+                //log('Target Found: '+userID+' '+nameStr+' '+deityNum+' '+rankStr+' '+rankNum+' '+levelNum+' '+armyNum+' '+aliveTime);
     /*-------------------------------------------------------------------------------------\
     Ok, recon has found a viable target. We get any existing values from the targetsOL
     database.
@@ -16460,7 +16509,7 @@ caap = {
 
             return false;
         } catch (e) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Recon :" + e);
+            log("ERROR in Recon :" + e);
             return false;
         }
     },
@@ -16511,7 +16560,7 @@ caap = {
         }
 
         if (lastAction != thisAction) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Changed from doing ' + lastAction + ' to ' + thisAction);
+            log('Changed from doing ' + lastAction + ' to ' + thisAction);
             gm.setValue('LastAction', thisAction);
         }
     },
@@ -16546,7 +16595,7 @@ caap = {
     MakeActionsList: function () {
         try {
             if (this.actionsList.length === 0) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Loading a fresh Action List");
+                log("Loading a fresh Action List");
                 // actionOrder is a comma seperated string of action numbers as
                 // hex pairs and can be referenced in the Master Action List
                 // Example: "00,01,02,03,04,05,06,07,08,09,0A,0B,0C,0D,0E,0F,10,11,12,13,14"
@@ -16557,7 +16606,7 @@ caap = {
                 if (actionOrderUser !== '') {
                     // We are using the user defined actionOrder set in the
                     // Advanced Hidden Options
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Trying user defined Action Order");
+                    log("Trying user defined Action Order");
                     // We take the User Action Order and convert it from a comma
                     // separated list into an array
                     actionOrderArray = actionOrderUser.split(",");
@@ -16566,23 +16615,23 @@ caap = {
                     for (action in this.masterActionList) {
                         if (this.masterActionList.hasOwnProperty(action)) {
                             masterActionListCount += 1;
-                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Counting Action List: " + masterActionListCount);
+                            //log("Counting Action List: " + masterActionListCount);
                         } else {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error Getting Master Action List length!");
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Skipping 'action' from masterActionList: " + action);
+                            log("Error Getting Master Action List length!");
+                            log("Skipping 'action' from masterActionList: " + action);
                         }
                     }
                 } else {
                     // We are building the Action Order Array from the
                     // Master Action List
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Building the default Action Order");
+                    log("Building the default Action Order");
                     for (action in this.masterActionList) {
                         if (this.masterActionList.hasOwnProperty(action)) {
                             masterActionListCount = actionOrderArray.push(action);
-                            //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action Added: " + action);
+                            //log("Action Added: " + action);
                         } else {
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error Building Default Action Order!");
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Skipping 'action' from masterActionList: " + action);
+                            log("Error Building Default Action Order!");
+                            log("Skipping 'action' from masterActionList: " + action);
                         }
                     }
                 }
@@ -16597,41 +16646,41 @@ caap = {
                 }
 
                 if (actionOrderArrayCount < masterActionListCount) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Warning! Action Order Array has fewer orders than default!");
+                    log("Warning! Action Order Array has fewer orders than default!");
                 }
 
                 if (actionOrderArrayCount > masterActionListCount) {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Warning! Action Order Array has more orders than default!");
+                    log("Warning! Action Order Array has more orders than default!");
                 }
 
                 // We build the Action List
-                //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Building Action List ...");
+                //log("Building Action List ...");
                 for (var itemCount = 0; itemCount !== actionOrderArrayCount; itemCount += 1) {
                     var actionItem = '';
                     if (actionOrderUser !== '') {
                         // We are using the user defined comma separated list
                         // of hex pairs
                         actionItem = this.masterActionList[parseInt(actionOrderArray[itemCount], 16)];
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "(" + itemCount + ") Converted user defined hex pair to action: " + actionItem);
+                        //log("(" + itemCount + ") Converted user defined hex pair to action: " + actionItem);
                     } else {
                         // We are using the Master Action List
                         actionItem = this.masterActionList[actionOrderArray[itemCount]];
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "(" + itemCount + ") Converted Master Action List entry to an action: " + actionItem);
+                        //log("(" + itemCount + ") Converted Master Action List entry to an action: " + actionItem);
                     }
 
                     // Check the Action Item
                     if (actionItem.length > 0 && typeof(actionItem) === "string") {
                         // We add the Action Item to the Action List
                         this.actionsList.push(actionItem);
-                        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Added action to the list: " + actionItem);
+                        //log("Added action to the list: " + actionItem);
                     } else {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error! Skipping actionItem");
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action Item(" + itemCount + "): " + actionItem);
+                        log("Error! Skipping actionItem");
+                        log("Action Item(" + itemCount + "): " + actionItem);
                     }
                 }
 
                 if (actionOrderUser !== '') {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Get Action List: " + this.actionsList);
+                    log("Get Action List: " + this.actionsList);
                 }
             }
 			if (this.actionsList[0] != 'Page') {
@@ -16640,7 +16689,7 @@ caap = {
             return true;
         } catch (e) {
             // Something went wrong, log it and use the emergency Action List.
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in MakeActionsList: " + e);
+            log("ERROR in MakeActionsList: " + e);
             this.actionsList = [
 				'Page',
                 "Elite",
@@ -16674,7 +16723,7 @@ caap = {
         // assorted errors...
         var href = location.href;
         if (href.indexOf('/common/error.html') >= 0) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'detected error page, waiting to go back to previous page.');
+            log('detected error page, waiting to go back to previous page.');
             window.setTimeout(function () {
                 window.history.go(-1);
             }, 30 * 1000);
@@ -16683,7 +16732,7 @@ caap = {
         }
 
         if (document.getElementById('try_again_button')) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'detected Try Again message, waiting to reload');
+            log('detected Try Again message, waiting to reload');
             // error
             window.setTimeout(function () {
                 window.history.go(0);
@@ -16712,10 +16761,10 @@ caap = {
 
         if (locationFBMF) {
             if (gm.getValue("mfStatus", "") == "OpenMonster") {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Opening Monster " + gm.getValue("navLink"));
+                log("Opening Monster " + gm.getValue("navLink"));
                 this.CheckMonster();
             } else if (gm.getValue("mfStatus", "") == "CheckMonster") {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Scanning URL for new monster");
+                log("Scanning URL for new monster");
                 this.selectMonst();
             }
 
@@ -16729,7 +16778,7 @@ caap = {
         var button = nHtml.FindByAttrContains(document.body, "a", "class", 'undo_link');
         if (button) {
             this.Click(button);
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Undoing notification');
+            log('Undoing notification');
         }
 
         var caapDisabled = gm.getValue('Disabled', false);
@@ -16753,7 +16802,7 @@ caap = {
                 this.ReloadCastleAge();
             }
 
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Page no-load count: ' + noWindowLoad);
+            log('Page no-load count: ' + noWindowLoad);
             this.WaitMainLoop();
             return;
         } else {
@@ -16776,7 +16825,7 @@ caap = {
         }
 
         if (this.WhileSinceDidIt('clickedOnSomething', 25) && this.waitingForDomLoad) {
-            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Clicked on something, but nothing new loaded.  Reloading page.');
+            log('Clicked on something, but nothing new loaded.  Reloading page.');
             this.ReloadCastleAge();
         }
 
@@ -16789,14 +16838,14 @@ caap = {
         this.MakeActionsList();
         var actionsListCopy = this.actionsList.slice();
 
-        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Action List: " + actionsListCopy);
+        //log("Action List: " + actionsListCopy);
         if (!gm.getValue('ReleaseControl', false)) {
             actionsListCopy.unshift(gm.getValue('LastAction', 'Idle'));
         } else {
             gm.setValue('ReleaseControl', false);
         }
 
-        //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Action List2: ' + actionsListCopy);
+        //log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
             if (actionsListCopy.hasOwnProperty(action)) {
                 worker = WorkerByName(actionsListCopy[action]);
@@ -16806,14 +16855,14 @@ caap = {
                     worker._unflush();
                     result = worker._work(true);
                     if (result) {
-                        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Doing worker ' + worker.name);
+                        log('Doing worker ' + worker.name);
                     }
                 } else {
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'ERROR - No function for ' + actionsListCopy[action]);
+                    log('ERROR - No function for ' + actionsListCopy[action]);
                 }
 
                 if (result) {
-                    //console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Action: ' + actionsListCopy[action]);
+                    //log('Action: ' + actionsListCopy[action]);
                     this.CheckLastAction(actionsListCopy[action]);
                     break;
                 }
@@ -16856,7 +16905,7 @@ caap = {
 
         nHtml.setTimeout(function () {
             if (caap.WhileSinceDidIt('clickedOnSomething', 5 * 60)) {
-                console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Reloading if not paused after inactivity');
+                log('Reloading if not paused after inactivity');
                 if ((window.location.href.indexOf('castle_age') >= 0 || window.location.href.indexOf('reqs.php#confirm_46755028429_0') >= 0) &&
                         !gm.getValue('Disabled') && (gm.getValue('caapPause') == 'none')) {
                     if (global.is_chrome) {
@@ -16882,54 +16931,7 @@ if (typeof GM_log !== 'function') {
     throw "Error: Your browser does not appear to support Greasemonkey scripts!";
 }
 
-console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Starting");
-//////////   Start Golem _main.js
-
-var show_debug = true;
-
-// Shouldn't touch
-var VERSION = 30.9;
-var script_started = Date.now();
-
-// Automatically filled
-var userID = 0;
-var imagepath = '';
-var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
-
-// Decide which facebook app we're in...
-var applications = {
-	'reqs.php':['','Gifts'], // For gifts etc
-	'castle_age':['46755028429', 'Castle Age']
-};
-
-if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
-	for (var i in applications) {
-		if (window.location.pathname.indexOf(i) === 1) {
-			var APP = i;
-			var APPID = applications[i][0];
-			var APPNAME = applications[i][1];
-			var PREFIX = 'golem'+APPID+'_';
-			break;
-		}
-	}
-}
-
-var log = console.log;
-
-if (show_debug) {
-	var debug = function(txt) {
-		console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + txt);
-	};
-} else {
-	var debug = function(){};
-}
-
-if (typeof unsafeWindow === 'undefined') {
-	unsafeWindow = window;
-}
-
-//////////   End Golem _main.js
-
+log("Starting");
 
 /////////////////////////////////////////////////////////////////////
 //                         Chrome Startup
@@ -16949,13 +16951,13 @@ if (global.is_chrome) {
             ConvertGMtoJSON();
         }
     } catch (e) {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error converting DB: " + e);
+        log("Error converting DB: " + e);
     }
 
     try {
         CM_Listener();
     } catch (e) {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Error loading CM_Listener" + e);
+        log("Error loading CM_Listener" + e);
     }
 }
 
@@ -17004,7 +17006,7 @@ if (!global.is_chrome) {
                             gm.setValue('SUC_last_update', new Date().getTime() + '');
                             gm.setValue('SUC_target_script_name', script_name);
                             gm.setValue('SUC_remote_version', remote_version);
-                            console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'remote version ' + remote_version);
+                            log('remote version ' + remote_version);
                             if (remote_version > caapVersion) {
                                 global.newVersionAvailable = true;
                                 if (forced) {
@@ -17031,7 +17033,7 @@ if (!global.is_chrome) {
 
         updateCheck(false);
     } catch (err) {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in GitHub updater: " + err);
+        log("ERROR in GitHub updater: " + err);
     }
 }
 
@@ -17080,7 +17082,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
                 var attribute = gm.getValue("Attribute" + a, '');
                 if (attribute !== '') {
                     gm.setValue("Attribute" + a, attribute.ucFirst());
-                    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
+                    log("Converted Attribute" + a + ": " + attribute + "   to: " + attribute.ucFirst());
                 }
             }
         }
@@ -17118,7 +17120,7 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 
         gm.setValue('LastVersion', caapVersion);
     } catch (err) {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + "ERROR in Environment updater: " + err);
+        log("ERROR in Environment updater: " + err);
     }
 }
 
@@ -17127,10 +17129,10 @@ if (gm.getValue('LastVersion', 0) != caapVersion) {
 /////////////////////////////////////////////////////////////////////
 
 $(function () {
-    console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Full page load completed');
+    log('Full page load completed');
     // If unable to read in gm.values, then reload the page
     if (gm.getValue('caapPause', 'none') !== 'none' && gm.getValue('caapPause', 'none') !== 'block') {
-        console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Refresh page because unable to load gm.values due to unsafewindow error');
+        log('Refresh page because unable to load gm.values due to unsafewindow error');
         window.location.href = window.location.href;
     }
 
@@ -17151,7 +17153,7 @@ $(function () {
 			}
 
 			Page.identify();
-			console.log('v' + caapVersion + ' [' + (new Date).toLocaleTimeString() + '] : ' + 'Workers: ' + Workers.length);
+			log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
 					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
 					Workers[ii]._setup();

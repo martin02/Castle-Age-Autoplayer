@@ -10,6 +10,22 @@ var userID = 0;
 var imagepath = '';
 var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
 
+var log = function(txt){
+	console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+}
+
+if (show_debug) {
+	var debug = function(txt) {
+		console.log('[' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '] [' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+	};
+} else {
+	var debug = function(){};
+}
+
+if (typeof unsafeWindow === 'undefined') {
+	var unsafeWindow = window;
+}
+
 // Decide which facebook app we're in...
 if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
 	var applications = {
@@ -27,22 +43,6 @@ if (window.location.hostname === 'apps.facebook.com' || window.location.hostname
 		}
 	}
 	if (typeof APP !== 'undefined') {
-		var log = function(txt){
-			console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
-		}
-
-		if (show_debug) {
-			var debug = function(txt) {
-				console.log('[' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '] [' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
-			};
-		} else {
-			var debug = function(){};
-		}
-
-		if (typeof unsafeWindow === 'undefined') {
-			var unsafeWindow = window;
-		}
-
 		var document_ready = function() {
 			var i;
 			userID = $('head').html().regex(/user:([0-9]+),/i);

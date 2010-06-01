@@ -12,7 +12,23 @@ var userID = 0;
 var imagepath = '';
 var isGreasemonkey = (navigator.userAgent.toLowerCase().indexOf('chrome') === -1);
 
-// Decide which facebook app we're in...
+var log = function(txt){
+	console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+}
+
+if (show_debug) {
+	var debug = function(txt) {
+		console.log('[' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '] [' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
+	};
+} else {
+	var debug = function(){};
+}
+
+if (typeof unsafeWindow === 'undefined') {
+	var unsafeWindow = window;
+}
+
+	// Decide which facebook app we're in...
 if (window.location.hostname === 'apps.facebook.com' || window.location.hostname === 'apps.new.facebook.com') {
 	var applications = {
 		'reqs.php':['','Gifts'], // For gifts etc
@@ -28,23 +44,6 @@ if (window.location.hostname === 'apps.facebook.com' || window.location.hostname
 			break;
 		}
 	}
-	if (typeof APP !== 'undefined') {
-		var log = function(txt){
-			console.log('[' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
-		}
-
-		if (show_debug) {
-			var debug = function(txt) {
-				console.log('[' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '] [' + (new Date).toLocaleTimeString() + '] ' + (WorkerStack && WorkerStack.length ? WorkerStack[WorkerStack.length-1].name + ': ' : '') + $.makeArray(arguments).join("\n"));
-			};
-		} else {
-			var debug = function(){};
-		}
-
-		if (typeof unsafeWindow === 'undefined') {
-			var unsafeWindow = window;
-		}
-    }
 }
 
 //////////   End Golem _main.js

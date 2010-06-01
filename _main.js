@@ -228,7 +228,7 @@ $(function () {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
 			}
-
+			do_css();
 			Page.identify();
 			log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {

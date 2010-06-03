@@ -90,9 +90,6 @@ Dashboard.init = function() {
 };
 
 Dashboard.parse = function(change) {
-	if (iscaap()) {
-//		return false;
-	}
 	$('#golem-dashboard').css('top', $('#app'+APPID+'_main_bn').offset().top+'px');
 };
 

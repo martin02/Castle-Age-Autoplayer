@@ -867,7 +867,7 @@ Config.init = function() {
 	}
 	$('head').append('<link rel="stylesheet" href="http://cloutman.com/css/base/jquery-ui.css" type="text/css" />');
 	var $btn, $golem_config, $newPanel, i, j, k;
-	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (revision && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
+	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (typeof revision !== 'undefined' && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
 	$('#golem_options').click(function(){
 		$(this).toggleClass('golem-button golem-button-active');
 		Config.option.display = Config.option.display==='block' ? 'none' : 'block';
@@ -1284,9 +1284,6 @@ Dashboard.init = function() {
 };
 
 Dashboard.parse = function(change) {
-	if (iscaap()) {
-//		return false;
-	}
 	$('#golem-dashboard').css('top', $('#app'+APPID+'_main_bn').offset().top+'px');
 };
 
@@ -2144,13 +2141,6 @@ Bank.option = {
 	keep: 10000
 };
 
-Bank.caap_load = function() {
-	valuesList = {'above':'MaxInCash','hand':'MinInCash','keep':'minInStore'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-};
-
 Bank.display = [
 	{
 		id:'general',
@@ -2734,12 +2724,6 @@ Elite.option = {
 	armyperpage:25 // Read only, but if they change it and I don't notice...
 };
 
-Elite.caap_load = function() {
-	this.option.prefer = gm.getListFromText('EliteArmyList');
-	this.option.elite = gm.getValue('AutoElite', false);
-	this.option.every = 1;
-};
-
 Elite.runtime = {
 	armylastpage:1,
 	armyextra:0,
@@ -2916,7 +2900,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
+		pages:'* heroes_generals'
 	}
 };
 
@@ -2929,6 +2913,9 @@ Generals.init = function() {
 		if (i.indexOf('\t') !== -1) { // Fix bad page loads...
 			delete this.data[i];
 		}
+	}
+	if (!Player.get('attack') || !Player.get('defense')) {
+		this._watch(Player); // Only need them the first time...
 	}
 	this._watch(Town);
 };
@@ -2992,7 +2979,10 @@ Generals.update = function(type, worker) {
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
 
-	if ((type === 'data' || worker === Town) && invade && duel) {
+	if ((type === 'data' || worker === Town || worker === Player) && invade && duel) {
+		if (worker === Player && Player.get('attack') && Player.get('defense')) {
+			this._unwatch(Player); // Only need them the first time...
+		}
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
 			defense_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Defense|Increase Player Defense by ([0-9]+)/i))	+ ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Defense for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -3306,6 +3296,7 @@ Generals.dashboard = function(sort, rev) {
 		$('#golem-dashboard-Generals thead th:eq('+sort+')').attr('name',(rev ? 'reverse' : 'sort')).append('&nbsp;' + (rev ? '&uarr;' : '&darr;'));
 	}
 }
+
 /********** Worker.Gift() **********
 * Auto accept gifts and return if needed
 * *** Needs to talk to Alchemy to work out what's being made
@@ -4195,13 +4186,6 @@ Land.option = {
 	land_exp:false
 };
 
-Land.caap_load = function() {
-	valuesList = {'enabled':'autoBuyLand','sell':'SellLands'};
-	for (i in valuesList) {
-		this.option[i] = gm.getValue(valuesList[i]);
-	}
-};
-
 Land.runtime = {
 	lastlevel:0,
 	best:null,
@@ -4575,7 +4559,7 @@ LevelUp.work = function(state) {
 		}
 		runtime.heal_me = false;
 	}
-	if (!runtime.running || state) { // We're not running yet, or we have focus
+	if (state && !runtime.running) { // We're not running yet and we have focus
 		runtime.level = Player.get('level');
 		runtime.battle_monster = Battle.get('option.monster');
 		runtime.running = true;
@@ -4586,7 +4570,7 @@ LevelUp.work = function(state) {
 	if (general && general !== 'any' && Player.get('exp_needed') < 100) { // If we want to change...
 		Generals.set('runtime.disabled', false);	// make sure changing Generals is not disabled
 		if (general === Player.get('general') || Generals.to(general)) { // ...then change if needed
-//			debug('Disabling Generals because we are within 25 XP from leveling.');
+//			debug('Disabling Generals because we are within 100 XP from leveling.');
 			Generals.set('runtime.disabled', true);	// and lock the General se we can level up.
 		} else {
 			return true;	// Try to change generals again

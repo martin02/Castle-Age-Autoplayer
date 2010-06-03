@@ -9,7 +9,7 @@ Generals.data = {};
 
 Generals.defaults = {
 	castle_age:{
-		pages:'* heroes_generals town_soldiers town_blacksmith town_magic'
+		pages:'* heroes_generals'
 	}
 };
 
@@ -22,6 +22,9 @@ Generals.init = function() {
 		if (i.indexOf('\t') !== -1) { // Fix bad page loads...
 			delete this.data[i];
 		}
+	}
+	if (!Player.get('attack') || !Player.get('defense')) {
+		this._watch(Player); // Only need them the first time...
 	}
 	this._watch(Town);
 };
@@ -85,7 +88,10 @@ Generals.update = function(type, worker) {
 	this.runtime.max_priority = priority_list.length;
 	// End Priority Stuff
 
-	if ((type === 'data' || worker === Town) && invade && duel) {
+	if ((type === 'data' || worker === Town || worker === Player) && invade && duel) {
+		if (worker === Player && Player.get('attack') && Player.get('defense')) {
+			this._unwatch(Player); // Only need them the first time...
+		}
 		for (i in data) {
 			attack_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Attack|Increase Player Attack by ([0-9]+)|Convert ([-+]?[0-9]*\.?[0-9]*) Attack/i)) + ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Attack for every Hero Owned/i) || 0) * (length(data)-1)));
 			defense_bonus = Math.floor(sum(data[i].skills.regex(/([-+]?[0-9]*\.?[0-9]*) Player Defense|Increase Player Defense by ([0-9]+)/i))	+ ((data[i].skills.regex(/Increase ([-+]?[0-9]*\.?[0-9]*) Player Defense for every Hero Owned/i) || 0) * (length(data)-1)));
@@ -399,3 +405,4 @@ Generals.dashboard = function(sort, rev) {
 		$('#golem-dashboard-Generals thead th:eq('+sort+')').attr('name',(rev ? 'reverse' : 'sort')).append('&nbsp;' + (rev ? '&uarr;' : '&darr;'));
 	}
 }
+

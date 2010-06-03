@@ -150,7 +150,7 @@ Quest.update = function(type,worker) {
 		return; // Missing quest requirements
 	}
 	// First let's update the Quest dropdown list(s)...
-	var i, unit, own, need, best = null, best_advancement = null, best_influence = null, best_experience = null, best_land = 0, list = [], quests = this.data;
+	var i, unit, own, need, noCanDo = false, best = null, best_advancement = null, best_influence = null, best_experience = null, best_land = 0, list = [], quests = this.data;
 	if (!type || type === 'data') {
 		for (i in quests) {
 			if (quests[i].item && !quests[i].unique) {
@@ -174,17 +174,18 @@ Quest.update = function(type,worker) {
 //		debug('option = ' + this.option.what);
 //		best = (this.runtime.best && quests[this.runtime.best] && (quests[this.runtime.best].influence < 100) ? this.runtime.best : null);
 		for (i in quests) {
-			if (quests[i].units && (typeof quests[i].own === 'undefined' || (quests[i].own === false && worker === Town))) {// Only check for requirements if we don't already know about them
-				own = 0, need = 0;
+			if (quests[i].units) {
+				own = 0, need = 0, noCanDo = false;
 				for (unit in quests[i].units) {
-					own += Town.get([unit, 'own']) || 0;
-					need += quests[i].units[unit];
+					own = Town.get([unit, 'own']) || 0;
+					need = quests[i].units[unit];
+					if (need > own) {	// Need more than we own, skip this quest.
+						noCanDo = true;	// set flag
+						continue;	// no need to check more prerequisites.
 				}
-				quests[i].own = (own >= need);
-				if (!quests[i].own) { // Can't do a quest because we don't have all the items...
-//					debug('Can\'t do "'+i+'" because we don\'t have the items...');
-					this._watch(Town); // Watch Town for updates...
-					continue;
+				}
+				if (noCanDo) {
+					continue;	// Skip to the next quest in the list
 				}
 			}
 			switch(this.option.what) { // Automatically fallback on type - but without changing option

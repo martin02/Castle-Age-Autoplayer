@@ -26,19 +26,19 @@ Elite.caap_load = function() {
 };
 
 Land.caap_values = {
-	'enabled':	'autoBuyLand',
-	'sell':		'SellLands'
+	enabled:	'autoBuyLand',
+	sell:		'SellLands'
 };
 
 Bank.caap_values = {
-	'above':	'MaxInCash',
-	'hand':		'MinInCash',
-	'keep':		'minInStore'
+	above:		'MaxInCash',
+	hand:		'MinInCash',
+	keep:		'minInStore'
 };
 
 Alchemy.caap_values = {
-	'perform':	'AutoAlchemy',
-	'hearts':	'AutoAlchemyHearts'
+	perform:	'AutoAlchemy',
+	hearts:		'AutoAlchemyHearts'
 };
 
 Alchemy.caap_load = function() {
@@ -61,4 +61,3 @@ Blessing.caap_values = {
 Blessing.caap_load = function() {
 	this.option.display = true;
 };
-

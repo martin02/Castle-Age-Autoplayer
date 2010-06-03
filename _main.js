@@ -228,6 +228,13 @@ $(function () {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
 			}
+			try {
+				imagepath = $('#app'+APPID+'_globalContainer img:eq(0)').attr('src').pathpart();
+			} catch(e) {
+				log('ERROR: Bad Page Load!!!');
+				Page.reload();
+				return;
+			}
 			do_css();
 			Page.identify();
 			log('Workers: ' + Workers.length);

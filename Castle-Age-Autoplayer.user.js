@@ -1034,6 +1034,8 @@ Config.makePanel = function(worker) {
 					}
 				} else if (o.text) {
 					txt.push('<input type="text" id="' + o.real_id + '" size="' + o.size + '" value="' + (o.value || '') + '">');
+				} else if (o.textarea) {
+					txt.push('<textarea id="' + o.real_id + '" name="' + o.real_id + '" cols="23" rows="5">' + (o.value || '') + '</textarea>');
 				} else if (o.checkbox) {
 					txt.push('<input type="checkbox" id="' + o.real_id + '"' + (o.value ? ' checked' : '') + '>');
 				} else if (o.select) {
@@ -1155,7 +1157,7 @@ Config.updateOptions = function() {
 	// Now can we see the advanced stuff
 	this.option.advanced = $('#golem-config-advanced').attr('checked');
 	// Now save the contents of all elements with the right id style
-	$('#golem_config :input').each(function(i,el){
+	$('#golem_config input,#golem_config textarea').each(function(i,el){
 		if ($(el).attr('id')) {
 			var val, tmp = $(el).attr('id').slice(PREFIX.length).regex(/([^_]*)_(.*)/i);
 			if (!tmp) {
@@ -5074,7 +5076,7 @@ Monster.types = {
         list:'nm_volcanic_list_2.jpg',
         image:'nm_volcanic_large_2.jpg',
         dead:'nm_volcanic_dead_2.jpg', //Guesswork
-        achievement:2000000, // Guesswork
+        achievement:3000000, // Guesswork
         timer:604800, // 168 hours
         mpool:3,
         atk_btn:'input[name="Attack Dragon"][src*="stab"],input[name="Attack Dragon"][src*="bolt"],input[name="Attack Dragon"][src*="smite"],input[name="Attack Dragon"][src*="bash"]',
@@ -5087,7 +5089,7 @@ Monster.types = {
         list:'nm_azriel_list.jpg',
         image:'nm_azriel_large2.jpg',
         dead:'nm_azriel_dead.jpg', //Guesswork
-        achievement:2000000, // Guesswork
+        achievement:3000000, // ~0.5%, 2X = ~1%
         timer:604800, // 168 hours
         mpool:1,
         atk_btn:'input[name="Attack Dragon"][src*="stab"],input[name="Attack Dragon"][src*="bolt"],input[name="Attack Dragon"][src*="smite"],input[name="Attack Dragon"][src*="bash"]',
@@ -6290,7 +6292,7 @@ Quest.update = function(type,worker) {
 		return; // Missing quest requirements
 	}
 	// First let's update the Quest dropdown list(s)...
-	var i, unit, own, need, best = null, best_advancement = null, best_influence = null, best_experience = null, best_land = 0, list = [], quests = this.data;
+	var i, unit, own, need, noCanDo = false, best = null, best_advancement = null, best_influence = null, best_experience = null, best_land = 0, list = [], quests = this.data;
 	if (!type || type === 'data') {
 		for (i in quests) {
 			if (quests[i].item && !quests[i].unique) {
@@ -6314,17 +6316,18 @@ Quest.update = function(type,worker) {
 //		debug('option = ' + this.option.what);
 //		best = (this.runtime.best && quests[this.runtime.best] && (quests[this.runtime.best].influence < 100) ? this.runtime.best : null);
 		for (i in quests) {
-			if (quests[i].units && (typeof quests[i].own === 'undefined' || (quests[i].own === false && worker === Town))) {// Only check for requirements if we don't already know about them
-				own = 0, need = 0;
+			if (quests[i].units) {
+				own = 0, need = 0, noCanDo = false;
 				for (unit in quests[i].units) {
-					own += Town.get([unit, 'own']) || 0;
-					need += quests[i].units[unit];
+					own = Town.get([unit, 'own']) || 0;
+					need = quests[i].units[unit];
+					if (need > own) {	// Need more than we own, skip this quest.
+						noCanDo = true;	// set flag
+						continue;	// no need to check more prerequisites.
 				}
-				quests[i].own = (own >= need);
-				if (!quests[i].own) { // Can't do a quest because we don't have all the items...
-//					debug('Can\'t do "'+i+'" because we don\'t have the items...');
-					this._watch(Town); // Watch Town for updates...
-					continue;
+				}
+				if (noCanDo) {
+					continue;	// Skip to the next quest in the list
 				}
 			}
 			switch(this.option.what) { // Automatically fallback on type - but without changing option
@@ -6992,19 +6995,19 @@ Elite.caap_load = function() {
 };
 
 Land.caap_values = {
-	'enabled':	'autoBuyLand',
-	'sell':		'SellLands'
+	enabled:	'autoBuyLand',
+	sell:		'SellLands'
 };
 
 Bank.caap_values = {
-	'above':	'MaxInCash',
-	'hand':		'MinInCash',
-	'keep':		'minInStore'
+	above:		'MaxInCash',
+	hand:		'MinInCash',
+	keep:		'minInStore'
 };
 
 Alchemy.caap_values = {
-	'perform':	'AutoAlchemy',
-	'hearts':	'AutoAlchemyHearts'
+	perform:	'AutoAlchemy',
+	hearts:		'AutoAlchemyHearts'
 };
 
 Alchemy.caap_load = function() {
@@ -7027,7 +7030,6 @@ Blessing.caap_values = {
 Blessing.caap_load = function() {
 	this.option.display = true;
 };
-
 
 ///////////////////////////
 // Define our global object
@@ -17171,6 +17173,13 @@ $(function () {
 			if (!userID || typeof userID !== 'number' || userID === 0) {
 				log('ERROR: No Facebook UserID!!!');
 				window.location.href = window.location.href; // Force reload without retrying
+			}
+			try {
+				imagepath = $('#app'+APPID+'_globalContainer img:eq(0)').attr('src').pathpart();
+			} catch(e) {
+				log('ERROR: Bad Page Load!!!');
+				Page.reload();
+				return;
 			}
 			do_css();
 			Page.identify();

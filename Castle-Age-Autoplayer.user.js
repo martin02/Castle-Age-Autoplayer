@@ -863,11 +863,13 @@ Config.option = {
 
 Config.init = function() {
 	if (iscaap()) {
-		return false;
+		$after = $('#caap_debug2_mess');
+	} else {
+		$after = $('div.UIStandardFrame_Content');	
 	}
 	$('head').append('<link rel="stylesheet" href="http://cloutman.com/css/base/jquery-ui.css" type="text/css" />');
 	var $btn, $golem_config, $newPanel, i, j, k;
-	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (typeof revision !== 'undefined' && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
+	$after.after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (typeof revision !== 'undefined' && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
 	$('#golem_options').click(function(){
 		$(this).toggleClass('golem-button golem-button-active');
 		Config.option.display = Config.option.display==='block' ? 'none' : 'block';
@@ -881,7 +883,10 @@ Config.init = function() {
 	});
 	$golem_config = $('#golem_config');
 	for (i in Workers) {
+		if (!iscaap() || (caap.actionsList.indexOf(Workers[i].name)>=0 
+				&& typeof caap[Workers[i].name] !== 'function')) {
 		$golem_config.append(Config.makePanel(Workers[i]));
+	}
 	}
 	$golem_config.sortable({axis:"y"}); //, items:'div', handle:'h3' - broken inside GM
 	$('.golem-config .golem-panel > h3').click(function(event){
@@ -1125,9 +1130,6 @@ Config.makePanel = function(worker) {
 };
 
 Config.set = function(key, value) {
-	if (iscaap()) {
-		return false;
-	}
 	this._unflush();
 	if (!this.data[key] || JSON.stringify(this.data[key]) !== JSON.stringify(value)) {
 		this.data[key] = value;
@@ -6988,6 +6990,11 @@ Worker.prototype._unflush = function() {
 	(typeof this.caap_load == 'function') && this.caap_load();
 }; 
 
+Queue.caap_load = function() {
+	this.option.pause = false;
+};
+
+/*
 Elite.caap_load = function() {
 	this.option.prefer = gm.getListFromText('EliteArmyList');
 	this.option.elite = gm.getValue('AutoElite', false);
@@ -7014,10 +7021,6 @@ Alchemy.caap_load = function() {
 	this.option.summon = true;
 };
 
-Queue.caap_load = function() {
-	this.option.pause = false;
-};
-
 Heal.caap_values = {
 	stamina: 	'MinStamToHeal',
 	health: 	'MinToHeal'
@@ -7030,6 +7033,33 @@ Blessing.caap_values = {
 Blessing.caap_load = function() {
 	this.option.display = true;
 };
+
+Monster.caap_values = {
+    fortify: 30,
+    //	quest_over: 90,
+    min_to_attack: 0,
+    //	dispel: 50,
+    fortify_active:false,
+    choice: 'Any',
+    ignore_stats:true,
+    stop: 'Never',
+    own: true,
+    armyratio: 1,
+    levelratio: 'Any',
+    force1: true,
+    raid: 'Invade x5',
+    assist: true,
+    maxstamina: 5,
+    minstamina: 5,
+    maxenergy: 10,
+    minenergy: 10,
+    monster_check:'Hourly',
+    check_interval:3600000,
+    avoid_behind:false,
+    avoid_hours:5,
+    behind_override:false
+};
+*/
 
 ///////////////////////////
 // Define our global object
@@ -8638,7 +8668,7 @@ caap = {
             $("#caap_FillArmy").button();
             $("#caap_ResetMenuLocation").button();
 
-			$('#caap_BannerHide').append('Golem Dashboard <img class="golem-button' + (Dashboard.option.display==='block'?'-active':'') + '" id="golem_toggle_dash" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%1EPLTE%BA%BA%BA%EF%EF%EF%E5%E5%E5%D4%D4%D4%D9%D9%D9%E3%E3%E3%F8%F8%F8%40%40%40%FF%FF%FF%00%00%00%83%AA%DF%CF%00%00%00%0AtRNS%FF%FF%FF%FF%FF%FF%FF%FF%FF%00%B2%CC%2C%CF%00%00%00EIDATx%DA%9C%8FA%0A%00%20%08%04%B5%CC%AD%FF%7F%B8%0D%CC%20%E8%D20%A7AX%94q!%7FA%10H%04%F4%00%19*j%07Np%9E%3B%C9%A0%0C%BA%DC%A1%91B3%98%85%AF%D9%E1%5C%A1%FE%F9%CB%14%60%00D%1D%07%E7%0AN(%89%00%00%00%00IEND%AEB%60%82">');
+			/*$('#caap_BannerHide').append('Golem Dashboard <img class="golem-button' + (Dashboard.option.display==='block'?'-active':'') + '" id="golem_toggle_dash" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%1EPLTE%BA%BA%BA%EF%EF%EF%E5%E5%E5%D4%D4%D4%D9%D9%D9%E3%E3%E3%F8%F8%F8%40%40%40%FF%FF%FF%00%00%00%83%AA%DF%CF%00%00%00%0AtRNS%FF%FF%FF%FF%FF%FF%FF%FF%FF%00%B2%CC%2C%CF%00%00%00EIDATx%DA%9C%8FA%0A%00%20%08%04%B5%CC%AD%FF%7F%B8%0D%CC%20%E8%D20%A7AX%94q!%7FA%10H%04%F4%00%19*j%07Np%9E%3B%C9%A0%0C%BA%DC%A1%91B3%98%85%AF%D9%E1%5C%A1%FE%F9%CB%14%60%00D%1D%07%E7%0AN(%89%00%00%00%00IEND%AEB%60%82">');
 			$('#golem_toggle_dash').click(function(){
 				$(this).toggleClass('golem-button golem-button-active');
 				Dashboard.option.display = Dashboard.option.display==='block' ? 'none' : 'block';
@@ -8650,6 +8680,12 @@ caap = {
 				Dashboard._save('option');
 			});
 
+			$golem_config = $('#golem_toggle_dash');
+			for (i in Workers) {
+				$golem_config.append(Config.makePanel(Workers[i]));
+			}*/
+
+			
             return true;
         } catch (err) {
             log("ERROR in AddControl: " + err);
@@ -16870,7 +16906,6 @@ caap = {
 
         //log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
-            if (actionsListCopy.hasOwnProperty(action)) {
                 worker = WorkerByName(actionsListCopy[action]);
                 if (typeof this[actionsListCopy[action]] == 'function') {
                     result = this[actionsListCopy[action]]();
@@ -16889,7 +16924,6 @@ caap = {
                     this.CheckLastAction(actionsListCopy[action]);
                     break;
                 }
-            }
         }
 
         for (i = 0; i < Workers.length; i += 1) {
@@ -17182,6 +17216,8 @@ $(function () {
 				return;
 			}
 			do_css();
+  			caap.MakeActionsList();
+			caap.init();
 			Page.identify();
 			log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
@@ -17199,7 +17235,6 @@ $(function () {
 			}
 
 			Page.parse_all(); // Call once to get the ball rolling...
-            caap.init();
         }, 200);
     }
 

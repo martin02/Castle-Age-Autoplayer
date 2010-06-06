@@ -976,7 +976,7 @@ caap = {
             $("#caap_FillArmy").button();
             $("#caap_ResetMenuLocation").button();
 
-			$('#caap_BannerHide').append('Golem Dashboard <img class="golem-button' + (Dashboard.option.display==='block'?'-active':'') + '" id="golem_toggle_dash" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%1EPLTE%BA%BA%BA%EF%EF%EF%E5%E5%E5%D4%D4%D4%D9%D9%D9%E3%E3%E3%F8%F8%F8%40%40%40%FF%FF%FF%00%00%00%83%AA%DF%CF%00%00%00%0AtRNS%FF%FF%FF%FF%FF%FF%FF%FF%FF%00%B2%CC%2C%CF%00%00%00EIDATx%DA%9C%8FA%0A%00%20%08%04%B5%CC%AD%FF%7F%B8%0D%CC%20%E8%D20%A7AX%94q!%7FA%10H%04%F4%00%19*j%07Np%9E%3B%C9%A0%0C%BA%DC%A1%91B3%98%85%AF%D9%E1%5C%A1%FE%F9%CB%14%60%00D%1D%07%E7%0AN(%89%00%00%00%00IEND%AEB%60%82">');
+			/*$('#caap_BannerHide').append('Golem Dashboard <img class="golem-button' + (Dashboard.option.display==='block'?'-active':'') + '" id="golem_toggle_dash" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%1EPLTE%BA%BA%BA%EF%EF%EF%E5%E5%E5%D4%D4%D4%D9%D9%D9%E3%E3%E3%F8%F8%F8%40%40%40%FF%FF%FF%00%00%00%83%AA%DF%CF%00%00%00%0AtRNS%FF%FF%FF%FF%FF%FF%FF%FF%FF%00%B2%CC%2C%CF%00%00%00EIDATx%DA%9C%8FA%0A%00%20%08%04%B5%CC%AD%FF%7F%B8%0D%CC%20%E8%D20%A7AX%94q!%7FA%10H%04%F4%00%19*j%07Np%9E%3B%C9%A0%0C%BA%DC%A1%91B3%98%85%AF%D9%E1%5C%A1%FE%F9%CB%14%60%00D%1D%07%E7%0AN(%89%00%00%00%00IEND%AEB%60%82">');
 			$('#golem_toggle_dash').click(function(){
 				$(this).toggleClass('golem-button golem-button-active');
 				Dashboard.option.display = Dashboard.option.display==='block' ? 'none' : 'block';
@@ -988,6 +988,12 @@ caap = {
 				Dashboard._save('option');
 			});
 
+			$golem_config = $('#golem_toggle_dash');
+			for (i in Workers) {
+				$golem_config.append(Config.makePanel(Workers[i]));
+			}*/
+
+			
             return true;
         } catch (err) {
             log("ERROR in AddControl: " + err);
@@ -9208,7 +9214,6 @@ caap = {
 
         //log('Action List2: ' + actionsListCopy);
         for (var action in actionsListCopy) {
-            if (actionsListCopy.hasOwnProperty(action)) {
                 worker = WorkerByName(actionsListCopy[action]);
                 if (typeof this[actionsListCopy[action]] == 'function') {
                     result = this[actionsListCopy[action]]();
@@ -9227,7 +9232,6 @@ caap = {
                     this.CheckLastAction(actionsListCopy[action]);
                     break;
                 }
-            }
         }
 
         for (i = 0; i < Workers.length; i += 1) {

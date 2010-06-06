@@ -19,6 +19,11 @@ Worker.prototype._unflush = function() {
 	(typeof this.caap_load == 'function') && this.caap_load();
 }; 
 
+Queue.caap_load = function() {
+	this.option.pause = false;
+};
+
+/*
 Elite.caap_load = function() {
 	this.option.prefer = gm.getListFromText('EliteArmyList');
 	this.option.elite = gm.getValue('AutoElite', false);
@@ -45,10 +50,6 @@ Alchemy.caap_load = function() {
 	this.option.summon = true;
 };
 
-Queue.caap_load = function() {
-	this.option.pause = false;
-};
-
 Heal.caap_values = {
 	stamina: 	'MinStamToHeal',
 	health: 	'MinToHeal'
@@ -61,3 +62,30 @@ Blessing.caap_values = {
 Blessing.caap_load = function() {
 	this.option.display = true;
 };
+
+Monster.caap_values = {
+    fortify: 30,
+    //	quest_over: 90,
+    min_to_attack: 0,
+    //	dispel: 50,
+    fortify_active:false,
+    choice: 'Any',
+    ignore_stats:true,
+    stop: 'Never',
+    own: true,
+    armyratio: 1,
+    levelratio: 'Any',
+    force1: true,
+    raid: 'Invade x5',
+    assist: true,
+    maxstamina: 5,
+    minstamina: 5,
+    maxenergy: 10,
+    minenergy: 10,
+    monster_check:'Hourly',
+    check_interval:3600000,
+    avoid_behind:false,
+    avoid_hours:5,
+    behind_override:false
+};
+*/

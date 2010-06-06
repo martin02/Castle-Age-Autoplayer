@@ -17,11 +17,13 @@ Config.option = {
 
 Config.init = function() {
 	if (iscaap()) {
-		return false;
+		$after = $('#caap_debug2_mess');
+	} else {
+		$after = $('div.UIStandardFrame_Content');	
 	}
 	$('head').append('<link rel="stylesheet" href="http://cloutman.com/css/base/jquery-ui.css" type="text/css" />');
 	var $btn, $golem_config, $newPanel, i, j, k;
-	$('div.UIStandardFrame_Content').after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (typeof revision !== 'undefined' && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
+	$after.after('<div class="golem-config' + (Config.option.fixed?' golem-config-fixed':'') + '"><div class="ui-widget-content"><div class="golem-title">Castle Age Golem ' + (typeof revision !== 'undefined' && revision !== '$WCREV$' ? 'r'+revision : 'v'+VERSION) + '<img id="golem_fixed"></div><div id="golem_buttons" style="margin:4px;"><img class="golem-button' + (Config.option.display==='block'?'-active':'') + '" id="golem_options" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00%0FPLTE%E2%E2%E2%8A%8A%8A%AC%AC%AC%FF%FF%FFUUU%1C%CB%CE%D3%00%00%00%04tRNS%FF%FF%FF%00%40*%A9%F4%00%00%00%3DIDATx%DA%A4%8FA%0E%00%40%04%03%A9%FE%FF%CDK%D2%B0%BBW%BD%CD%94%08%8B%2F%B6%10N%BE%A2%18%97%00%09pDr%A5%85%B8W%8A%911%09%A8%EC%2B%8CaM%60%F5%CB%11%60%00%9C%F0%03%07%F6%BC%1D%2C%00%00%00%00IEND%AEB%60%82"></div><div style="display:'+Config.option.display+';"><div id="golem_config" style="margin:0 4px;overflow:hidden;overflow-y:auto;"></div><div style="text-align:right;"><label>Advanced <input type="checkbox" id="golem-config-advanced"' + (Config.option.advanced ? ' checked' : '') + '></label></div></div></div></div>');
 	$('#golem_options').click(function(){
 		$(this).toggleClass('golem-button golem-button-active');
 		Config.option.display = Config.option.display==='block' ? 'none' : 'block';
@@ -35,7 +37,10 @@ Config.init = function() {
 	});
 	$golem_config = $('#golem_config');
 	for (i in Workers) {
+		if (!iscaap() || (caap.actionsList.indexOf(Workers[i].name)>=0 
+				&& typeof caap[Workers[i].name] !== 'function')) {
 		$golem_config.append(Config.makePanel(Workers[i]));
+	}
 	}
 	$golem_config.sortable({axis:"y"}); //, items:'div', handle:'h3' - broken inside GM
 	$('.golem-config .golem-panel > h3').click(function(event){
@@ -279,9 +284,6 @@ Config.makePanel = function(worker) {
 };
 
 Config.set = function(key, value) {
-	if (iscaap()) {
-		return false;
-	}
 	this._unflush();
 	if (!this.data[key] || JSON.stringify(this.data[key]) !== JSON.stringify(value)) {
 		this.data[key] = value;

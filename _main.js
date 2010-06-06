@@ -236,6 +236,8 @@ $(function () {
 				return;
 			}
 			do_css();
+  			caap.MakeActionsList();
+			caap.init();
 			Page.identify();
 			log('Workers: ' + Workers.length);
 			for (ii=0; ii<Workers.length; ii++) {
@@ -253,7 +255,6 @@ $(function () {
 			}
 
 			Page.parse_all(); // Call once to get the ball rolling...
-            caap.init();
         }, 200);
     }
 

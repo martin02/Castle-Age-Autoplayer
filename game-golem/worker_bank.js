@@ -8,9 +8,7 @@ Bank.settings = {
 	after:['Land','Town']
 };
 
-Bank.defaults = {
-	castle_age:{}
-};
+Bank.defaults['castle_age'] = {};
 
 Bank.option = {
 	general: true,
@@ -40,7 +38,7 @@ Bank.display = [
 ];
 
 Bank.work = function(state) {
-	if (iscaap() && this.option.above === '') {
+	if (iscaap() && this.option.above === null) {
 		return QUEUE_FINISH;
 	}
 	if (Player.get('cash') <= 10 || Player.get('cash') <= this.option.above) {

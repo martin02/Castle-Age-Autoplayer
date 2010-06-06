@@ -239,21 +239,17 @@ $(function () {
   			caap.MakeActionsList();
 			caap.init();
 			Page.identify();
-			log('Workers: ' + Workers.length);
-			for (ii=0; ii<Workers.length; ii++) {
-					//alert('Setup for ' + ii + ' worker ' + Workers[ii].name);
-					Workers[ii]._setup();
+			for (i in Workers) {
+				Workers[i]._setup();
 			}
-
-			for (i=0; i<Workers.length; i++) {
-					Workers[i]._init();
+			for (i in Workers) {
+				Workers[i]._init();
 			}
-
-			for (i=0; i<Workers.length; i++) {
-					Workers[i]._update();
-					Workers[i]._flush();
+			for (i in Workers) {
+				Workers[i]._update();
+				Workers[i]._flush();
 			}
-
+			log('Workers: ' + Length(Workers));
 			Page.parse_all(); // Call once to get the ball rolling...
         }, 200);
     }

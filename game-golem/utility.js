@@ -69,17 +69,20 @@ var makeTimer = function(sec) {
 	return (h ? h+':'+(m>9 ? m : '0'+m) : m) + ':' + (s>9 ? s : '0'+s);
 };
 
-var WorkerByName = function(name) { // Get worker object by Worker.name
-	for (var i=0; i<Workers.length; i++) {
-		if (Workers[i].name.toLowerCase() === name.toLowerCase()) {
-			return Workers[i];
+var WorkerByName = function(name) { // Get worker object by Worker.name (case insensitive, use Workers[name] for case sensitive (and speed).
+	if (typeof name === 'string') {
+		name = name.toLowerCase();
+		for (var i in Workers) {
+			if (i.toLowerCase() === name) {
+				return Workers[i];
+			}
 		}
 	}
 	return null;
 };
 
 var WorkerById = function(id) { // Get worker object by panel id
-	for (var i=0; i<Workers.length; i++) {
+	for (var i in Workers) {
 		if (Workers[i].id === id) {
 			return Workers[i];
 		}
@@ -129,9 +132,11 @@ var unique = function (a) { // Return an array with no duplicates
 };
 
 var deleteElement = function(list, value) { // Removes matching elements from an array
+	if (isArray(list)) {
 	while (value in list) {
 		list.splice(list.indexOf(value), 1);
 	}
+}
 }
 			
 var sum = function (a) { // Adds the values of all array entries together
@@ -161,14 +166,25 @@ var addCommas = function(s) { // Adds commas into a string, ignore any number fo
 };
 
 var findInArray = function(list, value) {
-	if (typeof list === 'array' || typeof list === 'object') {
-		for (var i in list) {
+	if (isArray(list)) {
+		for (var i=0; i<list.length; i++) {
 			if (list[i] === value) {
 				return true;
 			}
 		}
 	}
 	return false;
+};
+
+var findInObject = function(list, value) {
+	if (typeof list === 'object') {
+		for (var i in list) {
+			if (list[i] == value) {
+				return i;
+			}
+		}
+	}
+	return null;
 };
 
 var arrayIndexOf = function(list, value) {
@@ -193,15 +209,21 @@ var arrayLastIndexOf = function(list, value) {
 	return -1;
 };
 
-
-var sortObject = function(object, sortfunc) {
+var sortObject = function(obj, sortfunc, deep) {
 	var list = [], output = {};
-	for (i in object) {
+	if (typeof deep === 'undefined') {
+		deep = false;
+	}
+	for (i in obj) {
 		list.push(i);
 	}
 	list.sort(sortfunc);
 	for (i=0; i<list.length; i++) {
-		output[list[i]] = object[list[i]];
+		if (deep && typeof obj[list[i]] === 'object') {
+			output[list[i]] = sortObject(obj[list[i]], sortfunc, deep);
+		} else {
+			output[list[i]] = obj[list[i]];
+		}
 	}
 	return output;
 };
@@ -262,11 +284,11 @@ var isArray = function(obj) {
 };
 
 var isNumber = function(num) {
-	return num && typeof num === 'number';
+	return typeof num === 'number';
 };
 
 var isWorker = function(obj) {
-	return obj && findInArray(Workers,obj); // Only a worker if it's an active worker
+	return obj && typeof obj === 'object' && typeof obj.name === 'string' && typeof Workers[obj.name] === 'object' && Workers[obj.name] === obj; // Only a worker if it's an active worker
 };
 
 var plural = function(i) {

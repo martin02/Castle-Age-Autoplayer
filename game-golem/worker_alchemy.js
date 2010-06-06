@@ -3,10 +3,8 @@
 */
 var Alchemy = new Worker('Alchemy');
 
-Alchemy.defaults = {
-	castle_age:{
+Alchemy.defaults['castle_age'] = {
 		pages:'keep_alchemy'
-	}
 };
 
 Alchemy.data = {

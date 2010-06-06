@@ -4,10 +4,8 @@
 // Should also look for quests_quest but that should never be used unless there's a new area
 var Quest = new Worker('Quest');
 
-Quest.defaults = {
-	castle_age:{
+Quest.defaults['castle_age'] = {
 		pages:'quests_quest1 quests_quest2 quests_quest3 quests_quest4 quests_quest5 quests_quest6 quests_quest7 quests_quest8 quests_demiquests quests_atlantis'
-	}
 };
 
 Quest.option = {
@@ -108,6 +106,7 @@ Quest.parse = function(change) {
 		quest[name] = {};
 		quest[name].area = area;
 		quest[name].type = type;
+		quest[name].id = parseInt($('input[name="quest"]', el).val());
 		if (typeof land === 'number') {
 			quest[name].land = land;
 		}
@@ -177,7 +176,7 @@ Quest.update = function(type,worker) {
 			if (quests[i].units) {
 				own = 0, need = 0, noCanDo = false;
 				for (unit in quests[i].units) {
-					own = Town.get([unit, 'own']) || 0;
+					own = Town.get([unit, 'own'], 0);
 					need = quests[i].units[unit];
 					if (need > own) {	// Need more than we own, skip this quest.
 						noCanDo = true;	// set flag
@@ -244,13 +243,13 @@ Quest.work = function(state) {
 		}
 		return QUEUE_FINISH;
 	}
-	if (this.option.monster && Monster.data) {
+	if (this.option.monster && Monster.data && Monster.option.fortify_active) {
 		for (i in Monster.data) {
 			for (j in Monster.data[i]) {
-				if (Monster.data[i][j].state === 'engage' && typeof Monster.data[i][j].defense === 'number' && Monster.data[i][j].defense < Monster.option.fortify) {
+				if (Monster.data[i][j].state === 'engage' && typeof Monster.data[i][j].defense === 'number' && (typeof Monster.data[i][j].mclass === 'undefined' || Monster.data[i][j].mclass < 2) && ((typeof Monster.data[i][j].attackbonus !== 'undefined' && Monster.data[i][j].attackbonus < Monster.option.fortify && Monster.data[i][j].defense < 100))) {
 					return QUEUE_FINISH;
 				}
-				if (Monster.data[i][j].state === 'engage' && typeof Monster.data[i][j].dispel === 'number' && Monster.data[i][j].dispel > Monster.option.dispel) {
+                                if (Monster.option.fortify_active && typeof Monster.data[i][j].mclass !== 'undefined' && Monster.data[i][j].mclass > 1 && typeof Monster.data[i][j].secondary !== 'undefined' && Monster.data[i][j].secondary < 100){
 					return QUEUE_FINISH;
 				}
 			}
@@ -308,7 +307,7 @@ Quest.work = function(state) {
 			return QUEUE_FINISH;
 	}
 	debug('Performing - ' + best + ' (energy: ' + this.data[best].energy + ')');
-	if (!Page.click('div.action[title^="' + best + ':"] input[type="image"], div.action[title^="' + best + ' :"] input[type="image"]')) { // Can't find the quest, so either a bad page load, or bad data - delete the quest and reload, which should force it to update ok...
+	if (!Page.click($('input[name="quest"][value="' + this.data[best].id + '"]').siblings('.imgButton').children('input[type="image"]'))) { // Can't find the quest, so either a bad page load, or bad data - delete the quest and reload, which should force it to update ok...
 		debug('Can\'t find button for ' + best + ', so deleting and re-visiting page...');
 		delete this.data[best];
 		Page.reload();

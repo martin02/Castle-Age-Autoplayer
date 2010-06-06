@@ -3,10 +3,8 @@
 */
 var Battle = new Worker('Battle');
 
-Battle.defaults = {
-	castle_age:{
+Battle.defaults['castle_age'] = {
 		pages:'battle_rank battle_battle'
-	}
 };
 
 Battle.data = {
@@ -56,7 +54,8 @@ Battle.display = [
 	},{
 		id:'type',
 		label:'Battle Type',
-		select:['Invade', 'Duel']
+		select:['Invade', 'Duel', 'War'],
+		help:'War needs level 150+, and is similar to Duel - though also uses 10 stamina'
 	},{
 		id:'losses',
 		label:'Attack Until',
@@ -129,7 +128,7 @@ Battle.init = function() {
 2c. Check every possible target and if they're eligable then add them to the target list
 */
 Battle.parse = function(change) {
-	var data, uid, tmp;
+	var data, uid, tmp, myrank;
 	if (Page.page === 'battle_rank') {
 		data = {0:{name:'Newbie',points:0}};
 		$('tr[height="23"]').each(function(i,el){
@@ -165,21 +164,17 @@ Battle.parse = function(change) {
 		if (tmp) {
 			this.data.points = tmp;
 		}
+		myrank = Player.get('rank');
 		$('#app'+APPID+'_app_body table.layout table table tr:even').each(function(i,el){
-			var uid = $('img[uid!==""]', el).attr('uid'), info = $('td.bluelink', el).text().trim().regex(/Level ([0-9]+) (.*)/i), rank;
-			if (!uid || !info) {
+			var uid = $('img[uid!==""]', el).attr('uid'), info = $('td.bluelink', el).text().replace(/[ \t\n]+/g, ' '), rank = info.regex(/Battle:[^(]+\(Rank ([0-9]+)\)/i);;
+			if (!uid || !info || (Battle.option.bp === 'Always' && myrank - rank > 5) || (!Battle.option.bp === 'Never' && myrank - rank <= 5)) {
 				return;
 			}
-			rank = Battle.rank(info[1]);
-			if ((Battle.option.bp === 'Always' && Player.get('rank') - rank > 5) || (!Battle.option.bp === 'Never' && Player.get('rank') - rank <= 5)) {
-				return;
-			}
-			if (!data[uid]) {
-				data[uid] = {};
-			}
+			data[uid] = data[uid] || {};
 			data[uid].name = $('a', el).text().trim();
-			data[uid].level = info[0];
+			data[uid].level = info.regex(/\(Level ([0-9]+)\)/i);
 			data[uid].rank = rank;
+			data[uid].war = info.regex(/War:[^(]+\(Rank ([0-9]+)\)/i);
 			data[uid].army = $('td.bluelink', el).next().text().regex(/([0-9]+)/);
 			data[uid].align = $('img[src*="graphics/symbol_"]', el).attr('src').regex(/symbol_([0-9])/i);
 		});
@@ -206,13 +201,14 @@ Battle.update = function(type) {
 	var i, j, data = this.data.user, list = [], points = false, status = [], army = Player.get('army'), level = Player.get('level'), rank = Player.get('rank'), count = 0;
 
 	status.push('Rank ' + Player.get('rank') + ' ' + (Player.get('rank') && this.data.rank[Player.get('rank')].name) + ' with ' + addCommas(this.data.bp || 0) + ' Battle Points, Targets: ' + length(data) + ' / ' + this.option.cache);
+	if (this.option.points) {
 	status.push('Demi Points Earned Today: '
 	+ '<img src="' + this.symbol[1] +'" alt=" " title="'+this.demi[1]+'" style="width:11px;height:11px;"> ' + (this.data.points[0] || 0) + '/10 '
 	+ '<img src="' + this.symbol[2] +'" alt=" " title="'+this.demi[2]+'" style="width:11px;height:11px;"> ' + (this.data.points[1] || 0) + '/10 '
 	+ '<img src="' + this.symbol[3] +'" alt=" " title="'+this.demi[3]+'" style="width:11px;height:11px;"> ' + (this.data.points[2] || 0) + '/10 '
 	+ '<img src="' + this.symbol[4] +'" alt=" " title="'+this.demi[4]+'" style="width:11px;height:11px;"> ' + (this.data.points[3] || 0) + '/10 '
 	+ '<img src="' + this.symbol[5] +'" alt=" " title="'+this.demi[5]+'" style="width:11px;height:11px;"> ' + (this.data.points[4] || 0) + '/10');
-
+	}
 	// First make check our target list doesn't need reducing
 	for (i in data) { // Forget low or high rank - no points or too many points
 		if ((this.option.bp === 'Always' && rank - (data[i].rank || 0) >= 4) || (!this.option.bp === 'Never' && rank - (data[i].rank || 6) <= 5)) { // unknown rank never deleted
@@ -312,7 +308,7 @@ Battle.update = function(type) {
 3c. Click the Invade / Dual attack button
 */
 Battle.work = function(state) {
-	if (!this.runtime.attacking || Player.get('health') < 13 || Queue.burn.stamina < 1) {
+	if (!this.runtime.attacking || Player.get('health') < 13 || Queue.burn.stamina < (this.option.type === 'War' ? 10 : 1)) {
 //		debug('Not attacking because: ' + (this.runtime.attacking ? '' : 'No Target, ') + 'Health: ' + Player.get('health') + ' (must be >=10), Burn Stamina: ' + Queue.burn.stamina + ' (must be >=1)');
 		return QUEUE_FINISH;
 	}
@@ -387,7 +383,7 @@ Battle.dashboard = function(sort, rev) {
 		data = this.data.user[this.order[o]];
 		output = [];
 		td(output, '<img src="' + this.symbol[data.align] + '" alt="' + this.demi[data.align] + '">', 'title="' + this.demi[data.align] + '"');
-		th(output, data.name, 'title="'+i+'"');
+		th(output, data.name, 'title="'+this.order[o]+'"');
 		td(output, (this.option.level !== 'Any' && (data.level / level) > this.option.level) ? '<i>'+data.level+'</i>' : data.level);
 		td(output, this.data.rank[data.rank] ? this.data.rank[data.rank].name : '');
 		td(output, (this.option.army !== 'Any' && (data.army / army) > this.option.army) ? '<i>'+data.army+'</i>' : data.army);

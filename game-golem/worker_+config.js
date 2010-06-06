@@ -31,7 +31,7 @@ Config.init = function() {
 		Config._save('option');
 	});
 	$('#golem_fixed').click(function(){
-		Config.option.fixed ^= true;
+		Config.option.fixed ^= !iscaap();
 		$(this).closest('.golem-config').toggleClass('golem-config-fixed');
 		Config._save('option');
 	});
@@ -271,13 +271,14 @@ Config.makePanel = function(worker) {
 			}
 			$head.append('<div class="golem-panel-content" style="font-size:smaller;">' + panel.join('') + '</div>');
 			return $head;
-//		case 'function':
-//			$panel = display();
-//			if ($panel) {
-//				$head.append($panel);
-//				return $head;
-//			}
-//			return null;
+		case 'function':
+			$head.append('<div class="golem-panel-content" style="font-size:smaller;"></div>');
+			try {
+				$('.golem-panel-content', $head).append(display());
+			} catch(e) {
+				debug(e.name + ' in Config.makePanel(' + worker.name + '.display()): ' + e.message);
+			}
+			return $head;
 		default:
 			return null;
 	}
@@ -313,7 +314,7 @@ Config.updateOptions = function() {
 	// Now can we see the advanced stuff
 	this.option.advanced = $('#golem-config-advanced').attr('checked');
 	// Now save the contents of all elements with the right id style
-	$('#golem_config input,#golem_config textarea').each(function(i,el){
+	$('#golem_config :input').each(function(i,el){
 		if ($(el).attr('id')) {
 			var val, tmp = $(el).attr('id').slice(PREFIX.length).regex(/([^_]*)_(.*)/i);
 			if (!tmp) {
@@ -337,7 +338,7 @@ Config.updateOptions = function() {
 			}
 		}
 	});
-	for (i=0; i<Workers.length; i++) {
+	for (i in Workers) {
 		Workers[i]._save('option');
 	}
 };

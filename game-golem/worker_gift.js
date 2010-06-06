@@ -8,10 +8,8 @@ Gift.settings = {
 	keep:true
 };
 
-Gift.defaults = {
-	castle_age:{
+Gift.defaults['castle_age'] = {
 		pages:'* index army_invite army_gifts'
-	}
 };
 
 Gift.data = {
@@ -157,6 +155,7 @@ Gift.parse = function(change) {
 		if ($('div.result').text().indexOf('have exceed') !== -1){
 			debug('We have run out of gifts to send.  Waiting one hour to retry.');
 			this.runtime.gift_delay = Date.now() + 3600000;	// Wait an hour and try to send again.
+			iscaap() && this.JustDidIt('WaitForNextGiftSend');
 		}
 	}
 	return false;

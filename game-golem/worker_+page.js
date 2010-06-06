@@ -51,7 +51,8 @@ Page.defaults = {
 			battle_training:		{url:'battle_train.php', image:'training_grounds_on_new.gif'},
 			battle_rank:			{url:'battlerank.php', image:'tab_battle_rank_on.gif'},
 			battle_raid:			{url:'raid.php', image:'tab_raid_on.gif'},
-			battle_arena:			{url:'arena.php', image:'tab_arena_on.gif'},
+//			battle_arena:			{url:'arena.php', image:'tab_arena_on.gif'},
+			battle_war_council:		{url:'war_council.php', image:'war_select_banner.jpg'},
 			heroes_heroes:			{url:'mercenary.php', image:'tab_heroes_on.gif'},
 			heroes_generals:		{url:'generals.php', image:'tab_generals_on.gif'},
 			town_soldiers:			{url:'soldiers.php', image:'tab_soldiers_on.gif'},
@@ -94,7 +95,7 @@ Page.parse_all = function() {
 	WorkerStack.push(this);
 	Page.identify();
 	var i, list = [];
-	for (i=0; i<Workers.length; i++) {
+	for (i in Workers) {
 		if (Workers[i].parse && Workers[i].pages && (Workers[i].pages.indexOf('*')>=0 || (Page.page !== '' && Workers[i].pages.indexOf(Page.page) >= 0))) {
 			Workers[i]._unflush();
 			if (Workers[i]._parse(false)) {
@@ -105,7 +106,7 @@ Page.parse_all = function() {
 	for (i in list) {
 		list[i]._parse(true);
 	}
-	for (i=0; i<Workers.length; i++) {
+	for (i in Workers) {
 		Workers[i]._flush();
 	}
 	WorkerStack.pop();
@@ -116,7 +117,7 @@ Page.work = function(state) {
 		return false;
 	}
 	var i, l, list, found = null;
-	for (i=0; i<Workers.length && !found; i++) {
+	for (i in Workers) {
 		if (Workers[i].pages) {
 			list = Workers[i].pages.split(' ');
 			for (l=0; l<list.length; l++) {
@@ -125,6 +126,9 @@ Page.work = function(state) {
 					break;
 				}
 			}
+		}
+		if (found) {
+			break;
 		}
 	}
 	if (!state) {

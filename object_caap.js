@@ -1031,7 +1031,8 @@ caap = {
     },
 
     AddCashHealthMenu: function () {
-        try {
+		return '';
+/*        try {
             var bankInstructions0 = "Minimum cash to keep in the bank. Press tab to save",
                 bankInstructions1 = "Minimum cash to have on hand, press tab to save",
                 bankInstructions2 = "Maximum cash to have on hand, bank anything above this, press tab to save (leave blank to disable).",
@@ -1063,7 +1064,7 @@ caap = {
             log("ERROR in AddCashHealthMenu: " + err);
             return false;
         }
-    },
+*/    },
 
     AddQuestMenu: function () {
         try {
@@ -1083,7 +1084,7 @@ caap = {
             htmlCode += "<tr><td style='padding-left: 10px'>Stop At Or Below Energy</td><td style='text-align: right'>" +
                 this.MakeNumberForm('XMinQuestEnergy', XMinQuestInstructions, 0, "size='3' style='font-size: 10px; text-align: right'") + '</td></tr></table>';
             htmlCode += "</div>";
-            htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
+/*            htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += "<tr><td>Quest Area</td><td style='text-align: right; width: 60%'>" + this.MakeDropDown('QuestArea', this.questAreaList, '', "style='font-size: 10px; width: 100%'") + '</td></tr>';
             switch (gm.getValue('QuestArea', this.questAreaList[0])) {
             case 'Quest' :
@@ -1113,8 +1114,8 @@ caap = {
             }
 
             htmlCode += "<hr/></div>";
-            return htmlCode;
-        } catch (err) {
+*/            return htmlCode;
+		} catch (err) {
             log("ERROR in AddQuestMenu: " + err);
             return false;
         }
@@ -1231,7 +1232,7 @@ caap = {
                 this.MakeNumberForm('XMinBattleStamina', XMinBattleInstructions, 0, "size='2' style='font-size: 10px; text-align: right'") + '</td></tr></table>';
             htmlCode += "</div>";
             htmlCode += "<div id='caap_WhenBattleHide' style='display: " + (gm.getValue('WhenBattle', false) != 'Never' ? 'block' : 'none') + "'>";
-            htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
+/*            htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += "<tr><td>Battle Type</td><td style='text-align: right; width: 40%'>" + this.MakeDropDown('BattleType', typeList, typeInst, "style='font-size: 10px; width: 100%'") + '</td></tr></table>';
             htmlCode += "<table width='180px' cellpadding='0px' cellspacing='0px'>";
             htmlCode += this.MakeCheckTR("Clear Complete Raids", 'clearCompleteRaids', false, '', '');
@@ -1272,7 +1273,7 @@ caap = {
             htmlCode += "</div>";
             htmlCode += "</div>";
             htmlCode += "<hr/></div>";
-            return htmlCode;
+*/            return htmlCode;
         } catch (err) {
             log("ERROR in AddBattleMenu: " + err);
             return false;
@@ -3192,7 +3193,7 @@ caap = {
         }
 
         if (this.stats.energy.num >= gm.getValue('MaxIdleEnergy')) {
-            return this.Quests();
+            return Quest.work(true);
         }
 
         return false;
@@ -3217,7 +3218,7 @@ caap = {
         'Azeron'      : 'stamina'
     },
 
-    Quests: function () {
+    CaapQuests: function () {
         try {
             if (gm.getValue('storeRetrieve', '') !== '') {
                 if (gm.getValue('storeRetrieve') == 'general') {
@@ -3959,7 +3960,7 @@ caap = {
 
             if (condition == 'Energy Available' || condition == 'Not Fortifying') {
                 if (this.stats.energy.num >= energy) {
-                    return true;
+                    return this.stats.energy.num;
                 }
 
                 if (msgdiv) {
@@ -3971,15 +3972,15 @@ caap = {
                         this.SetDivContent(msgdiv, 'Burning all energy to level up');
                     }
 
-                    return true;
+                    return this.stats.energy.num;
                 }
 
                 if ((this.stats.energy.num >= gm.getValue('XQuestEnergy', 1)) && (this.stats.energy.num >= energy)) {
-                    return true;
+                    return this.stats.energy.num - gm.getValue('XMinQuestEnergy', 0);
                 }
 
                 if ((this.stats.energy.num >= gm.getValue('XMinQuestEnergy', 0)) && (this.stats.energy.num >= energy)) {
-                    return true;
+                    return this.stats.energy.num - gm.getValue('XMinQuestEnergy', 0);
                 }
 
                 var whichEnergy = gm.getValue('XQuestEnergy', 1);
@@ -3997,7 +3998,7 @@ caap = {
                 }
 
                 if (this.stats.energy.num >= gm.getValue('MaxIdleEnergy')) {
-                    return true;
+                    return this.stats.energy.num;
                 }
 
                 if (this.InLevelUpMode() && this.stats.energy.num >= energy) {
@@ -4005,7 +4006,7 @@ caap = {
                         this.SetDivContent(msgdiv, 'Burning all energy to level up');
                     }
 
-                    return true;
+                    return this.stats.energy.num;
                 }
 
                 if (msgdiv) {
@@ -4792,7 +4793,7 @@ caap = {
         }
     },
 
-    Battle: function (mode) {
+    CaapBattle: function (mode) {
         try {
             if (gm.getValue('WhenBattle', '') == 'Never') {
                 this.SetDivContent('battle_mess', 'Battle off');
@@ -6796,7 +6797,7 @@ caap = {
             if (when == 'At X Stamina') {
                 if (this.InLevelUpMode() && this.stats.stamina.num >= attackMinStamina) {
                     this.SetDivContent('battle_mess', 'Burning stamina to level up');
-                    return true;
+                    return this.stats.stamina.num;
                 }
                 var staminaMF = battleOrBattle + 'Stamina';
                 if (gm.getValue('BurnMode_' + staminaMF, false) || this.stats.stamina.num >= gm.getValue('X' + staminaMF, 1)) {
@@ -6807,7 +6808,7 @@ caap = {
 
                     //this.SetDivContent('battle_mess', 'Burning stamina');
                     gm.setValue('BurnMode_' + staminaMF, true);
-                    return true;
+                    return this.stats.stamina.num - gm.getValue('XMin' + staminaMF, 0);
                 } else {
                     gm.setValue('BurnMode_' + staminaMF, false);
                 }
@@ -6824,12 +6825,12 @@ caap = {
 
                 if (this.stats.stamina.num >= gm.getValue('MaxIdleStamina')) {
                     this.SetDivContent('battle_mess', 'Using max stamina');
-                    return true;
+                    return this.stats.stamina.num;
                 }
 
                 if (this.InLevelUpMode() && this.stats.stamina.num >= attackMinStamina) {
                     this.SetDivContent('battle_mess', 'Burning all stamina to level up');
-                    return true;
+                    return this.stats.stamina.num;
                 }
 
                 this.SetDivContent('battle_mess', 'Waiting for max stamina: ' + this.stats.stamina.num + "/" + gm.getValue('MaxIdleStamina'));
@@ -6837,7 +6838,7 @@ caap = {
             }
 
             if (this.stats.stamina.num >= attackMinStamina) {
-                return true;
+                return this.stats.stamina.num;
             }
 
             this.SetDivContent('battle_mess', 'Waiting for more stamina: ' + this.stats.stamina.num + "/" + attackMinStamina);
@@ -8945,7 +8946,7 @@ caap = {
         0x08: 'Monsters',
         0x09: 'Battle',
         0x0A: 'MonsterFinder',
-        0x0B: 'Quests',
+        0x0B: 'Quest',
         0x0C: 'PassiveGeneral',
         0x0D: 'Land',
         0x0E: 'Bank',
@@ -9070,7 +9071,7 @@ caap = {
                 "Monsters",
                 "Battle",
                 "MonsterFinder",
-                "Quests",
+                "Quest",
                 "PassiveGeneral",
                 "Land",
                 "Bank",
@@ -9196,6 +9197,10 @@ caap = {
             this.ReloadCastleAge();
         }
 
+		// Check how much energy we have to burn for the golem workers
+		Queue.burn.stamina = this.CheckStamina('Battle');
+		Queue.burn.energy = this.CheckEnergy(1, gm.getValue('WhenQuest', 'Never'));
+
         if (this.AutoIncome()) {
             this.CheckLastAction('AutoIncome');
             this.WaitMainLoop();
@@ -9234,9 +9239,9 @@ caap = {
                 }
         }
 
-        for (i = 0; i < Workers.length; i += 1) {
-            Workers[i]._flush();
-        }
+		for (i in Workers) {
+			Workers[i]._flush();
+		}
 
         this.WaitMainLoop();
     },

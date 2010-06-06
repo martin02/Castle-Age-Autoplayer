@@ -23,6 +23,10 @@ Queue.caap_load = function() {
 	this.option.pause = false;
 };
 
+Config.caap_load = function() {
+	Config.option.fixed = true;
+};
+
 /*
 Elite.caap_load = function() {
 	this.option.prefer = gm.getListFromText('EliteArmyList');
